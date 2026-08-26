@@ -1,3 +1,4 @@
+import { useState, type ReactNode } from 'react';
 import type { Habitation, HazardType, TierKey } from '../data/schema';
 import { HAZARD_LABEL } from '../data/schema';
 import { OVERLAYS, isIngested } from '../data/layers';
@@ -20,6 +21,53 @@ const TIERS: Array<[TierKey, string]> = [
   ['SHORT_TERM', 'Short-term'],
   ['LONG_TERM', 'Long-term'],
 ];
+
+/**
+ * A rail group that can fold away.
+ *
+ * Same contract as `Block`: the head keeps the STATE ("dim", "5/5", "3 active")
+ * so folding a group never hides what it is currently doing -- only the
+ * controls that set it. The rail is a filter surface, and an officer reads its
+ * current settings far more often than they change them.
+ */
+function RailSection({
+  title,
+  count,
+  children,
+  collapsible,
+  defaultOpen = true,
+  style,
+}: {
+  title: string;
+  count?: ReactNode;
+  children: ReactNode;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  style?: React.CSSProperties;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  if (!collapsible) {
+    return (
+      <section className="rail-section" style={style}>
+        <div className="rail-head">
+          <span>{title}</span>
+          {count ? <span className="count">{count}</span> : null}
+        </div>
+        {children}
+      </section>
+    );
+  }
+  return (
+    <section className={`rail-section${open ? ' open' : ''}`} style={style}>
+      <button className="rail-head disclose" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span className="caret" aria-hidden />
+        <span>{title}</span>
+        {count ? <span className="count">{count}</span> : null}
+      </button>
+      <div className="collapse">{children}</div>
+    </section>
+  );
+}
 
 export function SideRail({
   filters,
@@ -68,10 +116,12 @@ export function SideRail({
   return (
     <aside className="rail">
       {/* ----------------------------------------------------- basemap --- */}
-      <section className="rail-section">
-        <div className="rail-head">
-          <span>Basemap</span>
-        </div>
+      <RailSection
+        title="Basemap"
+        count={basemap === 'off' ? 'none' : basemap}
+        collapsible
+        defaultOpen={false}
+      >
         <div className="rail-body">
           <div className="seg">
             {(['off', 'dim', 'terrain'] as Basemap[]).map((b) => (
@@ -81,18 +131,16 @@ export function SideRail({
             ))}
           </div>
           <div className="fig-sub" style={{ marginTop: 'var(--s-3)' }}>
-            Terrain is hillshade only and carries no boundaries. Drop to None on a projector or when
-            the overlay needs full contrast.
+            Hillshade only — no boundaries. Use None on a projector.
           </div>
         </div>
-      </section>
+      </RailSection>
 
       {/* ---------------------------------------------------- overlays --- */}
-      <section className="rail-section">
-        <div className="rail-head">
-          <span>Overlay</span>
-          <span className="count">{OVERLAYS.filter(isIngested).length}/{OVERLAYS.length} ingested</span>
-        </div>
+      <RailSection
+        title="Overlay"
+        count={`${OVERLAYS.filter(isIngested).length}/${OVERLAYS.length} ingested`}
+      >
         <div className="rail-body">
           <label className="chk">
             <input
@@ -128,13 +176,19 @@ export function SideRail({
             );
           })}
         </div>
-      </section>
+      </RailSection>
 
       {/* ------------------------------------------------------- score --- */}
-      <section className="rail-section">
-        <div className="rail-head">
-          <span>Score basis</span>
-        </div>
+      <RailSection
+        title="Score basis"
+        count={
+          filters.threshold > 0
+            ? `${filters.scoreField} · ≥${filters.threshold}`
+            : filters.scoreField
+        }
+        collapsible
+        defaultOpen={false}
+      >
         <div className="rail-body">
           <div className="field">
             <div className="seg">
@@ -174,14 +228,15 @@ export function SideRail({
             />
           </div>
         </div>
-      </section>
+      </RailSection>
 
       {/* ------------------------------------------------------ hazard --- */}
-      <section className="rail-section">
-        <div className="rail-head">
-          <span>Hazard type</span>
-          <span className="count">{filters.hazards.size}/{HAZARDS.length}</span>
-        </div>
+      <RailSection
+        title="Hazard type"
+        count={`${filters.hazards.size}/${HAZARDS.length}`}
+        collapsible
+        defaultOpen={false}
+      >
         <div className="rail-body">
           {HAZARDS.map((h) => (
             <label className="chk" key={h}>
@@ -192,34 +247,39 @@ export function SideRail({
             </label>
           ))}
         </div>
-      </section>
+      </RailSection>
 
       {/* ------------------------------------------------- tier filter --- */}
-      <section className="rail-section">
-        <div className="rail-head">
-          <span>Tier membership</span>
-          <span className="count">independent flags</span>
-        </div>
+      <RailSection
+        title="Tier membership"
+        count={filters.tiers.size ? `${filters.tiers.size} active` : 'any'}
+        collapsible
+        defaultOpen={false}
+      >
         <div className="rail-body">
           {TIERS.map(([k, label]) => (
             <label className="chk" key={k}>
               <input type="checkbox" checked={filters.tiers.has(k)} onChange={() => toggleTier(k)} />
               <span className="chk-box" />
               <span className="chk-label">{label}</span>
-              <span className="chk-count">{int(tierCount(k))}</span>
+              <span
+                className="chk-count"
+                title="Independent flags — a habitation may hold several tiers, so these do not sum"
+              >
+                {int(tierCount(k))}
+              </span>
             </label>
           ))}
-          <div className="fig-sub" style={{ marginTop: 'var(--s-3)' }}>
-            A habitation may hold several tiers at once; counts do not sum to the total.
-          </div>
         </div>
-      </section>
+      </RailSection>
 
       {/* ------------------------------------------------------- state --- */}
-      <section className="rail-section">
-        <div className="rail-head">
-          <span>State</span>
-        </div>
+      <RailSection
+        title="State"
+        count={filters.states || 'all'}
+        collapsible
+        defaultOpen={false}
+      >
         <div className="rail-body">
           <select className="inp" value={filters.states} onChange={(e) => patch({ states: e.target.value })}>
             <option value="">All states</option>
@@ -230,10 +290,13 @@ export function SideRail({
             ))}
           </select>
         </div>
-      </section>
+      </RailSection>
 
       {/* ----------------------------------------------------- results --- */}
-      <section className="rail-section" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <section
+        className="rail-section"
+        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+      >
         <div className="rail-head">
           <span>Habitations</span>
           <span className="count">{int(results.length)}</span>
@@ -284,10 +347,7 @@ export function SideRail({
       </section>
 
       {/* ------------------------------------------------------ legend --- */}
-      <section className="rail-section">
-        <div className="rail-head">
-          <span>Severity class</span>
-        </div>
+      <RailSection title="Severity class" collapsible defaultOpen={false}>
         <div className="rail-body">
           {[...BAND_ORDER].reverse().map((b) => (
             <div className="legend-row" key={b}>
@@ -309,7 +369,7 @@ export function SideRail({
             Marker size and stroke weight carry severity redundantly; the score is always printed.
           </div>
         </div>
-      </section>
+      </RailSection>
 
       <FlagLegend />
     </aside>
@@ -318,10 +378,7 @@ export function SideRail({
 
 function FlagLegend() {
   return (
-    <section className="rail-section">
-      <div className="rail-head">
-        <span>Tier flag state</span>
-      </div>
+    <RailSection title="Tier flag state" collapsible defaultOpen={false}>
       <div className="rail-body">
         <div className="legend-row">
           <FlagDot status="FLAGGED" />
@@ -340,6 +397,6 @@ function FlagLegend() {
           not flagged, and must not be read as safe.
         </div>
       </div>
-    </section>
+    </RailSection>
   );
 }

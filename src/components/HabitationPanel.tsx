@@ -165,18 +165,16 @@ function TierBody({ h, tier }: { h: Habitation; tier: TierKey }) {
       <>
         <div className="empty">
           <strong>Tier assessment not authored for this habitation</strong>
-          This habitation carries a full susceptibility and operational breakdown, shown below, but
-          the three tier bodies are populated only for the Wayanad demonstration habitations in this
-          build. The tier flag above is derived from the score thresholds, not from an authored
-          assessment.
+          The flag above is derived from score thresholds. Breakdowns below are real; the three
+          tier bodies are authored only for the Wayanad demonstration habitations.
         </div>
-        <Block title="Standing susceptibility breakdown" aux={`score ${h.susceptibility.score.toFixed(1)}`} flush>
+        <Block title="Standing susceptibility breakdown" aux={`score ${h.susceptibility.score.toFixed(1)}`} flush collapsible>
           <FactorTable a={h.susceptibility} />
         </Block>
-        <Block title="Published hazard classification" aux="ingested sheets" flush>
+        <Block title="Published hazard classification" aux="ingested sheets" flush collapsible>
           <PublishedBlock id={h.id} />
         </Block>
-        <Block title="Current state drivers" aux={ts(h.current.observedAt)} flush>
+        <Block title="Current state drivers" aux={ts(h.current.observedAt)} flush collapsible>
           <FactorTable
             a={{
               score: h.current.score,
@@ -271,6 +269,7 @@ function ImmediateBody({ h, d }: { h: Habitation; d: ImmediateTier }) {
         title={`Feed — ${d.nowcast.stationName}`}
         aux={`${d.nowcast.distanceKm.toFixed(1)} km · ${coord(d.nowcast.lngLat)}`}
         flush
+        collapsible
       >
         <table className="rowtable">
           <thead>
@@ -390,7 +389,7 @@ function ImmediateBody({ h, d }: { h: Habitation; d: ImmediateTier }) {
         <ProvLine p={d.evacuation.provenance} />
       </Block>
 
-      <Block title="Routing" flush>
+      <Block title="Routing" flush collapsible>
         <div className="empty" style={{ padding: 'var(--s-5)' }}>
           <strong>Not in this build</strong>
           The routing page (origin to camp, primary plus alternates, segment risk, blockage
@@ -412,16 +411,15 @@ function ShortTermBody({ d, id }: { d: ShortTermTier; id: string }) {
       <Block
         title="Static susceptibility"
         aux={`score ${d.susceptibility.score.toFixed(1)}`}
-        flush
-      >
+        flush collapsible>
         <FactorTable a={d.susceptibility} />
       </Block>
 
-      <Block title="Published hazard classification" aux="ingested sheets" flush>
+      <Block title="Published hazard classification" aux="ingested sheets" flush collapsible>
         <PublishedBlock id={id} />
       </Block>
 
-      <Block title="Exposure" flush>
+      <Block title="Exposure" flush collapsible>
         <table className="rowtable">
           <tbody>
             {[d.exposure.structures, d.exposure.population, d.exposure.households, d.exposure.footprintHa].map(
@@ -448,8 +446,7 @@ function ShortTermBody({ d, id }: { d: ShortTermTier; id: string }) {
       <Block
         title="Seasonal window"
         aux={d.window.currentlyActive ? 'active' : 'inactive'}
-        flush
-      >
+        flush collapsible>
         <div className="block-body">
           <dl className="kv">
             <dt>Activates</dt>
@@ -530,7 +527,7 @@ function LongTermBody({ h, d }: { h: Habitation; d: LongTermTier }) {
         </div>
       ) : null}
 
-      <Block title="Why mitigation is insufficient" flush>
+      <Block title="Why mitigation is insufficient" flush collapsible>
         <div className="block-body" style={{ borderBottom: '1px solid var(--line-1)' }}>
           <div style={{ fontSize: 'var(--fs-sm)', lineHeight: 1.45 }}>{d.mitigationRejection.summary}</div>
         </div>
@@ -654,11 +651,11 @@ function SiteCard({
             <Fig label="Land" value={c.land.acquisitionStatus.split(';')[0]} mono={false} />
           </div>
 
-          <Block title="Site suitability breakdown" aux={`score ${c.suitability.score.toFixed(1)}`} flush>
+          <Block title="Site suitability breakdown" aux={`score ${c.suitability.score.toFixed(1)}`} flush collapsible>
             <FactorTable a={c.suitability} dense />
           </Block>
 
-          <Block title="Carrying capacity" aux={`${int(c.capacity.households)} households`} flush>
+          <Block title="Carrying capacity" aux={`${int(c.capacity.households)} households`} flush collapsible>
             <table className="rowtable">
               <tbody>
                 <tr>
@@ -729,11 +726,11 @@ function SiteCard({
             <ProvLine p={c.capacity.provenance} />
           </Block>
 
-          <Block title="Livability" aux={<><AssessmentHead a={c.livability} /></>} flush>
+          <Block title="Livability" aux={<><AssessmentHead a={c.livability} /></>} flush collapsible>
             <FactorTable a={c.livability} dense />
           </Block>
 
-          <Block title="Land status" flush>
+          <Block title="Land status" flush collapsible>
             <div className="block-body">
               <dl className="kv">
                 <dt>Classification</dt>

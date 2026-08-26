@@ -12,7 +12,17 @@ type Answer = { text: string; sources: string[]; miss?: true };
  * sources line names the displayed factors the answer drew on, so the officer
  * can check it against the tables above rather than trusting it.
  */
-export function ExplainDock({ scope }: { scope: ExplainScope }) {
+export function ExplainDock({
+  scope,
+  defaultOpen = false,
+}: {
+  scope: ExplainScope;
+  defaultOpen?: boolean;
+}) {
+  /* Folded by default. The dock is a way in when a figure on the panel is
+   * unclear -- it is not itself a finding, and an open input box on every
+   * panel reads as the subject rather than the aid. */
+  const [open, setOpen] = useState(defaultOpen);
   const [q, setQ] = useState('');
   const [asked, setAsked] = useState<string | null>(null);
   const [answer, setAnswer] = useState<Answer | null>(null);
@@ -28,12 +38,14 @@ export function ExplainDock({ scope }: { scope: ExplainScope }) {
   const hints = SCOPE_HINTS[scope];
 
   return (
-    <div className="explain">
-      <div className="explain-head">
+    <div className={`explain${open ? ' open' : ''}`}>
+      <button className="explain-head disclose" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span className="caret" aria-hidden />
         <span>Explain</span>
         <span className="explain-scope">{SCOPE_LABEL[scope]}</span>
-      </div>
+      </button>
 
+      <div className="collapse">
       <form
         className="explain-form"
         onSubmit={(e) => {
@@ -77,6 +89,7 @@ export function ExplainDock({ scope }: { scope: ExplainScope }) {
           ) : null}
         </div>
       ) : null}
+      </div>
     </div>
   );
 }

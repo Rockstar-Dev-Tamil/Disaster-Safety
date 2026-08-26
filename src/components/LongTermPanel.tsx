@@ -10,6 +10,7 @@ import {
   type LongTermWeights,
 } from '../lib/longterm';
 import { int } from '../lib/format';
+import { Block } from './primitives';
 
 const LABEL: Record<keyof LongTermWeights, string> = {
   continuity: 'Community continuity',
@@ -48,21 +49,19 @@ export function LongTermPanel({
 }) {
   return (
     <>
-      <section className="block">
-        <div className="block-head">
-          <span>Permanent tier · exclusions</span>
-          <span className="aux">{eligiblePct.toFixed(1)}% eligible</span>
+      <Block
+        title="Permanent tier · exclusions"
+        aux={`${eligiblePct.toFixed(1)}% eligible`}
+        collapsible
+      >
+        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--fg-2)', lineHeight: 1.5 }}>
+          Looser on gradient than a camp (15° against 5°, terracing is viable for a permanent
+          build) and far stricter on everything else: <b>every</b> mapped landslide class is
+          excluded rather than Medium and above, along with forest requiring diversion under the
+          Forest (Conservation) Act 1980 and protected areas under the Wildlife Protection Act
+          1972.
         </div>
-        <div className="block-body">
-          <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--fg-2)', lineHeight: 1.5 }}>
-            Looser on gradient than a camp (15° against 5°, terracing is viable for a permanent
-            build) and far stricter on everything else: <b>every</b> mapped landslide class is
-            excluded rather than Medium and above, along with forest requiring diversion under the
-            Forest (Conservation) Act 1980 and protected areas under the Wildlife Protection Act
-            1972.
-          </div>
-        </div>
-      </section>
+      </Block>
 
       {result.withheld ? (
         <section className="block">
@@ -102,20 +101,9 @@ export function LongTermPanel({
               {result.candidates.length} pass · {result.failedCapacity} failed capacity
             </span>
           </div>
-          <div
-            style={{
-              padding: 'var(--s-2) var(--s-5)',
-              background: 'var(--bg-0)',
-              borderBottom: '1px solid var(--line-1)',
-              color: 'var(--fg-2)',
-              fontSize: 'var(--fs-xs)',
-              lineHeight: 1.4,
-            }}
-          >
-            Capacity is a gate, not a score: {int(result.failedCapacity)} zones cleared every
-            exclusion but cannot hold all {int(h.households)} households as one site. Centralised
-            resettlement outperforms scattered on measured resilience, so a partial site is a
-            failure rather than a partial success.
+          <div className="fnote">
+            Capacity is a gate, not a score — {int(result.failedCapacity)} zones cleared every
+            exclusion but cannot hold all {int(h.households)} households on one site.
           </div>
           {result.candidates.slice(0, 12).map((c) => (
             <CandidateCard

@@ -90,6 +90,20 @@
   --s-6: 16px;
   --s-7: 24px;
 
+  /* ---------------------------------------------------------------
+     Motion. Three durations, two easings, nothing else.
+     Motion only ever confirms a state change the user just caused or
+     the system just recomputed. Nothing animates on load, hover or
+     scroll. ease-out for appearing/growing, ease-in for leaving.
+     --------------------------------------------------------------- */
+  --t-collapse: 280ms;   /* small, frequent: disclosure rows */
+  --t-panel:    420ms;   /* large, occasional: docked panels */
+  --t-count:    520ms;   /* recomputed numerals */
+  --t-camera:   800ms;   /* map fly-to */
+  --t-veil:     240ms;   /* one half of a route cross-fade */
+  --e-in:  cubic-bezier(0.4, 0, 1, 1);   /* ease-in  */
+  --e-out: cubic-bezier(0, 0, 0.2, 1);   /* ease-out */
+
   --rail-w: 268px;
   --panel-w: 560px;
   --strip-h: 26px;

@@ -11,6 +11,7 @@ import {
   type ZoneResult,
 } from '../lib/zones';
 import { int } from '../lib/format';
+import { Block } from './primitives';
 
 const LANDUSE_LABEL: Record<number, string> = {
   0: 'Unmapped',
@@ -94,11 +95,12 @@ export function ZonePanel({
   return (
     <>
       {/* --------------------------------------------------- eligibility --- */}
-      <section className="block">
-        <div className="block-head">
-          <span>Step 3 · Exclusions</span>
-          <span className="aux">{stats.eligiblePct.toFixed(1)}% eligible</span>
-        </div>
+      <Block
+        title="Step 3 · Exclusions"
+        aux={`${int(Math.round(stats.eligibleHa))} ha · ${stats.eligiblePct.toFixed(1)}% eligible`}
+        collapsible
+        flush
+      >
         <table className="rowtable">
           <tbody>
             {Object.entries(stats.byReason)
@@ -131,25 +133,21 @@ export function ZonePanel({
           </tfoot>
         </table>
         <div className="provline">
-          <div>
-            Each cell records the first rule that excluded it. Rules are hard constraints, not
-            weights — an excluded cell is ineligible, not merely poor.
-          </div>
+          <div>First matching rule wins. Rules are hard constraints, not weights.</div>
         </div>
-      </section>
+      </Block>
 
       {/* -------------------------------------------------------- rules --- */}
-      <section className="block">
-        <div className="block-head">
-          <span>Constraint rules</span>
-          <button
-            className="blockbtn"
-            onClick={() => setRules(DEFAULT_RULES)}
-            disabled={JSON.stringify(rules) === JSON.stringify(DEFAULT_RULES)}
-          >
-            reset
-          </button>
-        </div>
+      <Block
+        title="Constraint rules"
+        aux={
+          JSON.stringify(rules) === JSON.stringify(DEFAULT_RULES)
+            ? 'published defaults'
+            : 'modified'
+        }
+        collapsible
+        flush
+      >
         <div className="block-body">
           <Slider
             label="Max ground gradient"
@@ -209,15 +207,19 @@ export function ZonePanel({
             note={`1 cell = 1 ha · ${int(stats.clustersBelowFloor)} of ${int(stats.clustersFound)} clusters below floor · ${int(stats.removedByOpening)} cells removed as speckle`}
             onChange={(v) => setRules({ ...rules, minZoneHa: v })}
           />
+          <button
+            className="railbtn"
+            style={{ marginTop: 'var(--s-3)' }}
+            onClick={() => setRules(DEFAULT_RULES)}
+            disabled={JSON.stringify(rules) === JSON.stringify(DEFAULT_RULES)}
+          >
+            Reset to published rules
+          </button>
         </div>
-      </section>
+      </Block>
 
       {/* ------------------------------------------------------ weights --- */}
-      <section className="block">
-        <div className="block-head">
-          <span>Step 4 · Suitability weights</span>
-          <span className="aux">Σ {wSum.toFixed(2)}</span>
-        </div>
+      <Block title="Step 4 · Suitability weights" aux={`Σ ${wSum.toFixed(2)}`} collapsible flush>
         <div className="block-body">
           {(Object.keys(weights) as Array<keyof Weights>).map((k) => (
             <Slider
@@ -239,7 +241,7 @@ export function ZonePanel({
             Reset to published weights
           </button>
         </div>
-      </section>
+      </Block>
 
       {/* -------------------------------------------------------- zones --- */}
       <section className="block">
@@ -260,10 +262,9 @@ export function ZonePanel({
               lineHeight: 1.4,
             }}
           >
-            Merged at z{zoom.toFixed(1)}: clusters within{' '}
-            <span className="mono">{mergeKm.toFixed(1)} km</span> combine into one area with
-            pooled capacity, from {int(result.zones.length)} individual clusters. Zoom in to
-            separate them.
+            {int(result.zones.length)} clusters merged within{' '}
+            <span className="mono">{mergeKm.toFixed(1)} km</span> at z{zoom.toFixed(1)}, capacity
+            pooled. Zoom in to separate.
           </div>
         ) : null}
         <div className="block-body" style={{ borderBottom: '1px solid var(--line-1)' }}>

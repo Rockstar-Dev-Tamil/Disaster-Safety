@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
-import type { HazardType, TierKey } from '../data/schema';
+import type { Habitation, HazardType, TierKey } from '../data/schema';
+
+/** Must match --t-camera in tokens.css. */
+const CAMERA_MS = 800;
 import { HABITATIONS, HABITATION_BY_ID, OPERATING_CLOCK, STATES } from '../data/habitations';
 import { OVERLAYS } from '../data/layers';
 import { MapCanvas, type Basemap, type ScoreField } from '../components/MapCanvas';
 import { SideRail, type Filters } from '../components/SideRail';
 import { HabitationPanel } from '../components/HabitationPanel';
 import { ExplainDock } from '../components/ExplainDock';
+import { OverlayBox } from '../components/primitives';
 import { KeyboardSheet, StatusStrip, TopBar } from '../components/Chrome';
 import {
   ForecastTimeline,
@@ -42,6 +46,22 @@ export function MapView() {
   const [blend, setBlend] = useState<BlendState | null>(null);
   const [zoom, setZoom] = useState(4);
   const [showKeys, setShowKeys] = useState(false);
+  /** Filter dock slid off to the left. The map is the subject; the controls
+   *  that set it should be dismissable once they are set. */
+  const [railOut, setRailOut] = useState(false);
+
+  /* MapLibre sizes itself from its container, so a dock that slides over
+   * ~220 ms needs the canvas re-measured across those frames -- otherwise the
+   * map snaps to its new width only once the transition settles. */
+  const nudgeMap = () => {
+    const until = performance.now() + 300;
+    const tick = () => {
+      window.dispatchEvent(new Event('resize'));
+      if (performance.now() < until) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
   const [cursor, setCursor] = useState(0);
 
   const mapRef = useRef<MLMap | null>(null);
@@ -65,6 +85,47 @@ export function MapView() {
   }, [filters]);
 
   const selected = selectedId ? HABITATION_BY_ID.get(selectedId) ?? null : null;
+
+  /* Two pieces of state, because a dock has to exist at its closed position
+   * before it can travel from there.
+   *
+   *   lingering -- what the panel DRAWS. Held past close so the dock still has
+   *                content while it slides out, instead of vanishing.
+   *   panelIn   -- whether the dock is OUT. Set a frame after mount so the
+   *                browser paints the closed position first; flipping it in
+   *                the same frame as the mount gave an instant open and a
+   *                slid close, which is the asymmetry that showed up. */
+  const [lingering, setLingering] = useState<Habitation | null>(null);
+  const [panelIn, setPanelIn] = useState(false);
+
+  /* Mount the content. */
+  useEffect(() => {
+    nudgeMap();
+    if (selected) {
+      setLingering(selected);
+      return;
+    }
+    setPanelIn(false);
+    const t = setTimeout(() => setLingering(null), 480);
+    return () => clearTimeout(t);
+  }, [selected]);
+
+  /* Then, in a LATER effect keyed on the mounted content, flush the closed
+   * position and open.
+   *
+   * Keying this on `selected` instead put the mount and the class change in
+   * one frame: the dock appeared already open while closing still slid. This
+   * effect only runs once `lingering` has been committed, so the panel is in
+   * the DOM and `with-panel` is not yet on the parent -- reading offsetWidth
+   * there computes the closed margin and gives the transition a start value. */
+  useEffect(() => {
+    if (!lingering || !selected) return;
+    const el = document.querySelector<HTMLElement>('.mapview > .panel');
+    if (!el) return;
+    void el.offsetWidth;
+    const raf = requestAnimationFrame(() => setPanelIn(true));
+    return () => cancelAnimationFrame(raf);
+  }, [lingering, selected]);
   const overlay = OVERLAYS.find((o) => o.id === overlayId) ?? null;
   const isSequence = overlay?.kind === 'IMAGE_SEQUENCE';
 
@@ -95,10 +156,14 @@ export function MapView() {
       const h = HABITATION_BY_ID.get(id);
       const map = mapRef.current;
       if (h && map) {
+        /* Eased, not cut. Jumping between habitations relocates the viewport
+         * across the country; a hard cut loses the reader's place, whereas a
+         * pan carries the spatial relationship between the two. */
         map.easeTo({
           center: h.lngLat,
           zoom: Math.max(map.getZoom(), 9.4),
-          duration: 0, // instant panel switches, no easing flourish
+          duration: CAMERA_MS,
+          essential: true,
         });
       }
     },
@@ -168,7 +233,7 @@ export function MapView() {
     <>
       <TopBar onShowKeys={() => setShowKeys(true)} />
 
-      <div className={`mapview${selected ? ' with-panel' : ''}`}>
+      <div className={`mapview${panelIn ? ' with-panel' : ''}${railOut ? ' rail-out' : ''}`}>
         <SideRail
           filters={filters}
           setFilters={setFilters}
@@ -184,6 +249,16 @@ export function MapView() {
         />
 
         <div className="mapstage">
+          {/* The handle stays put when the rail slides off, so a hidden dock is
+              never unreachable. */}
+          <button
+            className="dockhandle left"
+            onClick={() => { setRailOut((v) => !v); nudgeMap(); }}
+            title={railOut ? 'Show filters' : 'Hide filters'}
+            aria-expanded={!railOut}
+          >
+            {railOut ? '›' : '‹'}
+          </button>
           <MapCanvas
             habitations={filtered}
             selectedId={selectedId}
@@ -251,7 +326,8 @@ export function MapView() {
 
           {overlay ? (
             <div className="map-overlay map-legend">
-              <div className="legend-title">{overlay.label}</div>
+              <OverlayBox title={overlay.label}>
+                <div>
               {overlay.legend.map((l) => (
                 <div className="legend-row" key={l.label}>
                   <span
@@ -271,23 +347,34 @@ export function MapView() {
                 <button
                   className="railbtn"
                   style={{ marginTop: 'var(--s-3)' }}
-                  onClick={() => mapRef.current?.fitBounds(overlay.bounds!, { padding: 30, duration: 0 })}
+                  onClick={() =>
+                    mapRef.current?.fitBounds(overlay.bounds!, {
+                      padding: 30,
+                      duration: CAMERA_MS,
+                      essential: true,
+                    })
+                  }
                 >
                   Zoom to layer extent
                 </button>
               ) : null}
               <div className="legend-note">{overlay.meaning}</div>
+                </div>
+              </OverlayBox>
             </div>
           ) : (
             <div className="map-overlay map-legend">
-              <div className="legend-title">Habitation severity</div>
-              {[...BAND_ORDER].reverse().map((b) => (
-                <div className="legend-row" key={b}>
-                  <span style={{ width: 10, height: 10, background: BAND_FILL[b], display: 'block' }} />
-                  <span className="lbl">{BAND_LABEL[b]}</span>
-                  <span className="rng">{BAND_RANGE[b]}</span>
+              <OverlayBox title="Habitation severity">
+                <div>
+                  {[...BAND_ORDER].reverse().map((b) => (
+                    <div className="legend-row" key={b}>
+                      <span style={{ width: 10, height: 10, background: BAND_FILL[b], display: 'block' }} />
+                      <span className="lbl">{BAND_LABEL[b]}</span>
+                      <span className="rng">{BAND_RANGE[b]}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </OverlayBox>
             </div>
           )}
 
@@ -303,10 +390,13 @@ export function MapView() {
           </div>
         </div>
 
-        {selected ? (
+        {/* Rendered from `lingering`, not `selected`, so the dock still has
+            content to draw while it slides out. Unmounting on close would make
+            the panel vanish rather than leave. */}
+        {lingering ? (
           <HabitationPanel
-            key={selected.id}
-            h={selected}
+            key={lingering.id}
+            h={lingering}
             onClose={() => setSelectedId(null)}
             activeTier={activeTier}
             setActiveTier={setActiveTier}

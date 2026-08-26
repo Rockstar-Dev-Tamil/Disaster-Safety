@@ -107,14 +107,17 @@ button { cursor: pointer; }
 
 /* provenance banner - never dismissible */
 .databanner {
+  /* Not dismissible -- a screenshot of this app must never be mistakable for
+     an official assessment. But it does not need to be the loudest object on
+     the screen to do that: amber text against the bar reads just as clearly in
+     a screenshot as an amber slab did, and stops competing with the map. */
   display: flex;
   align-items: center;
   gap: var(--s-3);
-  padding: 0 var(--s-4);
-  background: #3a2c0c;
-  border-left: 1px solid var(--line-2);
-  border-right: 1px solid var(--line-2);
-  color: #e8c96a;
+  padding: 0 var(--s-5);
+  background: transparent;
+  border-left: 2px solid #8a6d1f;
+  color: #c8a94e;
   font-size: var(--fs-xs);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -146,13 +149,57 @@ button { cursor: pointer; }
 .ss-tier { display: flex; align-items: center; gap: var(--s-2); }
 
 /* =================== MAP VIEW =================== */
+/* Flex rather than grid so the two docks can slide.
+   A grid column cannot be transformed out of the way -- a translated child
+   leaves its track behind as a gap. As flex items with a fixed width and a
+   negative margin, the docks slide off their own edge and the map takes the
+   space back continuously. */
 .mapview {
-  display: grid;
-  grid-template-columns: var(--rail-w) 1fr;
+  display: flex;
   min-height: 0;
   overflow: hidden;
 }
-.mapview.with-panel { grid-template-columns: var(--rail-w) 1fr var(--panel-w); }
+.mapview > .rail {
+  width: var(--rail-w);
+  flex: none;
+  transition: margin-left var(--t-panel) var(--e-out);
+}
+.mapview.rail-out > .rail { margin-left: calc(-1 * var(--rail-w)); }
+.mapview > .mapstage { flex: 1 1 auto; min-width: 0; }
+.mapview > .panel {
+  width: var(--panel-w);
+  flex: none;
+  margin-right: calc(-1 * var(--panel-w));
+  transition: margin-right var(--t-panel) var(--e-in);
+}
+.mapview.with-panel > .panel {
+  margin-right: 0;
+  transition: margin-right var(--t-panel) var(--e-out);
+}
+
+/* Dock handles. Always reachable, so a slid-away dock is never lost. */
+.dockhandle {
+  /* Mid-edge, not top-corner: the top-left corner already carries the zoom
+     context box and the two collided. */
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  width: 18px; height: 34px;
+  display: grid; place-items: center;
+  background: var(--bg-1);
+  border: 1px solid var(--line-2);
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: background var(--t-collapse) var(--e-out),
+              color var(--t-collapse) var(--e-out);
+}
+.dockhandle:hover { background: var(--bg-3); color: var(--fg-0); }
+.dockhandle.left { left: 0; border-left: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mapview > .rail, .mapview > .panel, .dockhandle { transition: none; }
+}
 
 .mapstage { position: relative; min-width: 0; border-left: 1px solid var(--line-2); }
 .mapcanvas { position: absolute; inset: 0; }
@@ -184,13 +231,13 @@ button { cursor: pointer; }
 .zoomctx .lod { color: var(--fg-0); letter-spacing: 0.05em; text-transform: uppercase; }
 
 .map-legend {
+  /* Bounded so a long provenance footnote wraps instead of stretching the box
+     across the map and colliding with the transport beside it. */
   bottom: var(--s-4); left: var(--s-4);
-  background: rgba(11,12,14,0.92);
-  border: 1px solid var(--line-2);
-  padding: var(--s-4);
   font-size: var(--fs-xs);
-  min-width: 232px;
+  width: 268px;
 }
+.map-legend .obox { background: rgba(11, 12, 14, 0.94); }
 .legend-title {
   color: var(--fg-2); letter-spacing: 0.06em; text-transform: uppercase;
   margin-bottom: var(--s-3); font-size: var(--fs-xs);
@@ -382,9 +429,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb { background: var(--accent
 .fig-sub { color: var(--fg-3); font-size: var(--fs-xs); margin-top: 1px; }
 
 /* dual score header block */
-.scorepair { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-1); margin-top: var(--s-4); }
-.scorebox { padding: var(--s-3) var(--s-4); border-right: 1px solid var(--line-1); }
-.scorebox:last-child { border-right: 0; }
+.scorepair { display: grid; grid-template-columns: 1fr 1fr; margin-top: var(--s-5); gap: var(--s-6); }
+.scorebox { padding: 0; }
+
 .scorebox-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); }
 .scorebox-label { color: var(--fg-2); font-size: var(--fs-xs); letter-spacing: 0.05em; text-transform: uppercase; }
 .scorebox-main { display: flex; align-items: baseline; gap: var(--s-4); margin-top: var(--s-2); }
@@ -427,6 +474,44 @@ input[type=range]:focus-visible::-webkit-slider-thumb { background: var(--accent
 .flagdot.held { background: transparent; border-color: var(--flag-held); transform: rotate(45deg); }
 .flagdot.off  { background: transparent; border-color: var(--flag-off); border-radius: 50%; }
 
+/* ---------------- panel headline ----------------
+   One number per screen carries the decision. It is the largest thing in the
+   panel; everything else in the head is a label-value pair at label size.
+   Spacing separates these, not boxes -- the only hard edge in the head is the
+   hairline under it. */
+.headline {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s-6);
+  padding: var(--s-5) var(--s-5) var(--s-4);
+}
+.headline-label {
+  font-size: var(--fs-xs); letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--fg-2);
+}
+.headline-num {
+  font-family: var(--ff-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 30px; line-height: 1.05; color: var(--fg-0);
+  margin-top: var(--s-2);
+}
+.headline-side { display: flex; flex-direction: column; gap: var(--s-2); min-width: 132px; }
+.hs-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4);
+  font-size: var(--fs-xs); color: var(--fg-2);
+}
+.hs-row .mono { color: var(--fg-1); font-size: var(--fs-sm); }
+
+.metarow {
+  display: flex; flex-wrap: nowrap; gap: var(--s-5);
+  padding: 0 var(--s-5) var(--s-5);
+}
+.metarow .mi { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 1px; }
+.mi { display: flex; align-items: baseline; gap: var(--s-3); }
+.mi-k {
+  font-size: var(--fs-xs); letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--fg-3);
+}
+.mi-v { font-size: var(--fs-sm); color: var(--fg-1); }
+
 /* ---------------- panel body ---------------- */
 .panel-body { overflow-y: auto; min-height: 0; }
 
@@ -444,6 +529,66 @@ input[type=range]:focus-visible::-webkit-slider-thumb { background: var(--accent
 .block-head .aux { letter-spacing: 0; text-transform: none; color: var(--fg-3); font-family: var(--ff-mono); }
 .block-body { padding: var(--s-4) var(--s-5); }
 .block-body.flush { padding: 0; }
+
+/* ---------------- disclosure ----------------
+   A collapsed block keeps its finding in the head (`aux`) and hides only the
+   rows. max-height is animated against a generous explicit ceiling rather
+   than `auto`, which does not interpolate. */
+.block-head.disclose {
+  width: 100%;
+  font: inherit;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  text-align: left;
+  border-left: 0; border-right: 0; border-top: 0;
+  cursor: pointer;
+  transition: background var(--t-collapse) var(--e-out),
+              color var(--t-collapse) var(--e-out);
+}
+.block-head.disclose:hover { background: var(--bg-3); color: var(--fg-1); }
+.block-head.disclose:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+.block.open > .block-head.disclose { color: var(--fg-1); }
+
+.caret {
+  width: 7px; height: 7px; flex: none; margin-right: var(--s-1);
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg) translate(-1px, -1px);
+  transition: transform var(--t-collapse) var(--e-out);
+}
+.block.open .caret { transform: rotate(45deg) translate(-1px, -1px); }
+
+.collapse {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height var(--t-collapse) var(--e-in),
+              opacity calc(var(--t-collapse) * 0.7) var(--e-in);
+}
+/* Keyed on `.open` rather than `.block.open` so every disclosure surface --
+   panel blocks, rail groups, map overlay boxes -- shares one rule. Scoping it
+   to `.block` left rail groups with height but zero opacity: expanded and
+   blank. */
+.open > .collapse {
+  max-height: 2400px;
+  opacity: 1;
+  transition: max-height var(--t-collapse) var(--e-out),
+              opacity var(--t-collapse) var(--e-out);
+}
+
+/* Unit suffix on a headline numeral -- smaller, muted, never competes. */
+.unit {
+  font-size: 0.62em;
+  color: var(--fg-2);
+  letter-spacing: 0.04em;
+  margin-left: 0.35em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapse, .open > .collapse, .caret, .block-head.disclose { transition: none; }
+}
 
 /* ---------------- factor breakdown table ---------------- */
 .ftable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
@@ -781,12 +926,14 @@ a.inline:hover { text-decoration: underline; }
 /* =================== FORECAST TIMELINE =================== */
 /* Transport for the animated forecast field. Docked to the map stage, above
    the legend, below the explain dock. */
+/* Anchored BETWEEN the legend and the explain dock rather than centred on the
+   stage. Centring meant the transport's width and the legend's width had to be
+   guessed against each other, and at forecast widths they overlapped. */
 .map-timeline {
   bottom: var(--s-4);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 620px;
-  max-width: calc(100% - 520px);
+  left: calc(268px + var(--s-4) * 2);
+  right: calc(400px + var(--s-4) * 2);
+  min-width: 0;
 }
 .fctl {
   background: rgba(11, 12, 14, 0.94);
@@ -960,4 +1107,140 @@ a.inline:hover { text-decoration: underline; }
   color: #ff9c8e;
   font-size: var(--fs-sm);
   line-height: 1.5;
+}
+
+/* ---------------- candidate zone rank badge ----------------
+   An HTML marker rather than a symbol layer: the style has no glyphs
+   endpoint, and the badge should use the app's own mono face anyway. */
+.zbadge {
+  display: flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px;
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: #e4e7ea;
+  background: #10161d;
+  border: 1px solid #dfe6ec;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--t-collapse) var(--e-out),
+              color var(--t-collapse) var(--e-out);
+}
+.zbadge.sel {
+  color: #05070a;
+  background: #8fc6ea;
+  border-color: #cfe8f7;
+}
+
+/* One-line caveat under a section head. Prose that must stay on screen gets
+   this; anything longer belongs inside a collapsed block. */
+.fnote {
+  padding: var(--s-2) var(--s-5);
+  background: var(--bg-0);
+  border-bottom: 1px solid var(--line-1);
+  color: var(--fg-2);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+
+/* ---------------- rail disclosure ----------------
+   Same contract as .block-head.disclose: folding a group hides the controls,
+   never the state, which stays in .count on the head. */
+.rail-head.disclose {
+  width: 100%;
+  font: inherit;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line-1);
+  cursor: pointer;
+  transition: background var(--t-collapse) var(--e-out),
+              color var(--t-collapse) var(--e-out);
+}
+.rail-head.disclose:hover { background: var(--bg-2); color: var(--fg-1); }
+.rail-head.disclose:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+.rail-section.open > .rail-head.disclose { color: var(--fg-1); }
+.rail-section.open .caret { transform: rotate(45deg) translate(-1px, -1px); }
+.rail-section.open > .collapse { max-height: 900px; }
+
+/* ---------------- explain dock disclosure ---------------- */
+.explain-head.disclose {
+  width: 100%;
+  font: inherit;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  text-align: left;
+  background: var(--bg-2);
+  border: 0;
+  border-bottom: 1px solid var(--line-1);
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-5);
+  cursor: pointer;
+  transition: background var(--t-collapse) var(--e-out),
+              color var(--t-collapse) var(--e-out);
+}
+.explain-head.disclose .explain-scope { margin-left: auto; }
+.explain-head.disclose:hover { background: var(--bg-3); color: var(--fg-1); }
+.explain-head.disclose:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+.explain.open > .explain-head.disclose { color: var(--fg-1); }
+.explain.open .caret { transform: rotate(45deg) translate(-1px, -1px); }
+.explain.open > .collapse { max-height: 620px; }
+
+/* ---------------- foldable map overlay box ---------------- */
+.obox {
+  background: rgba(11, 12, 14, 0.94);
+  border: 1px solid var(--line-2);
+}
+.obox-head {
+  width: 100%;
+  display: flex; align-items: center; gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  background: none;
+  border: 0;
+  color: var(--fg-2);
+  font: inherit;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--t-collapse) var(--e-out);
+}
+.obox-head:hover { color: var(--fg-0); }
+.obox-head:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+.obox-title { flex: 1; }
+.obox-aux {
+  letter-spacing: 0; text-transform: none;
+  color: var(--fg-3); font-family: var(--ff-mono);
+}
+.obox.open > .collapse { max-height: 460px; }
+.obox > .collapse > * { padding: 0 var(--s-4) var(--s-4); }
+
+/* ---------------- route cross-fade ----------------
+   Covers the swap between the national map and an evacuation workspace. The
+   route is held on its old value until this is opaque, so the change of screen
+   happens behind it and is never seen mid-swap. */
+.routeveil {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--bg-0);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-veil) var(--e-in);
+}
+.routeveil.on {
+  opacity: 1;
+  transition: opacity var(--t-veil) var(--e-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .routeveil { transition: none; }
 }

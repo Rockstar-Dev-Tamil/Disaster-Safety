@@ -51,6 +51,11 @@ export function TopBar({ onShowKeys }: { onShowKeys: () => void }) {
 
 /* ------------------------------------------------------------- strip --- */
 
+/** A habitation may hold several tiers at once, so the three counts overlap
+ *  and do not sum to the total. Carried on the cells it qualifies rather than
+ *  as a permanent line of prose in the strip. */
+const TIER_CAVEAT = 'Independent flags — a habitation may hold several tiers, so these do not sum';
+
 export function StatusStrip({
   clock,
   all,
@@ -93,17 +98,17 @@ export function StatusStrip({
           {int(red)} red
         </span>
       </div>
-      <div className="ss-cell ss-tier">
+      <div className="ss-cell ss-tier" title={TIER_CAVEAT}>
         <span className="ss-label">Immediate</span>
         <FlagDot status="FLAGGED" />
         <span className="ss-val mono">{int(tierCount('IMMEDIATE', 'FLAGGED'))}</span>
       </div>
-      <div className="ss-cell ss-tier">
+      <div className="ss-cell ss-tier" title={TIER_CAVEAT}>
         <span className="ss-label">Short-term</span>
         <FlagDot status="FLAGGED" />
         <span className="ss-val mono">{int(tierCount('SHORT_TERM', 'FLAGGED'))}</span>
       </div>
-      <div className="ss-cell ss-tier">
+      <div className="ss-cell ss-tier" title={TIER_CAVEAT}>
         <span className="ss-label">Long-term</span>
         <FlagDot status="FLAGGED" />
         <span className="ss-val mono">{int(tierCount('LONG_TERM', 'FLAGGED'))}</span>
@@ -119,9 +124,6 @@ export function StatusStrip({
         </span>
       </div>
       <div className="ss-cell ss-spacer" />
-      <div className="ss-cell">
-        <span className="ss-label">Tier counts are independent flags and do not sum</span>
-      </div>
     </footer>
   );
 }

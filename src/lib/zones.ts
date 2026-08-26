@@ -844,23 +844,73 @@ export function shortlist(
 }
 
 /** Ellipse as a GeoJSON polygon, for drawing. Rough by design. */
+/** Hard ceiling on how much ground a drawn ellipse may cover, as a multiple
+ *  of the eligible area it summarises.
+ *
+ *  The 2-sigma ellipse of a sprawling merged cluster is enormous -- a group of
+ *  37 sub-clusters strung along 15 km of valley fits an ellipse covering the
+ *  better part of the search radius, nearly all of which failed the filter.
+ *  At that size the ellipse stops meaning "eligible ground clusters here" and
+ *  starts meaning nothing at all. Capping its AREA against the cluster's own
+ *  eligible hectares keeps the shape and bearing while bounding the claim: the
+ *  drawn ellipse never depicts more than this multiple of ground that actually
+ *  passed. Rendering only -- the stored second moment, area, capacity and rank
+ *  are untouched. */
+const MAX_ELLIPSE_AREA_RATIO = 1.6;
+
+/** Hard ceiling on the drawn semi-major axis, metres.
+ *
+ *  The area ratio alone does not bound absolute size: a cluster with enough
+ *  eligible ground still earns an ellipse spanning most of a 30 km operation
+ *  radius, which tells an officer to go and look at the whole district. Past
+ *  roughly 6 km across, an ellipse has stopped pointing anywhere. */
+const MAX_SEMI_MAJOR_M = 3000;
+
 export function ellipseFeature(z: Zone, selected: boolean): GeoJSON.Feature {
   const [lon, lat] = z.centroid;
   const mPerDegLat = 111320;
   const mPerDegLon = 111320 * Math.cos((lat * Math.PI) / 180);
   const th = (z.angleDeg * Math.PI) / 180;
+
+  let a = z.semiMajorM;
+  let b = z.semiMinorM;
+  const drawnM2 = Math.PI * a * b;
+  const capM2 = MAX_ELLIPSE_AREA_RATIO * z.areaHa * 10_000;
+  if (capM2 > 0 && drawnM2 > capM2) {
+    /* Scale both axes by the same factor: bearing and aspect are real
+     * properties of the cluster and must survive the clamp. */
+    const k = Math.sqrt(capM2 / drawnM2);
+    a *= k;
+    b *= k;
+  }
+  if (a > MAX_SEMI_MAJOR_M) {
+    const k = MAX_SEMI_MAJOR_M / a;
+    a *= k;
+    b *= k;
+  }
+
   const pts: Array<[number, number]> = [];
   for (let i = 0; i <= 64; i++) {
     const t = (i / 64) * Math.PI * 2;
-    const x = z.semiMajorM * Math.cos(t);
-    const y = z.semiMinorM * Math.sin(t);
+    const x = a * Math.cos(t);
+    const y = b * Math.sin(t);
     const rx = x * Math.cos(th) - y * Math.sin(th);
     const ry = x * Math.sin(th) + y * Math.cos(th);
     pts.push([lon + rx / mPerDegLon, lat + ry / mPerDegLat]);
   }
   return {
     type: 'Feature',
-    properties: { id: z.id, rank: z.rank, score: Math.round(z.score), selected },
+    properties: {
+      id: z.id,
+      rank: z.rank,
+      score: Math.round(z.score),
+      selected,
+      /** True when the drawn ellipse was clamped, i.e. the cluster is more
+       *  scattered than the outline suggests. */
+      clamped:
+        z.semiMajorM > MAX_SEMI_MAJOR_M ||
+        Math.PI * z.semiMajorM * z.semiMinorM > MAX_ELLIPSE_AREA_RATIO * z.areaHa * 10_000,
+    },
     geometry: { type: 'Polygon', coordinates: [pts] },
   };
 }

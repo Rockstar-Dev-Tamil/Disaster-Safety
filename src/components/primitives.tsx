@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Assessment, Provenance, SusceptibilityBand, TierStatus } from '../data/schema';
 import { BAND_FILL, BAND_LABEL, BAND_TEXT } from '../lib/severity';
 import { dateOnly, ts } from '../lib/format';
@@ -37,25 +37,133 @@ export function ProvLine({ p }: { p: Provenance }) {
 
 /* ------------------------------------------------------------ layout --- */
 
+/**
+ * A titled section.
+ *
+ * With `collapsible`, the head becomes a disclosure control. The rule for the
+ * label is that collapsing must never hide the FINDING -- only the row-by-row
+ * detail behind it. So `aux` on a collapsible block should carry the headline
+ * ("15.3% eligible", "6 factors, score 78.4"), and the rows go inside.
+ */
 export function Block({
   title,
   aux,
   children,
   flush,
+  collapsible,
+  defaultOpen = false,
 }: {
   title: string;
   aux?: ReactNode;
   children: ReactNode;
   flush?: boolean;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const body = <div className={flush ? 'block-body flush' : 'block-body'}>{children}</div>;
+
+  if (!collapsible) {
+    return (
+      <section className="block">
+        <div className="block-head">
+          <span>{title}</span>
+          {aux ? <span className="aux">{aux}</span> : null}
+        </div>
+        {body}
+      </section>
+    );
+  }
+
   return (
-    <section className="block">
-      <div className="block-head">
+    <section className={`block${open ? ' open' : ''}`}>
+      <button
+        className="block-head disclose"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <span className="caret" aria-hidden />
         <span>{title}</span>
         {aux ? <span className="aux">{aux}</span> : null}
+      </button>
+      <div className="collapse" hidden={false}>
+        {body}
       </div>
-      <div className={flush ? 'block-body flush' : 'block-body'}>{children}</div>
     </section>
+  );
+}
+
+/* ------------------------------------------------------------- motion --- */
+
+const reduced = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Eases a displayed number toward a new value.
+ *
+ * Only ever attached to a HEADLINE figure, never to the rows of a factor
+ * table: for the ~300 ms of the tween the headline does not reconcile with its
+ * breakdown, and that is tolerable for one number confirming a recompute but
+ * not for a table the officer is reading down. The tween always LANDS on the
+ * exact target rather than on the last eased frame, so the resting value is
+ * the computed value and not an artefact of the animation.
+ */
+export function useAnimatedNumber(target: number, ms = 300) {
+  const [shown, setShown] = useState(target);
+  const from = useRef(target);
+  const raf = useRef(0);
+
+  useEffect(() => {
+    if (reduced() || from.current === target) {
+      from.current = target;
+      setShown(target);
+      return;
+    }
+    const start = performance.now();
+    const a = from.current;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / ms);
+      const e = 1 - (1 - t) * (1 - t); // ease-out quad
+      if (t >= 1) {
+        from.current = target;
+        setShown(target); // exact landing
+        return;
+      }
+      setShown(a + (target - a) * e);
+      raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.current);
+  }, [target, ms]);
+
+  return shown;
+}
+
+/** A numeral that counts to its new value when the system recomputes it. */
+export function CountUp({
+  value,
+  decimals = 0,
+  suffix,
+  className,
+  style,
+}: {
+  value: number;
+  decimals?: number;
+  suffix?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const shown = useAnimatedNumber(value);
+  const text =
+    decimals > 0
+      ? shown.toFixed(decimals)
+      : Math.round(shown).toLocaleString('en-IN');
+  return (
+    <span className={className} style={style}>
+      {text}
+      {suffix ? <span className="unit">{suffix}</span> : null}
+    </span>
   );
 }
 
@@ -178,5 +286,41 @@ export function AssessmentHead({ a }: { a: Assessment }) {
       </span>{' '}
       <BandTag band={a.band} />
     </>
+  );
+}
+
+/* ------------------------------------------------------ map overlays --- */
+
+/**
+ * A box floating over the map that can be folded to its title bar.
+ *
+ * The bottom edge of the map stage carries three of these -- legend, forecast
+ * transport, explain dock -- and with a wide forecast transport open they
+ * overlap each other. Rather than fight for space, each can be folded to a
+ * single row so the officer decides which one is worth the map it covers.
+ */
+export function OverlayBox({
+  title,
+  aux,
+  children,
+  defaultOpen = true,
+  className,
+}: {
+  title: string;
+  aux?: ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className={`obox${open ? ' open' : ''}${className ? ` ${className}` : ''}`}>
+      <button className="obox-head" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span className="caret" aria-hidden />
+        <span className="obox-title">{title}</span>
+        {aux ? <span className="obox-aux">{aux}</span> : null}
+      </button>
+      <div className="collapse">{children}</div>
+    </div>
   );
 }

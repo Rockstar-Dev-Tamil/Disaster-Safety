@@ -29,6 +29,7 @@ import {
   type Weights,
   type ZoneResult,
 } from '../lib/zones';
+import { Block, CountUp } from '../components/primitives';
 import { ZonePanel } from '../components/ZonePanel';
 import { LongTermPanel } from '../components/LongTermPanel';
 import {
@@ -117,6 +118,13 @@ export function EvacView({ habitationId }: { habitationId: string }) {
   /* Level of detail: zoomed out, nearby clusters combine into general areas;
    * zoomed in they separate so an evaluator can judge each patch. */
   const mergeKm = mergeKmForZoom(zoom);
+  /** The extraction currently on screen -- short-term and permanent run
+   *  different rule sets, so the headline must follow the active tier. */
+  const activeResult = tier === 'LONG' ? longResult : result;
+
+  /** Rank badges, rebuilt whenever the shortlist changes. */
+  const rankMarkers = useRef<maplibregl.Marker[]>([]);
+
   const areas = useMemo(() => {
     if (!result || !h || !stack) return [];
     return mergeZones(
@@ -156,13 +164,18 @@ export function EvacView({ habitationId }: { habitationId: string }) {
     setReplanNote(null);
   }, [selected]);
 
+  /* Routing answers "can a convoy reach this site tonight" -- a short-term
+   * question. A permanent township is not reached by convoy on the night of
+   * the event, so the route overlay and its panel are off on the long-term
+   * tier rather than shown and ignored. */
   const routeResult: RouteResult | null = useMemo(() => {
+    if (tier !== 'SHORT') return null;
     if (!stack || !adjacency || !edgeRisks || !selectedZone || !h) return null;
     const from = nearestNode(stack.graph, h.lngLat);
     const to = nearestNode(stack.graph, selectedZone.centroid);
     if (from === to) return null;
     return computeRoutes(stack.graph, adjacency, edgeRisks, blocked, routeParams, from, to);
-  }, [stack, adjacency, edgeRisks, selectedZone, blocked, routeParams, h]);
+  }, [tier, stack, adjacency, edgeRisks, selectedZone, blocked, routeParams, h]);
 
   /* Distance from the habitation to the routable network, and from the network
    * to the zone. Real gaps, so they are measured and shown rather than hidden. */
@@ -464,8 +477,26 @@ export function EvacView({ habitationId }: { habitationId: string }) {
             ['get', 'color'],
           ],
           'line-width': ['case', ['==', ['get', 'primary'], true], 6, 2],
-          'line-opacity': ['case', ['get', 'primary'], 1, 0.5],
-          'line-dasharray': ['case', ['get', 'blocked'], ['literal', [1.5, 1.5]], ['literal', [1, 0]]],
+          'line-opacity': [
+            'case',
+            ['get', 'primary'], ['coalesce', ['feature-state', 'reveal'], 1],
+            ['*', 0.5, ['coalesce', ['feature-state', 'reveal'], 1]],
+          ],
+        },
+      });
+      /* line-dasharray takes no data expression in MapLibre, so the blocked
+       * case cannot be a `case` on the shared layer -- it silently threw and
+       * blocked segments rendered solid. Separate layer, static dash, filter. */
+      map.addLayer({
+        id: 'route-blocked',
+        type: 'line',
+        source: 'routes',
+        filter: ['==', ['get', 'blocked'], true],
+        layout: { 'line-cap': 'butt', 'line-join': 'round' },
+        paint: {
+          'line-color': '#ff3b28',
+          'line-width': ['case', ['==', ['get', 'primary'], true], 6, 2],
+          'line-dasharray': [1.5, 1.5],
         },
       });
       map.on('click', 'route-line', (e) => {
@@ -519,17 +550,25 @@ export function EvacView({ habitationId }: { habitationId: string }) {
         paint: {
           'line-color': [
             'case',
-            ['get', 'selected'], '#8fc6ea',
-            ['get', 'shortlisted'], '#a8d98a',
-            '#6e8a5e',
+            ['get', 'selected'], '#cfe8f7',
+            ['get', 'shortlisted'], '#dfe6ec',
+            '#7d858f',
           ],
           'line-width': [
             'case',
-            ['get', 'selected'], 2.2,
-            ['get', 'shortlisted'], 1.3,
-            0.7,
+            ['get', 'selected'], 1.6,
+            ['get', 'shortlisted'], 1,
+            0.6,
           ],
-          'line-dasharray': [2, 2],
+          /* Solid, but thin and only partly opaque. The ellipse is a second
+           * moment, not a surveyed boundary; a crisp bright outline would
+           * claim a precision a 100 m grid does not have. */
+          'line-opacity': [
+            'case',
+            ['get', 'selected'], 1,
+            ['get', 'shortlisted'], 0.8,
+            0.28,
+          ],
         },
       });
       map.addSource('zone-pts', { type: 'geojson', data: EMPTY_FC });
@@ -538,17 +577,23 @@ export function EvacView({ habitationId }: { habitationId: string }) {
         type: 'circle',
         source: 'zone-pts',
         paint: {
-          'circle-radius': ['case', ['get', 'selected'], 5, ['get', 'shortlisted'], 3.4, 1.8],
+          'circle-radius': ['case', ['get', 'shortlisted'], 0, ['get', 'selected'], 0, 1.8],
           'circle-color': [
             'case',
             ['get', 'selected'], '#8fc6ea',
+            ['get', 'shortlisted'], '#0f1620',
+            '#6e8a5e',
+          ],
+          'circle-stroke-color': [
+            'case',
+            ['get', 'selected'], '#cfe8f7',
             ['get', 'shortlisted'], '#a8d98a',
             '#6e8a5e',
           ],
-          'circle-stroke-color': '#05070a',
-          'circle-stroke-width': 1.2,
+          'circle-stroke-width': ['case', ['get', 'shortlisted'], 1.1, 0.8],
         },
       });
+
       map.on('click', 'zone-fill', (e) => {
         const f = e.features?.[0];
         if (f) setSelected(Number(f.properties?.id));
@@ -598,15 +643,30 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       url: cv.toDataURL(),
       coordinates: [[w0, n0], [e0, n0], [e0, s0], [w0, s0]],
     });
-    map.setPaintProperty('eligible-layer', 'raster-opacity', 0.85);
+    /* Dial the eligible surface back as it covers more of the view: at 15% it
+     * is a sparse finding worth showing boldly, at 51% it is a background the
+     * candidate outlines have to sit on top of. */
+    const pct = (tier === 'LONG' ? longResult : result)?.stats.eligiblePct ?? 0;
+    map.setPaintProperty('eligible-layer', 'raster-opacity', pct > 35 ? 0.42 : 0.85);
 
     /* Every cluster above the size floor gets an ellipse. The shortlist is a
      * ranking, not a filter on what exists -- an officer scanning the map has
      * to see the large uncircled patch rather than wonder why it is missing. */
-    const short =
-      tier === 'LONG' && longTerm
-        ? new Set(longTerm.candidates.slice(0, 12).map((c) => c.zone.id))
-        : new Set(shortlistFn(areas, shortlistSize, rules.minSeparationKm).map((p) => p.zone.id));
+    /* Badge numbers must be the numbers the panel prints. The long-term tier
+     * re-ranks zones through its own RFCTLARR/Cernea evaluation, so a zone
+     * sitting at raw rank 105 can be candidate #1 -- showing the raw rank on
+     * the map put a "105" beside the row the panel calls "#1". */
+    const displayRank = new Map<number, number>();
+    let short: Set<number>;
+    if (tier === 'LONG' && longTerm) {
+      const top = longTerm.candidates.slice(0, 12);
+      top.forEach((c, i) => displayRank.set(c.zone.id, i + 1));
+      short = new Set(top.map((c) => c.zone.id));
+    } else {
+      const picked = shortlistFn(areas, shortlistSize, rules.minSeparationKm);
+      picked.forEach((p, i) => displayRank.set(p.zone.id, i + 1));
+      short = new Set(picked.map((p) => p.zone.id));
+    }
     const shown = tier === 'LONG' && longResult ? longResult.zones : areas;
     /* A zone selected at high zoom is folded into an area with a different id
      * once merging kicks in. Resolve through membership so the highlight and
@@ -627,10 +687,35 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       type: 'FeatureCollection',
       features: shown.map((z) => ({
         type: 'Feature' as const,
-        properties: { id: z.id, selected: isSel(z), shortlisted: short.has(z.id) },
+        properties: {
+          id: z.id,
+          rank: displayRank.get(z.id) ?? z.rank,
+          selected: isSel(z),
+          shortlisted: short.has(z.id),
+        },
         geometry: { type: 'Point' as const, coordinates: z.centroid },
       })),
     });
+
+    /* Rank badges are HTML markers, not a symbol layer: the map style carries
+     * no `glyphs` endpoint, and pointing at a remote one would put a network
+     * dependency in front of the rank numbers at demo time. As markers they
+     * also inherit the app's own mono face instead of a webfont. */
+    for (const m of rankMarkers.current) m.remove();
+    rankMarkers.current = shown
+      .filter((z) => short.has(z.id))
+      .map((z) => {
+        const el = document.createElement('div');
+        el.className = `zbadge${isSel(z) ? ' sel' : ''}`;
+        const r = displayRank.get(z.id) ?? z.rank;
+        el.textContent = String(r);
+        el.title = `#${r} — ${Math.round(z.areaHa)} ha`;
+        el.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          setSelected(z.id);
+        });
+        return new maplibregl.Marker({ element: el }).setLngLat(z.centroid).addTo(map);
+      });
   }, [result, longResult, longTerm, tier, areas, selected, mapReady, shortlistSize, rules.minSeparationKm]);
 
   /* --------------------------------------------------- draw the routes --- */
@@ -719,7 +804,12 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       return; // wait for the route before framing
     }
     flownTo.current = selected;
-    map.fitBounds([w, so, e, no], { padding: 90, duration: 0, maxZoom: 13 });
+    map.fitBounds([w, so, e, no], {
+      padding: 90,
+      duration: 800, // matches --t-camera
+      maxZoom: 13,
+      essential: true,
+    });
   }, [selected, areas, mapReady, routeResult, selectedRoute, h, stack]);
 
   if (!h) {
@@ -787,7 +877,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                   <span className="lbl">{label}</span>
                 </div>
               ))}
-              {selectedZone ? (
+              {selectedZone && tier === 'SHORT' ? (
                 <>
                   <div className="legend-title" style={{ marginTop: 'var(--s-3)' }}>
                     Segment risk
@@ -826,25 +916,56 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                   ×
                 </a>
               </div>
-              <div className="panel-figs">
-                <div className="fig">
-                  <div className="fig-label">Population</div>
-                  <div className="fig-val">{int(h.population)}</div>
-                </div>
-                <div className="fig">
-                  <div className="fig-label">Households</div>
-                  <div className="fig-val">{int(h.households)}</div>
-                </div>
-                <div className="fig">
-                  <div className="fig-label">Susceptibility</div>
-                  <div className="fig-val" style={{ color: BAND_TEXT[h.susceptibility.band] }}>
-                    {h.susceptibility.score.toFixed(1)}
+              {/* The decision number on THIS screen is how much ground passed
+                * the filter -- not the hazard score, which is why the officer
+                * is already here. It counts when a rule slider moves, which is
+                * the visible confirmation that the overlay re-ran. */}
+              <div className="headline">
+                <div className="headline-main">
+                  <div className="headline-label">Eligible ground</div>
+                  <div className="headline-num">
+                    {activeResult ? (
+                      <CountUp value={Math.round(activeResult.stats.eligibleHa)} suffix="ha" />
+                    ) : (
+                      <span className="fg-3">—</span>
+                    )}
                   </div>
                 </div>
-                <div className="fig">
-                  <div className="fig-label">Current</div>
-                  <div className="fig-val">{h.current.score.toFixed(1)}</div>
+                <div className="headline-side">
+                  <div className="hs-row">
+                    <span>of search area</span>
+                    <span className="mono">
+                      {activeResult ? `${activeResult.stats.eligiblePct.toFixed(1)}%` : '—'}
+                    </span>
+                  </div>
+                  <div className="hs-row">
+                    <span>candidate zones</span>
+                    <span className="mono">
+                      {activeResult ? int(tier === 'LONG' ? activeResult.zones.length : areas.length) : '—'}
+                    </span>
+                  </div>
                 </div>
+              </div>
+
+              <div className="metarow">
+                <span className="mi">
+                  <span className="mi-k">Pop</span>
+                  <span className="mi-v mono">{int(h.population)}</span>
+                </span>
+                <span className="mi">
+                  <span className="mi-k">Households</span>
+                  <span className="mi-v mono">{int(h.households)}</span>
+                </span>
+                <span className="mi">
+                  <span className="mi-k">Susceptibility</span>
+                  <span className="mi-v mono" style={{ color: BAND_TEXT[h.susceptibility.band] }}>
+                    {h.susceptibility.score.toFixed(1)}
+                  </span>
+                </span>
+                <span className="mi">
+                  <span className="mi-k">Current</span>
+                  <span className="mi-v mono">{h.current.score.toFixed(1)}</span>
+                </span>
               </div>
             </div>
 
@@ -874,11 +995,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
             </div>
 
             <div className="panel-body">
-              <section className="block">
-                <div className="block-head">
-                  <span>Search area</span>
-                  <span className="aux">{RADIUS_KM} km radius</span>
-                </div>
+              <Block title="Search area" aux={`${RADIUS_KM} km radius`} collapsible flush>
                 <div className="block-body">
                   <dl className="kv">
                     <dt>Analysis grid</dt>
@@ -894,13 +1011,17 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                     <dd className="mono">{int(stack?.manifest.facilities.length ?? 0)}</dd>
                   </dl>
                 </div>
-              </section>
+              </Block>
 
               {pub ? (
-                <section className="block">
-                  <div className="block-head">
-                    <span>Published class at origin</span>
-                  </div>
+                <Block
+                  title="Published class at origin"
+                  aux={
+                    pub.landslide?.insideZone ? pub.landslide.class : 'outside mapped zones'
+                  }
+                  collapsible
+                  flush
+                >
                   <div className="block-body">
                     <dl className="kv">
                       {(['landslide', 'flood'] as const).map((k) =>
@@ -917,7 +1038,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                       )}
                     </dl>
                   </div>
-                </section>
+                </Block>
               ) : null}
 
               {tier === 'LONG' ? (
@@ -953,7 +1074,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                 />
               ) : null}
 
-              {selectedZone ? (
+              {selectedZone && tier === 'SHORT' ? (
                 <RoutePanel
                   zone={selectedZone}
                   result={routeResult}
