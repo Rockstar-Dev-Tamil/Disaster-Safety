@@ -777,3 +777,187 @@ a.inline:hover { text-decoration: underline; }
   border: 1px solid var(--line-2);
 }
 .map-explain .explain { border-top: 0; }
+
+/* =================== FORECAST TIMELINE =================== */
+/* Transport for the animated forecast field. Docked to the map stage, above
+   the legend, below the explain dock. */
+.map-timeline {
+  bottom: var(--s-4);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 620px;
+  max-width: calc(100% - 520px);
+}
+.fctl {
+  background: rgba(11, 12, 14, 0.94);
+  border: 1px solid var(--line-2);
+  font-size: var(--fs-xs);
+}
+.fctl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-2) var(--s-4);
+  border-bottom: 1px solid var(--line-1);
+  color: var(--fg-2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.fctl-head .mono { color: var(--fg-0); text-transform: none; letter-spacing: 0; }
+.fctl-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+}
+.fctl-btn {
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  color: var(--fg-1);
+  width: 24px;
+  height: 20px;
+  line-height: 1;
+  font-size: var(--fs-xs);
+  flex: none;
+  padding: 0;
+}
+.fctl-btn:hover { background: var(--bg-sel); color: var(--fg-0); }
+
+.fctl-track { position: relative; flex: 1; display: flex; align-items: center; }
+.fctl-track input[type=range] { width: 100%; }
+/* where the operating picture sits on the forecast timeline */
+.fctl-marker {
+  position: absolute;
+  top: -3px;
+  width: 1px;
+  height: 15px;
+  background: var(--accent);
+  pointer-events: none;
+}
+.fctl-marker::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -2px;
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+}
+
+.fctl-read {
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+  padding: var(--s-2) var(--s-4);
+  border-top: 1px solid var(--line-1);
+  color: var(--fg-2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.fctl-read b { color: var(--fg-0); font-weight: 400; }
+.fctl-read .mono:first-child { color: var(--fg-0); }
+.fctl-note {
+  padding: var(--s-2) var(--s-4);
+  border-top: 1px solid var(--line-1);
+  color: var(--fg-3);
+  line-height: 1.35;
+}
+
+/* =================== EVACUATION WORKSPACE =================== */
+.evacview {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  min-height: 0;
+  overflow: hidden;
+}
+.evacpanel {
+  background: var(--bg-1);
+  border-left: 1px solid var(--line-2);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.evacpanel .panel-close {
+  text-decoration: none;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------------- load screen ---------------- */
+/* Shows the actual pipeline rather than a spinner: the steps ARE the method
+   disclosure, and each reports what it really pulled. */
+.loadscreen {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg-0);
+}
+.loadscreen-inner {
+  width: 620px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-1);
+}
+.loadscreen-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-4) var(--s-5);
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line-2);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.loadscreen-head .mono { color: var(--fg-0); }
+.loadscreen-sub {
+  padding: var(--s-3) var(--s-5);
+  color: var(--fg-1);
+  font-size: var(--fs-sm);
+  border-bottom: 1px solid var(--line-1);
+}
+.loadbar {
+  height: 2px;
+  background: var(--bg-3);
+}
+.loadbar > i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 120ms linear;
+}
+.loadtable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.loadtable td {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--line-1);
+  vertical-align: top;
+}
+.loadtable .ls-mark {
+  width: 20px;
+  text-align: center;
+  font-family: var(--ff-mono);
+  color: var(--fg-3);
+}
+.loadtable .ls-label { width: 170px; color: var(--fg-2); }
+.loadtable .ls-detail { color: var(--fg-3); font-size: var(--fs-xs); }
+
+.loadtable tr.ls-pending td { color: var(--fg-3); }
+.loadtable tr.ls-active .ls-mark { color: var(--accent); }
+.loadtable tr.ls-active .ls-label { color: var(--fg-0); }
+.loadtable tr.ls-active td { background: var(--bg-2); }
+.loadtable tr.ls-done .ls-mark { color: var(--sev-low-fg); }
+.loadtable tr.ls-done .ls-label { color: var(--fg-1); }
+.loadtable tr.ls-done .ls-detail { color: var(--fg-2); }
+.loadtable tr.ls-failed .ls-mark { color: var(--sev-vhigh-fg); }
+.loadtable tr.ls-failed .ls-detail { color: var(--sev-vhigh-fg); }
+
+.loadscreen-error {
+  padding: var(--s-4) var(--s-5);
+  border-top: 1px solid var(--line-2);
+  background: #241010;
+  color: #ff9c8e;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}

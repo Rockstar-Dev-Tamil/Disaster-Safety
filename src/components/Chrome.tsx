@@ -7,6 +7,7 @@ import { FlagDot } from './primitives';
 /* ---------------------------------------------------------------- top --- */
 
 export function TopBar({ onShowKeys }: { onShowKeys: () => void }) {
+  const hash = typeof window !== 'undefined' ? window.location.hash : '';
   return (
     <header className="topbar">
       <div className="topbar-brand">
@@ -14,16 +15,11 @@ export function TopBar({ onShowKeys }: { onShowKeys: () => void }) {
         <span className="org">Multi-hazard · Module 1</span>
       </div>
       <nav className="topbar-nav">
-        <a className="active" href="#/map">
+        <a className={hash.startsWith('#/evac/') ? '' : 'active'} href="#/map">
           Red zone map
         </a>
-        <a
-          href="#/routing"
-          onClick={(e) => e.preventDefault()}
-          style={{ color: 'var(--fg-3)', cursor: 'not-allowed' }}
-          title="Routing is scoped out of this build"
-        >
-          Routing
+        <a className={hash.startsWith('#/evac/') ? 'active' : ''} href={hash.startsWith('#/evac/') ? hash : '#/map'}>
+          Evacuation planning
         </a>
       </nav>
 

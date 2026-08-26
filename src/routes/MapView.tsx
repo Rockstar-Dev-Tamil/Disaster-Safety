@@ -8,6 +8,11 @@ import { SideRail, type Filters } from '../components/SideRail';
 import { HabitationPanel } from '../components/HabitationPanel';
 import { ExplainDock } from '../components/ExplainDock';
 import { KeyboardSheet, StatusStrip, TopBar } from '../components/Chrome';
+import {
+  ForecastTimeline,
+  type BlendState,
+  type SequenceMeta,
+} from '../components/ForecastTimeline';
 import { BAND_FILL, BAND_LABEL, BAND_RANGE, BAND_ORDER } from '../lib/severity';
 import { int } from '../lib/format';
 
@@ -33,6 +38,8 @@ export function MapView() {
   const [activeTier, setActiveTier] = useState<TierKey>('IMMEDIATE');
   const [overlayId, setOverlayId] = useState<string | null>('district-susceptibility');
   const [basemap, setBasemap] = useState<Basemap>('dim');
+  const [sequence, setSequence] = useState<SequenceMeta | null>(null);
+  const [blend, setBlend] = useState<BlendState | null>(null);
   const [zoom, setZoom] = useState(4);
   const [showKeys, setShowKeys] = useState(false);
   const [cursor, setCursor] = useState(0);
@@ -59,6 +66,28 @@ export function MapView() {
 
   const selected = selectedId ? HABITATION_BY_ID.get(selectedId) ?? null : null;
   const overlay = OVERLAYS.find((o) => o.id === overlayId) ?? null;
+  const isSequence = overlay?.kind === 'IMAGE_SEQUENCE';
+
+  /* Sequence manifest is fetched lazily -- only when that overlay is chosen. */
+  useEffect(() => {
+    if (!isSequence || !overlay?.url) {
+      setSequence(null);
+      setBlend(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(overlay.url)
+      .then((r) => r.json())
+      .then((m: SequenceMeta) => {
+        if (!cancelled) setSequence(m);
+      })
+      .catch(() => {
+        if (!cancelled) setSequence(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isSequence, overlay?.url]);
 
   const select = useCallback(
     (id: string) => {
@@ -173,6 +202,27 @@ export function MapView() {
                   }
                 : null
             }
+            imageOverlay={
+              overlay && overlay.kind === 'IMAGE' && overlay.url && overlay.imageBounds
+                ? {
+                    id: overlay.id,
+                    url: overlay.url,
+                    bounds: overlay.imageBounds,
+                    opacity: overlay.opacity,
+                  }
+                : null
+            }
+            sequenceOverlay={
+              isSequence && blend && overlay?.imageBounds
+                ? {
+                    a: blend.a.file,
+                    b: blend.b.file,
+                    f: blend.f,
+                    bounds: overlay.imageBounds,
+                    opacity: overlay.opacity,
+                  }
+                : null
+            }
             basemap={basemap}
             onMapReady={(m) => {
               mapRef.current = m;
@@ -240,6 +290,12 @@ export function MapView() {
               ))}
             </div>
           )}
+
+          {sequence ? (
+            <div className="map-overlay map-timeline">
+              <ForecastTimeline meta={sequence} onBlend={setBlend} />
+            </div>
+          ) : null}
 
           {/* National-level explanation input, docked to the map stage. */}
           <div className="map-overlay map-explain">

@@ -31,6 +31,17 @@ export interface MapCanvasProps {
     classField: string;
     classColors: Record<string, string>;
   } | null;
+  /** Georeferenced PNG overlay (forecast fields), or null. */
+  imageOverlay: { id: string; url: string; bounds: [number, number, number, number]; opacity: number } | null;
+  /** Animated forecast: two frames cross-faded by `f` so the field morphs
+   *  continuously rather than snapping every 3 h. */
+  sequenceOverlay: {
+    a: string;
+    b: string;
+    f: number;
+    bounds: [number, number, number, number];
+    opacity: number;
+  } | null;
   basemap: Basemap;
   onMapReady: (map: MLMap) => void;
   onZoomChange: (z: number) => void;
@@ -45,6 +56,9 @@ const BASE_TILES =
 
 const INDIA_BOUNDS: [number, number, number, number] = [67.5, 6.0, 98.0, 37.6];
 
+const TRANSPARENT_PX =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
 export function MapCanvas(props: MapCanvasProps) {
   const {
     habitations,
@@ -54,6 +68,8 @@ export function MapCanvas(props: MapCanvasProps) {
     overlayField,
     overlayOpacity,
     vectorOverlay,
+    imageOverlay,
+    sequenceOverlay,
     basemap,
     onMapReady,
     onZoomChange,
@@ -200,6 +216,41 @@ export function MapCanvas(props: MapCanvasProps) {
         },
       });
 
+      /* Forecast raster: a georeferenced PNG rather than tiles, because the
+       * field is only 127x119 cells and a single 4 KB image beats a tile
+       * pyramid at this size. */
+      map.addSource('image-overlay', {
+        type: 'image',
+        url: TRANSPARENT_PX,
+        coordinates: [[0, 1], [1, 1], [1, 0], [0, 0]],
+      });
+      map.addLayer({
+        id: 'image-overlay-layer',
+        type: 'raster',
+        source: 'image-overlay',
+        paint: { 'raster-opacity': 0, 'raster-resampling': 'nearest', 'raster-fade-duration': 0 },
+      });
+
+      /* Two sources so consecutive forecast frames can be blended. One source
+       * with updateImage would hard-cut on every step. */
+      for (const slot of ['seq-a', 'seq-b']) {
+        map.addSource(slot, {
+          type: 'image',
+          url: TRANSPARENT_PX,
+          coordinates: [[0, 1], [1, 1], [1, 0], [0, 0]],
+        });
+        map.addLayer({
+          id: `${slot}-layer`,
+          type: 'raster',
+          source: slot,
+          paint: {
+            'raster-opacity': 0,
+            'raster-resampling': 'nearest',
+            'raster-fade-duration': 0,
+          },
+        });
+      }
+
       /* Vector hazard sheets sit above the district shading but below the
        * habitation points, so a point is never hidden by its own hazard zone. */
       map.addSource('vector-overlay', {
@@ -326,6 +377,66 @@ export function MapCanvas(props: MapCanvasProps) {
     map.setPaintProperty('hillshade', 'raster-contrast', p.contrast);
     map.setPaintProperty('land', 'fill-opacity', basemap === 'off' ? 0.72 : 0.5);
   }, [basemap, ready]);
+
+  /* ----------------------------------------------------- image overlay --- */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+    const src = map.getSource('image-overlay') as maplibregl.ImageSource | undefined;
+    if (!src) return;
+
+    if (!imageOverlay) {
+      map.setPaintProperty('image-overlay-layer', 'raster-opacity', 0);
+      return;
+    }
+    const [w, s2, e, n] = imageOverlay.bounds;
+    src.updateImage({
+      url: imageOverlay.url,
+      coordinates: [[w, n], [e, n], [e, s2], [w, s2]],
+    });
+    map.setPaintProperty('image-overlay-layer', 'raster-opacity', imageOverlay.opacity);
+  }, [imageOverlay, ready]);
+
+  /* -------------------------------------------------- sequence overlay --- */
+  const seqUrls = useRef<{ a: string | null; b: string | null }>({ a: null, b: null });
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+
+    if (!sequenceOverlay) {
+      map.setPaintProperty('seq-a-layer', 'raster-opacity', 0);
+      map.setPaintProperty('seq-b-layer', 'raster-opacity', 0);
+      seqUrls.current = { a: null, b: null };
+      return;
+    }
+
+    const [w, s2, e, n] = sequenceOverlay.bounds;
+    const coords: [[number, number], [number, number], [number, number], [number, number]] = [
+      [w, n],
+      [e, n],
+      [e, s2],
+      [w, s2],
+    ];
+    /* Only re-upload a texture when the frame actually changes; the blend
+     * factor updates every animation tick and must stay cheap. */
+    if (seqUrls.current.a !== sequenceOverlay.a) {
+      (map.getSource('seq-a') as maplibregl.ImageSource).updateImage({
+        url: sequenceOverlay.a,
+        coordinates: coords,
+      });
+      seqUrls.current.a = sequenceOverlay.a;
+    }
+    if (seqUrls.current.b !== sequenceOverlay.b) {
+      (map.getSource('seq-b') as maplibregl.ImageSource).updateImage({
+        url: sequenceOverlay.b,
+        coordinates: coords,
+      });
+      seqUrls.current.b = sequenceOverlay.b;
+    }
+    const o = sequenceOverlay.opacity;
+    map.setPaintProperty('seq-a-layer', 'raster-opacity', o * (1 - sequenceOverlay.f));
+    map.setPaintProperty('seq-b-layer', 'raster-opacity', o * sequenceOverlay.f);
+  }, [sequenceOverlay, ready]);
 
   /* ---------------------------------------------------- vector overlay --- */
   useEffect(() => {

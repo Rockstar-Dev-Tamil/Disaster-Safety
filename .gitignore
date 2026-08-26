@@ -7,3 +7,7 @@ tsconfig.tsbuildinfo
 # source archives (large, supplied separately)
 *.zip
 *.rar
+
+# local diagnostics
+shot*.png
+__*.mjs

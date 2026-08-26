@@ -1,0 +1,166 @@
+{
+ "run": "2024-07-29T00:00:00Z",
+ "runIst": "2024-07-29T05:30:00+05:30",
+ "bounds": [
+  67.875,
+  5.875,
+  97.625,
+  37.625
+ ],
+ "shape": [
+  127,
+  119
+ ],
+ "stepHours": 3,
+ "cell": {
+  "lon": 76.25,
+  "lat": 11.5
+ },
+ "operatingPictureMinutes": 1230,
+ "frames": [
+  {
+   "step": 3,
+   "file": "/layers/ecmwf-inc-03.png",
+   "validMinutes": 180,
+   "windowHours": 3,
+   "maxMm": 70.1,
+   "wayanadCellMm": 3.4,
+   "bytes": 2437
+  },
+  {
+   "step": 6,
+   "file": "/layers/ecmwf-inc-06.png",
+   "validMinutes": 360,
+   "windowHours": 3,
+   "maxMm": 121.7,
+   "wayanadCellMm": 5.8,
+   "bytes": 2778
+  },
+  {
+   "step": 9,
+   "file": "/layers/ecmwf-inc-09.png",
+   "validMinutes": 540,
+   "windowHours": 3,
+   "maxMm": 144.9,
+   "wayanadCellMm": 10.5,
+   "bytes": 3217
+  },
+  {
+   "step": 12,
+   "file": "/layers/ecmwf-inc-12.png",
+   "validMinutes": 720,
+   "windowHours": 3,
+   "maxMm": 106.9,
+   "wayanadCellMm": 8.1,
+   "bytes": 3102
+  },
+  {
+   "step": 15,
+   "file": "/layers/ecmwf-inc-15.png",
+   "validMinutes": 900,
+   "windowHours": 3,
+   "maxMm": 28.3,
+   "wayanadCellMm": 3.8,
+   "bytes": 2530
+  },
+  {
+   "step": 18,
+   "file": "/layers/ecmwf-inc-18.png",
+   "validMinutes": 1080,
+   "windowHours": 3,
+   "maxMm": 27.5,
+   "wayanadCellMm": 10.6,
+   "bytes": 2568
+  },
+  {
+   "step": 21,
+   "file": "/layers/ecmwf-inc-21.png",
+   "validMinutes": 1260,
+   "windowHours": 3,
+   "maxMm": 42.0,
+   "wayanadCellMm": 5.3,
+   "bytes": 2896
+  },
+  {
+   "step": 24,
+   "file": "/layers/ecmwf-inc-24.png",
+   "validMinutes": 1440,
+   "windowHours": 3,
+   "maxMm": 69.9,
+   "wayanadCellMm": 5.0,
+   "bytes": 2932
+  },
+  {
+   "step": 27,
+   "file": "/layers/ecmwf-inc-27.png",
+   "validMinutes": 1620,
+   "windowHours": 3,
+   "maxMm": 76.1,
+   "wayanadCellMm": 3.9,
+   "bytes": 2714
+  },
+  {
+   "step": 30,
+   "file": "/layers/ecmwf-inc-30.png",
+   "validMinutes": 1800,
+   "windowHours": 3,
+   "maxMm": 109.3,
+   "wayanadCellMm": 3.0,
+   "bytes": 2737
+  },
+  {
+   "step": 33,
+   "file": "/layers/ecmwf-inc-33.png",
+   "validMinutes": 1980,
+   "windowHours": 3,
+   "maxMm": 116.0,
+   "wayanadCellMm": 1.8,
+   "bytes": 3272
+  },
+  {
+   "step": 36,
+   "file": "/layers/ecmwf-inc-36.png",
+   "validMinutes": 2160,
+   "windowHours": 3,
+   "maxMm": 28.0,
+   "wayanadCellMm": 1.2,
+   "bytes": 3308
+  },
+  {
+   "step": 39,
+   "file": "/layers/ecmwf-inc-39.png",
+   "validMinutes": 2340,
+   "windowHours": 3,
+   "maxMm": 61.2,
+   "wayanadCellMm": 0.7,
+   "bytes": 2619
+  },
+  {
+   "step": 42,
+   "file": "/layers/ecmwf-inc-42.png",
+   "validMinutes": 2520,
+   "windowHours": 3,
+   "maxMm": 51.2,
+   "wayanadCellMm": 0.5,
+   "bytes": 2615
+  },
+  {
+   "step": 45,
+   "file": "/layers/ecmwf-inc-45.png",
+   "validMinutes": 2700,
+   "windowHours": 3,
+   "maxMm": 126.9,
+   "wayanadCellMm": 0.1,
+   "bytes": 2964
+  },
+  {
+   "step": 48,
+   "file": "/layers/ecmwf-inc-48.png",
+   "validMinutes": 2880,
+   "windowHours": 3,
+   "maxMm": 119.1,
+   "wayanadCellMm": 0.0,
+   "bytes": 3037
+  }
+ ]
+}

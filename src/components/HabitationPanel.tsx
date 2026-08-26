@@ -101,6 +101,23 @@ export function HabitationPanel({
 
         {/* What the published sheets say about this ground, at every tier. */}
         <PublishedSummary id={h.id} />
+
+        {/* Hand-off to the habitation-level workspace. This is a commitment,
+            not navigation: it is the officer saying "we are working this one
+            now", so it reads as an action rather than a link. */}
+        <a
+          className="linkbtn"
+          href={`#/evac/${encodeURIComponent(h.id)}`}
+          style={{ marginTop: 'var(--s-4)' }}
+        >
+          <span>
+            Open evacuation planning
+            <span className="sub" style={{ display: 'block' }}>
+              Loads terrain, hazard and road network for a 30 km operation radius
+            </span>
+          </span>
+          <span style={{ color: 'var(--accent)', fontSize: 'var(--fs-lg)' }}>→</span>
+        </a>
       </header>
 
       {/* Habitation-level scope: answers about the header figures and the two

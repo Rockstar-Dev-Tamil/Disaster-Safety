@@ -20,7 +20,7 @@
 import type { HazardType, Provenance, SusceptibilityBand } from './schema';
 import { SRC_IMD_NOWCAST, SRC_INCOIS_SURGE, SRC_NCSCM_SHORELINE } from './sources';
 
-export type OverlayKind = 'DERIVED_DISTRICT' | 'WMS' | 'XYZ' | 'GEOJSON';
+export type OverlayKind = 'DERIVED_DISTRICT' | 'WMS' | 'XYZ' | 'GEOJSON' | 'IMAGE' | 'IMAGE_SEQUENCE';
 
 /** [west, south, east, north] -- lets the legend offer "zoom to extent" for
  *  layers that cover one district rather than the whole country. */
@@ -47,6 +47,8 @@ export interface OverlayLayer {
    *  schemes do not have the same number of classes. */
   classField?: string;
   classColors?: Record<string, string>;
+  /** IMAGE only: [w, s, e, n] corners of the georeferenced PNG. */
+  imageBounds?: Bounds;
   bounds?: Bounds;
   legend: Array<{ label: string; band?: SusceptibilityBand; color?: string; note?: string }>;
   provenance: Provenance;
@@ -103,6 +105,37 @@ export const OVERLAYS: OverlayLayer[] = [
       agency: 'This application',
       method: 'max(current.alert) over habitations whose district matches the polygon.',
       observedAt: '2024-07-29T23:30:00+05:30',
+    },
+  },
+
+  {
+    id: 'ecmwf-sequence',
+    label: 'ECMWF forecast rain, 3-hourly',
+    meaning:
+      'IFS HRES deterministic, run 29 Jul 2024 00Z. Rain falling in each 3 h window, not accumulated total, so the field shows rain arriving and passing. Scrub or play the clock below the map. 0.25 deg (~28 km) — cells are drawn unsmoothed because the model has no more detail than this.',
+    kind: 'IMAGE_SEQUENCE',
+    url: '/layers/ecmwf-sequence.json',
+    imageBounds: [67.875, 5.875, 97.625, 37.625],
+    defaultOn: false,
+    opacity: 0.8,
+    legend: [
+      { label: '70+ mm / 3 h', color: '#ffb4aa' },
+      { label: '40-70 mm', color: '#ff7563' },
+      { label: '20-40 mm', color: '#d9a13a' },
+      { label: '10-20 mm', color: '#7cbf5c' },
+      { label: '5-10 mm', color: '#2ba3a0' },
+      { label: '2.5-5 mm', color: '#21819a' },
+      { label: '1-2.5 mm', color: '#1d5c74' },
+    ],
+    provenance: {
+      status: 'LIVE',
+      source: 'ECMWF IFS HRES open data, run 2024-07-29 00Z, steps +3 h to +48 h',
+      agency: 'European Centre for Medium-Range Weather Forecasts',
+      method:
+        'Deterministic total precipitation, differenced between consecutive steps to give rain per 3 h window. Retrieved by byte-range from the Google open-data mirror; ECMWF own feed retains only a rolling window and does not reach this date.',
+      resolution: '0.25 deg (~28 km), 3 h',
+      citation: 'ecmwf-open-data/20240729/00z/ifs/0p25/oper',
+      observedAt: '2024-07-29T05:30:00+05:30',
     },
   },
 
