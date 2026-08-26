@@ -19,6 +19,7 @@ import {
   DEFAULT_RULES,
   DEFAULT_WEIGHTS,
   EXCLUSION,
+  PERMANENT_RULES,
   analyse,
   ellipseFeature,
   mergeKmForZoom,
@@ -29,6 +30,12 @@ import {
   type ZoneResult,
 } from '../lib/zones';
 import { ZonePanel } from '../components/ZonePanel';
+import { LongTermPanel } from '../components/LongTermPanel';
+import {
+  LONG_TERM_WEIGHTS,
+  evaluateLongTerm,
+  type LongTermResult,
+} from '../lib/longterm';
 import { RoutePanel } from '../components/RoutePanel';
 import {
   DEFAULT_ROUTE_PARAMS,
@@ -66,6 +73,9 @@ export function EvacView({ habitationId }: { habitationId: string }) {
    * pointing at the current blocking handler without re-registering. */
   const blockRef = useRef<(i: number) => void>(() => {});
 
+  /* Two tiers over one loaded stack. Extraction is shared; the rule set,
+   * capacity model and evaluation differ entirely. */
+  const [tier, setTier] = useState<'SHORT' | 'LONG'>('SHORT');
   const [rules, setRules] = useState<Rules>(DEFAULT_RULES);
   const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
   const [selected, setSelected] = useState<number | null>(null);
@@ -82,6 +92,27 @@ export function EvacView({ habitationId }: { habitationId: string }) {
     if (!stack || !h) return null;
     return analyse(stack, h.lngLat, rules, weights, h.population);
   }, [stack, h, rules, weights]);
+
+  /* Permanent tier runs its own extraction: different exclusions produce a
+   * different eligible surface, not merely a different ranking over the same
+   * one. */
+  const longResult: ZoneResult | null = useMemo(() => {
+    if (!stack || !h || tier !== 'LONG') return null;
+    return analyse(stack, h.lngLat, PERMANENT_RULES, weights, h.population);
+  }, [stack, h, tier, weights]);
+
+  const longTerm: LongTermResult | null = useMemo(() => {
+    if (!longResult || !stack || !h) return null;
+    return evaluateLongTerm(
+      longResult.zones,
+      stack,
+      h.lngLat,
+      h.households,
+      h.population,
+      LONG_TERM_WEIGHTS,
+      null,
+    );
+  }, [longResult, stack, h]);
 
   /* Level of detail: zoomed out, nearby clusters combine into general areas;
    * zoomed in they separate so an evaluator can judge each patch. */
@@ -545,7 +576,8 @@ export function EvacView({ habitationId }: { habitationId: string }) {
     /* Suitability surface, painted to a canvas and georeferenced. Excluded
      * cells are left transparent -- the hazard polygons underneath already say
      * why, and a grey blanket would hide them. */
-    const { crop, reason, score } = result;
+    const active = tier === 'LONG' && longResult ? longResult : result;
+    const { crop, reason, score } = active;
     const cv = document.createElement('canvas');
     cv.width = crop.w;
     cv.height = crop.h;
@@ -571,10 +603,11 @@ export function EvacView({ habitationId }: { habitationId: string }) {
     /* Every cluster above the size floor gets an ellipse. The shortlist is a
      * ranking, not a filter on what exists -- an officer scanning the map has
      * to see the large uncircled patch rather than wonder why it is missing. */
-    const short = new Set(
-      shortlistFn(areas, shortlistSize, rules.minSeparationKm).map((p) => p.zone.id),
-    );
-    const shown = areas;
+    const short =
+      tier === 'LONG' && longTerm
+        ? new Set(longTerm.candidates.slice(0, 12).map((c) => c.zone.id))
+        : new Set(shortlistFn(areas, shortlistSize, rules.minSeparationKm).map((p) => p.zone.id));
+    const shown = tier === 'LONG' && longResult ? longResult.zones : areas;
     /* A zone selected at high zoom is folded into an area with a different id
      * once merging kicks in. Resolve through membership so the highlight and
      * the panel card survive a zoom change. */
@@ -598,7 +631,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
         geometry: { type: 'Point' as const, coordinates: z.centroid },
       })),
     });
-  }, [result, areas, selected, mapReady, shortlistSize, rules.minSeparationKm]);
+  }, [result, longResult, longTerm, tier, areas, selected, mapReady, shortlistSize, rules.minSeparationKm]);
 
   /* --------------------------------------------------- draw the routes --- */
   useEffect(() => {
@@ -815,6 +848,31 @@ export function EvacView({ habitationId }: { habitationId: string }) {
               </div>
             </div>
 
+            <div className="tierstrip">
+              <button
+                className={`tiertab${tier === 'SHORT' ? ' on' : ''}`}
+                onClick={() => { setTier('SHORT'); setSelected(null); }}
+              >
+                <span className="tiertab-top">
+                  <span className="tiertab-name">Short-term</span>
+                </span>
+                <span className="tiertab-status" style={{ color: 'var(--fg-2)' }}>
+                  transitional camp · Sphere
+                </span>
+              </button>
+              <button
+                className={`tiertab${tier === 'LONG' ? ' on' : ''}`}
+                onClick={() => { setTier('LONG'); setSelected(null); }}
+              >
+                <span className="tiertab-top">
+                  <span className="tiertab-name">Long-term</span>
+                </span>
+                <span className="tiertab-status" style={{ color: 'var(--fg-2)' }}>
+                  permanent · RFCTLARR
+                </span>
+              </button>
+            </div>
+
             <div className="panel-body">
               <section className="block">
                 <div className="block-head">
@@ -862,7 +920,22 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                 </section>
               ) : null}
 
-              {result ? (
+              {tier === 'LONG' ? (
+                longTerm && longResult ? (
+                  <LongTermPanel
+                    h={h}
+                    result={longTerm}
+                    weights={LONG_TERM_WEIGHTS}
+                    selected={selected}
+                    onSelect={setSelected}
+                    eligiblePct={longResult.stats.eligiblePct}
+                  />
+                ) : (
+                  <div className="empty" style={{ padding: 'var(--s-5)' }}>
+                    Running permanent-tier analysis...
+                  </div>
+                )
+              ) : result ? (
                 <ZonePanel
                   h={h}
                   result={result}

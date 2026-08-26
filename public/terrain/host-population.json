@@ -1,0 +1,1114 @@
+[
+{
+"qid": "Q28729",
+"name": "Kozhikode",
+"type": "city",
+"population": 609224,
+"lon": 75.78028,
+"lat": 11.24778
+},
+{
+"qid": "Q28173697",
+"name": "Kozhikode Municipal Corporation",
+"type": "Municipal Corporation (India)",
+"population": 436527,
+"lon": 75.80145,
+"lat": 11.25978
+},
+{
+"qid": "Q13111636",
+"name": "Koyilandy Municipality",
+"type": "municipality",
+"population": 68982,
+"lon": 75.706,
+"lat": 11.45
+},
+{
+"qid": "Q13114484",
+"name": "Vadakara Municipality",
+"type": "municipality",
+"population": 68970,
+"lon": 75.60113,
+"lat": 11.59055
+},
+{
+"qid": "Q13114224",
+"name": "Meppadi Grama Panchayat",
+"type": "gram panchayat",
+"population": 56530,
+"lon": 76.13355,
+"lat": 11.53782
+},
+{
+"qid": "Q16136191",
+"name": "Peruvayal Grama Panchayat",
+"type": "gram panchayat",
+"population": 53190,
+"lon": 75.88309,
+"lat": 11.26713
+},
+{
+"qid": "Q13113048",
+"name": "Padiyoor Grama Panchayat",
+"type": "gram panchayat",
+"population": 50481,
+"lon": 75.60861,
+"lat": 12.00772
+},
+{
+"qid": "Q13112448",
+"name": "Thamarassery Grama Panchayat",
+"type": "gram panchayat",
+"population": 45444,
+"lon": 75.94122,
+"lat": 11.41876
+},
+{
+"qid": "Q13111977",
+"name": "Chungathara Grama Panchayat",
+"type": "gram panchayat",
+"population": 44569,
+"lon": 76.20333,
+"lat": 11.36275
+},
+{
+"qid": "Q2738739",
+"name": "Olavanna Grama Panchayat",
+"type": "human settlement",
+"population": 44398,
+"lon": 75.84242,
+"lat": 11.22774
+},
+{
+"qid": "Q13113792",
+"name": "Mattanur Municipality",
+"type": "municipality",
+"population": 44317,
+"lon": 75.58333,
+"lat": 11.91667
+},
+{
+"qid": "Q13111973",
+"name": "Cheacode Grama Panchayat",
+"type": "gram panchayat",
+"population": 42125,
+"lon": 75.98934,
+"lat": 11.23043
+},
+{
+"qid": "Q13110491",
+"name": "Unnikulum Grama Panchayat",
+"type": "gram panchayat",
+"population": 40229,
+"lon": 75.8746,
+"lat": 11.44214
+},
+{
+"qid": "Q13113079",
+"name": "Panamaram Grama Panchayat",
+"type": "gram panchayat",
+"population": 38615,
+"lon": 76.06636,
+"lat": 11.73919
+},
+{
+"qid": "Q16136938",
+"name": "Thavinhal Grama Panchayat",
+"type": "gram panchayat",
+"population": 38307,
+"lon": 75.9653,
+"lat": 11.8111
+},
+{
+"qid": "Q13111311",
+"name": "Kunnamangalam Grama Panchayat",
+"type": "gram panchayat",
+"population": 38208,
+"lon": 75.88957,
+"lat": 11.30235
+},
+{
+"qid": "Q7917616",
+"name": "Vazhikkadavu Grama Panchayat",
+"type": "gram panchayat",
+"population": 38108,
+"lon": 76.34651,
+"lat": 11.38866
+},
+{
+"qid": "Q13112975",
+"name": "Nenmeni Grama Panchayat",
+"type": "gram panchayat",
+"population": 37045,
+"lon": 76.27394,
+"lat": 11.61227
+},
+{
+"qid": "Q13113406",
+"name": "Poothadi Grama Panchayat",
+"type": "gram panchayat",
+"population": 36544,
+"lon": 76.1668,
+"lat": 11.73617
+},
+{
+"qid": "Q13111911",
+"name": "Chathamangalam Grama Panchayat",
+"type": "gram panchayat",
+"population": 36231,
+"lon": 75.94114,
+"lat": 11.30461
+},
+{
+"qid": "Q16135436",
+"name": "Wandoor Grama Panchayat",
+"type": "gram panchayat",
+"population": 35748,
+"lon": 76.26074,
+"lat": 11.20408
+},
+{
+"qid": "Q13112854",
+"name": "Nadapuram Gramapanchayat",
+"type": "gram panchayat",
+"population": 35245,
+"lon": 75.67148,
+"lat": 11.68418
+},
+{
+"qid": "Q6750294",
+"name": "Maniyur Grama Panchayat",
+"type": "gram panchayat",
+"population": 34600,
+"lon": 75.65,
+"lat": 11.53333
+},
+{
+"qid": "Q13111322",
+"name": "Kunnothuparamba Grama Panchayat",
+"type": "gram panchayat",
+"population": 34491,
+"lon": 75.63755,
+"lat": 11.77355
+},
+{
+"qid": "Q13111664",
+"name": "Kodanchery Grama Panchayat",
+"type": "gram panchayat",
+"population": 32996,
+"lon": 76.01359,
+"lat": 11.43542
+},
+{
+"qid": "Q5105199",
+"name": "Chorode Grama Panchayat",
+"type": "gram panchayat",
+"population": 32947,
+"lon": 75.5922,
+"lat": 11.62633
+},
+{
+"qid": "Q16136092",
+"name": "Perumanna Grama Panchayat",
+"type": "gram panchayat",
+"population": 32124,
+"lon": 75.87917,
+"lat": 11.23889
+},
+{
+"qid": "Q16135168",
+"name": "Edavanna Grama Panchayat",
+"type": "gram panchayat",
+"population": 32087,
+"lon": 76.13812,
+"lat": 11.22228
+},
+{
+"qid": "Q16135103",
+"name": "Puduppady Grama Panchayat",
+"type": "gram panchayat",
+"population": 31620,
+"lon": 75.96667,
+"lat": 11.5
+},
+{
+"qid": "Q16134375",
+"name": "Chemanchery Grama Panchayat",
+"type": "gram panchayat",
+"population": 31326,
+"lon": 75.73036,
+"lat": 11.38039
+},
+{
+"qid": "Q13111264",
+"name": "Kizhakkoth Grama Panchayat",
+"type": "gram panchayat",
+"population": 31261,
+"lon": 75.89823,
+"lat": 11.38216
+},
+{
+"qid": "Q13112505",
+"name": "Thiruvallur Grama Panchayat",
+"type": "gram panchayat",
+"population": 30562,
+"lon": 75.66704,
+"lat": 11.59885
+},
+{
+"qid": "Q7919132",
+"name": "Vellamunda Grama Panchayat",
+"type": "gram panchayat",
+"population": 30498,
+"lon": 75.95,
+"lat": 11.71667
+},
+{
+"qid": "Q20572903",
+"name": "Ambalavayal Grama Panchayat",
+"type": "gram panchayat",
+"population": 30442,
+"lon": 76.20607,
+"lat": 11.60129
+},
+{
+"qid": "Q7130027",
+"name": "Panangad Grama Panchayat",
+"type": "gram panchayat",
+"population": 30339,
+"lon": 75.85569,
+"lat": 11.47338
+},
+{
+"qid": "Q16134423",
+"name": "Chelannur Grama Panchayat",
+"type": "gram panchayat",
+"population": 30081,
+"lon": 75.80833,
+"lat": 11.34167
+},
+{
+"qid": "Q99825450",
+"name": "Eramala Grama Panchayat",
+"type": "gram panchayat",
+"population": 30050,
+"lon": 75.59637,
+"lat": 11.6566
+},
+{
+"qid": "Q16135553",
+"name": "Pulpally Grama Panchayat",
+"type": "gram panchayat",
+"population": 30035,
+"lon": 76.14855,
+"lat": 11.80069
+},
+{
+"qid": "Q13110870",
+"name": "Kakkodi Grama Panchayat",
+"type": "gram panchayat",
+"population": 30024,
+"lon": 75.79847,
+"lat": 11.32939
+},
+{
+"qid": "Q13114719",
+"name": "Villiappally Grama Panchayat",
+"type": "gram panchayat",
+"population": 29996,
+"lon": 75.62991,
+"lat": 11.60691
+},
+{
+"qid": "Q13113964",
+"name": "Mangattidam Grama Panchayat",
+"type": "gram panchayat",
+"population": 29766,
+"lon": 75.56973,
+"lat": 11.85762
+},
+{
+"qid": "Q13111774",
+"name": "Kalpetta Municipality",
+"type": "municipality",
+"population": 29602,
+"lon": 76.08144,
+"lat": 11.60875
+},
+{
+"qid": "Q13110666",
+"name": "Edakkara Grama Panchayat",
+"type": "gram panchayat",
+"population": 29239,
+"lon": 76.28684,
+"lat": 11.38338
+},
+{
+"qid": "Q16136988",
+"name": "Kuthuparamba Municipality",
+"type": "municipality",
+"population": 28907,
+"lon": 75.5776,
+"lat": 11.82944
+},
+{
+"qid": "Q13110581",
+"name": "Urangattiri Grama Panchayat",
+"type": "gram panchayat",
+"population": 28878,
+"lon": 76.0333,
+"lat": 11.2333
+},
+{
+"qid": "Q16137318",
+"name": "Mullankolly Grama Panchayat",
+"type": "gram panchayat",
+"population": 28871,
+"lon": 76.17139,
+"lat": 11.84206
+},
+{
+"qid": "Q16134969",
+"name": "Narikunni Grama Panchayat",
+"type": "gram panchayat",
+"population": 28804,
+"lon": 75.8661,
+"lat": 11.38016
+},
+{
+"qid": "Q25585324",
+"name": "Madavoor Grama Panchayat",
+"type": "gram panchayat",
+"population": 28672,
+"lon": 75.86012,
+"lat": 11.34658
+},
+{
+"qid": "Q13114085",
+"name": "Meenangadi Grama Panchayat",
+"type": "gram panchayat",
+"population": 28573,
+"lon": 76.15519,
+"lat": 11.66078
+},
+{
+"qid": "Q13113474",
+"name": "Perambra Grama Panchayat",
+"type": "gram panchayat",
+"population": 28345,
+"lon": 75.75956,
+"lat": 11.56841
+},
+{
+"qid": "Q16134363",
+"name": "Ulliyeri Grama Panchayat",
+"type": "gram panchayat",
+"population": 27805,
+"lon": 75.75949,
+"lat": 11.44333
+},
+{
+"qid": "Q13113507",
+"name": "Pothukallu Grama Panchayat",
+"type": "gram panchayat",
+"population": 27750,
+"lon": 76.21762,
+"lat": 11.45581
+},
+{
+"qid": "Q13111872",
+"name": "Changaroth Grama Panchayat",
+"type": "gram panchayat",
+"population": 27748,
+"lon": 75.77395,
+"lat": 11.61538
+},
+{
+"qid": "Q16135523",
+"name": "Kottur Grama Panchayat",
+"type": "gram panchayat",
+"population": 27682,
+"lon": 75.81793,
+"lat": 11.48934
+},
+{
+"qid": "Q20582975",
+"name": "Moodadi Grama Panchayat",
+"type": "gram panchayat",
+"population": 27653,
+"lon": 75.65694,
+"lat": 11.46944
+},
+{
+"qid": "Q2722346",
+"name": "Pattiam Grama Panchayat",
+"type": "human settlement",
+"population": 27589,
+"lon": 75.56844,
+"lat": 11.80555
+},
+{
+"qid": "Q13110048",
+"name": "Amarambalam Grama Panchayat",
+"type": "gram panchayat",
+"population": 26804,
+"lon": 76.37736,
+"lat": 11.25693
+},
+{
+"qid": "Q6944101",
+"name": "Muttil Grama Panchayat",
+"type": "gram panchayat",
+"population": 26767,
+"lon": 76.12806,
+"lat": 11.64004
+},
+{
+"qid": "Q7917600",
+"name": "Vazhakkad Grama Panchayat",
+"type": "gram panchayat",
+"population": 26634,
+"lon": 75.95,
+"lat": 11.25
+},
+{
+"qid": "Q7798261",
+"name": "Triprangottoor Grama Panchayat",
+"type": "gram panchayat",
+"population": 26281,
+"lon": 75.62662,
+"lat": 11.73402
+},
+{
+"qid": "Q13114047",
+"name": "Mavoor Grama Panchayat",
+"type": "gram panchayat",
+"population": 26144,
+"lon": 75.93818,
+"lat": 11.26169
+},
+{
+"qid": "Q13112092",
+"name": "Chokli Grama Panchayat",
+"type": "gram panchayat",
+"population": 25849,
+"lon": 75.56134,
+"lat": 11.72049
+},
+{
+"qid": "Q13113861",
+"name": "Mampad Grama Panchayat",
+"type": "gram panchayat",
+"population": 25711,
+"lon": 76.18889,
+"lat": 11.24485
+},
+{
+"qid": "Q16135476",
+"name": "Azhiyur Grama Panchayat",
+"type": "gram panchayat",
+"population": 25700,
+"lon": 75.55282,
+"lat": 11.67913
+},
+{
+"qid": "Q3783820",
+"name": "Omassery Grama Panchayat",
+"type": "gram panchayat",
+"population": 25420,
+"lon": 75.975,
+"lat": 11.3
+},
+{
+"qid": "Q13113197",
+"name": "Payam Grama Panchayat",
+"type": "gram panchayat",
+"population": 25360,
+"lon": 75.68684,
+"lat": 12.01805
+},
+{
+"qid": "Q16136150",
+"name": "Onchiyam Grama Panchayat",
+"type": "gram panchayat",
+"population": 24856,
+"lon": 75.5743,
+"lat": 11.6489
+},
+{
+"qid": "Q13110676",
+"name": "Edavaka Grama Panchayat",
+"type": "gram panchayat",
+"population": 24746,
+"lon": 75.98588,
+"lat": 11.77209
+},
+{
+"qid": "Q13114225",
+"name": "Meppayur Grama Panchayat",
+"type": "gram panchayat",
+"population": 24645,
+"lon": 75.70663,
+"lat": 11.52477
+},
+{
+"qid": "Q13110103",
+"name": "Arikkulam Grama Panchayat",
+"type": "gram panchayat",
+"population": 24587,
+"lon": 75.72647,
+"lat": 11.48863
+},
+{
+"qid": "Q6363313",
+"name": "Kaniyambetta Grama Panchayat",
+"type": "gram panchayat",
+"population": 24419,
+"lon": 76.1,
+"lat": 11.7
+},
+{
+"qid": "Q15261016",
+"name": "Narippatta Grama Panchayat",
+"type": "gram panchayat",
+"population": 24393,
+"lon": 75.66667,
+"lat": 11.7
+},
+{
+"qid": "Q87746071",
+"name": "Aralam Grama Panchayat",
+"type": "gram panchayat",
+"population": 24195,
+"lon": 75.79705,
+"lat": 11.93952
+},
+{
+"qid": "Q16135180",
+"name": "Areacode Grama Panchayat",
+"type": "gram panchayat",
+"population": 24138,
+"lon": 76.03742,
+"lat": 11.22135
+},
+{
+"qid": "Q16137572",
+"name": "Balussery Grama Panchayat",
+"type": "gram panchayat",
+"population": 24113,
+"lon": 75.80566,
+"lat": 11.43797
+},
+{
+"qid": "Q13109913",
+"name": "Atholi Grama Panchayat",
+"type": "gram panchayat",
+"population": 24055,
+"lon": 75.76553,
+"lat": 11.40302
+},
+{
+"qid": "Q20574729",
+"name": "Edacheri Grama Panchayat",
+"type": "gram panchayat",
+"population": 23979,
+"lon": 75.61029,
+"lat": 11.68522
+},
+{
+"qid": "Q16137324",
+"name": "Thiruvambadi Grama Panchayat",
+"type": "gram panchayat",
+"population": 23968,
+"lon": 76.06723,
+"lat": 11.42424
+},
+{
+"qid": "Q7260813",
+"name": "Purameri Grama Panchayat",
+"type": "gram panchayat",
+"population": 23797,
+"lon": 75.6652,
+"lat": 11.65885
+},
+{
+"qid": "Q16136513",
+"name": "Kuruvattoor Grama Panchayat",
+"type": "gram panchayat",
+"population": 23780,
+"lon": 75.84642,
+"lat": 11.31813
+},
+{
+"qid": "Q7709502",
+"name": "Thalakulathur Grama Panchayat",
+"type": "gram panchayat",
+"population": 23708,
+"lon": 75.77322,
+"lat": 11.36382
+},
+{
+"qid": "Q5091369",
+"name": "Chengottukavu Grama Panchayat",
+"type": "gram panchayat",
+"population": 23702,
+"lon": 75.72576,
+"lat": 11.4199
+},
+{
+"qid": "Q13564480",
+"name": "Karassery Grama Panchayat",
+"type": "gram panchayat",
+"population": 23659,
+"lon": 76.01722,
+"lat": 11.30939
+},
+{
+"qid": "Q7785398",
+"name": "Thirunelly Grama Panchayat",
+"type": "gram panchayat",
+"population": 23529,
+"lon": 76.02379,
+"lat": 11.89926
+},
+{
+"qid": "Q13112804",
+"name": "Nanminda Grama Panchayat",
+"type": "gram panchayat",
+"population": 23461,
+"lon": 75.8175,
+"lat": 11.41474
+},
+{
+"qid": "Q116588130",
+"name": "Ayancheri Grama Panchayat",
+"type": "gram panchayat",
+"population": 23425,
+"lon": 75.66233,
+"lat": 11.62765
+},
+{
+"qid": "Q13113008",
+"name": "Nochad Grama Panchayat",
+"type": "gram panchayat",
+"population": 23231,
+"lon": 75.75851,
+"lat": 11.5305
+},
+{
+"qid": "Q137652042",
+"name": "Kayakkody",
+"type": "human settlement",
+"population": 23173,
+"lon": 75.75,
+"lat": 11.66667
+},
+{
+"qid": "Q13112961",
+"name": "Noolpuzha Grama Panchayat",
+"type": "gram panchayat",
+"population": 23151,
+"lon": 76.36597,
+"lat": 11.6473
+},
+{
+"qid": "Q13112462",
+"name": "Thikkodi Grama Panchayat",
+"type": "gram panchayat",
+"population": 22998,
+"lon": 75.63769,
+"lat": 11.49979
+},
+{
+"qid": "Q20583506",
+"name": "Vazhayur Grama Panchayat",
+"type": "gram panchayat",
+"population": 22948,
+"lon": 75.88879,
+"lat": 11.21434
+},
+{
+"qid": "Q13114854",
+"name": "Velom Grama Panchayat",
+"type": "gram panchayat",
+"population": 22888,
+"lon": 75.71902,
+"lat": 11.61883
+},
+{
+"qid": "Q13112787",
+"name": "Naduvannur Grama Panchayat",
+"type": "gram panchayat",
+"population": 22258,
+"lon": 75.75936,
+"lat": 11.48683
+},
+{
+"qid": "Q3595437",
+"name": "Payyavoor Grama Panchayat",
+"type": "gram panchayat",
+"population": 22102,
+"lon": 75.58199,
+"lat": 12.05605
+},
+{
+"qid": "Q13110089",
+"name": "Ayyankunnu Grama Panchayat",
+"type": "gram panchayat",
+"population": 21594,
+"lon": 75.7965,
+"lat": 12.00594
+},
+{
+"qid": "Q7123787",
+"name": "Padinharathara Grama Panchayat",
+"type": "gram panchayat",
+"population": 21398,
+"lon": 75.93927,
+"lat": 11.67295
+},
+{
+"qid": "Q16136148",
+"name": "Vanimal Grama Panchayat",
+"type": "gram panchayat",
+"population": 21356,
+"lon": 75.73731,
+"lat": 11.75297
+},
+{
+"qid": "Q13111606",
+"name": "Kodiyathur Grama Panchayat",
+"type": "gram panchayat",
+"population": 21242,
+"lon": 76.02463,
+"lat": 11.27988
+},
+{
+"qid": "Q6380415",
+"name": "Kayakkody Grama Panchayat",
+"type": "gram panchayat",
+"population": 21175,
+"lon": 75.75,
+"lat": 11.66667
+},
+{
+"qid": "Q13111963",
+"name": "Chittariparamba Grama Panchayat",
+"type": "gram panchayat",
+"population": 20974,
+"lon": 75.6296,
+"lat": 11.85352
+},
+{
+"qid": "Q13479531",
+"name": "Cheruvannur Grama Panchayat",
+"type": "gram panchayat",
+"population": 20687,
+"lon": 75.70424,
+"lat": 11.57297
+},
+{
+"qid": "Q13113471",
+"name": "Peravoor Grama Panchayat",
+"type": "gram panchayat",
+"population": 20618,
+"lon": 75.73482,
+"lat": 11.90208
+},
+{
+"qid": "Q16133839",
+"name": "Chekkiad Grama Panchayat",
+"type": "gram panchayat",
+"population": 20434,
+"lon": 75.64085,
+"lat": 11.74643
+},
+{
+"qid": "Q20578300",
+"name": "Chakkittapara Grama Panchayat",
+"type": "human settlement",
+"population": 20360,
+"lon": 75.81,
+"lat": 11.57
+},
+{
+"qid": "Q6379238",
+"name": "Kavilumpara Grama Panchayat",
+"type": "gram panchayat",
+"population": 20320,
+"lon": 75.78,
+"lat": 11.6775
+},
+{
+"qid": "Q13112574",
+"name": "Tuneri Grama Panchayat",
+"type": "gram panchayat",
+"population": 20208,
+"lon": 75.6314,
+"lat": 11.70462
+},
+{
+"qid": "Q13112521",
+"name": "Thiruvali Grama Panchayat",
+"type": "gram panchayat",
+"population": 19937,
+"lon": 76.19804,
+"lat": 11.20157
+},
+{
+"qid": "Q13114032",
+"name": "Malur Grama Panchayat",
+"type": "gram panchayat",
+"population": 19853,
+"lon": 75.64031,
+"lat": 11.9019
+},
+{
+"qid": "Q16133892",
+"name": "Thondernad Grama Panchayat",
+"type": "gram panchayat",
+"population": 19639,
+"lon": 75.86399,
+"lat": 11.75804
+},
+{
+"qid": "Q16137500",
+"name": "Moothedam Grama Panchayat",
+"type": "gram panchayat",
+"population": 19519,
+"lon": 76.31601,
+"lat": 11.30548
+},
+{
+"qid": "Q13110773",
+"name": "Eruvessy Grama Panchayat",
+"type": "gram panchayat",
+"population": 19393,
+"lon": 75.57128,
+"lat": 12.1141
+},
+{
+"qid": "Q13111105",
+"name": "Kakkur Grama Panchayat",
+"type": "gram panchayat",
+"population": 19358,
+"lon": 75.82605,
+"lat": 11.38734
+},
+{
+"qid": "Q16137365",
+"name": "Panniyannur Grama Panchayat",
+"type": "gram panchayat",
+"population": 19312,
+"lon": 75.55727,
+"lat": 11.74893
+},
+{
+"qid": "Q16137327",
+"name": "Muzhakkunnu Grama Panchayat",
+"type": "gram panchayat",
+"population": 19228,
+"lon": 75.70602,
+"lat": 11.93904
+},
+{
+"qid": "Q6427848",
+"name": "Kolayad Grama Panchayat",
+"type": "gram panchayat",
+"population": 18062,
+"lon": 75.71288,
+"lat": 11.86387
+},
+{
+"qid": "Q16137878",
+"name": "Mokeri Grama Panchayat",
+"type": "gram panchayat",
+"population": 17917,
+"lon": 75.57741,
+"lat": 11.78322
+},
+{
+"qid": "Q6373625",
+"name": "Karulai Grama Panchayat",
+"type": "gram panchayat",
+"population": 17698,
+"lon": 76.29677,
+"lat": 11.28759
+},
+{
+"qid": "Q20576738",
+"name": "Kuttiadi Grama Panchayat",
+"type": "gram panchayat",
+"population": 17108,
+"lon": 75.73194,
+"lat": 11.65098
+},
+{
+"qid": "Q6778025",
+"name": "Maruthonkara Grama Panchayat",
+"type": "gram panchayat",
+"population": 16985,
+"lon": 75.81944,
+"lat": 11.63889
+},
+{
+"qid": "Q16136253",
+"name": "Kunnummal Grama Panchayat",
+"type": "gram panchayat",
+"population": 16870,
+"lon": 75.81667,
+"lat": 11.20833
+},
+{
+"qid": "Q16135882",
+"name": "Valayam Grama Panchayat",
+"type": "gram panchayat",
+"population": 16705,
+"lon": 75.68339,
+"lat": 11.74275
+},
+{
+"qid": "Q13111620",
+"name": "Kottiyoor Grama Panchayat",
+"type": "gram panchayat",
+"population": 16608,
+"lon": 75.89663,
+"lat": 11.89573
+},
+{
+"qid": "Q13111397",
+"name": "Koodaranhi Grama Panchayat",
+"type": "gram panchayat",
+"population": 16503,
+"lon": 76.06909,
+"lat": 11.36505
+},
+{
+"qid": "Q13111919",
+"name": "Chaliyar Grama Panchayat",
+"type": "gram panchayat",
+"population": 16476,
+"lon": 76.16381,
+"lat": 11.32032
+},
+{
+"qid": "Q13113505",
+"name": "Pozhuthana Grama Panchayat",
+"type": "gram panchayat",
+"population": 16229,
+"lon": 75.99956,
+"lat": 11.5811
+},
+{
+"qid": "Q136094054",
+"name": "Kelakam",
+"type": "human settlement",
+"population": 16211,
+"lon": 75.8,
+"lat": 11.88333
+},
+{
+"qid": "Q13111416",
+"name": "Koorachundu Grama Panchayat",
+"type": "gram panchayat",
+"population": 16111,
+"lon": 75.89945,
+"lat": 11.54944
+},
+{
+"qid": "Q6385454",
+"name": "Kelakam Grama Panchayat",
+"type": "gram panchayat",
+"population": 15787,
+"lon": 75.80833,
+"lat": 11.89167
+},
+{
+"qid": "Q16135692",
+"name": "Keezhuparamba Grama Panchayat",
+"type": "gram panchayat",
+"population": 14637,
+"lon": 76.015,
+"lat": 11.24722
+},
+{
+"qid": "Q20577752",
+"name": "Kottathara Grama Panchayat",
+"type": "gram panchayat",
+"population": 14494,
+"lon": 76.02496,
+"lat": 11.65636
+},
+{
+"qid": "Q13114868",
+"name": "Vythiri Grama Panchayat",
+"type": "gram panchayat",
+"population": 14459,
+"lon": 76.04235,
+"lat": 11.5464
+},
+{
+"qid": "Q13110930",
+"name": "Kanichar Grama Panchayat",
+"type": "gram panchayat",
+"population": 14432,
+"lon": 75.77387,
+"lat": 11.88766
+},
+{
+"qid": "Q13111404",
+"name": "Koothali Grama Panchayat",
+"type": "gram panchayat",
+"population": 13839,
+"lon": 75.78481,
+"lat": 11.57518
+},
+{
+"qid": "Q16135624",
+"name": "Keezhariyur Grama Panchayat",
+"type": "gram panchayat",
+"population": 13482,
+"lon": 75.69248,
+"lat": 11.48971
+},
+{
+"qid": "Q16137575",
+"name": "Thurayur Grama Panchayat",
+"type": "gram panchayat",
+"population": 12830,
+"lon": 75.6723,
+"lat": 11.52667
+},
+{
+"qid": "Q13111164",
+"name": "Kayanna Grama Panchayat",
+"type": "gram panchayat",
+"population": 12578,
+"lon": 75.81845,
+"lat": 11.52331
+},
+{
+"qid": "Q16137456",
+"name": "Thillankery Grama Panchayat",
+"type": "gram panchayat",
+"population": 12347,
+"lon": 75.65273,
+"lat": 11.92973
+},
+{
+"qid": "Q13112383",
+"name": "Thariode Grama Panchayat",
+"type": "gram panchayat",
+"population": 10236,
+"lon": 75.9582,
+"lat": 11.62361
+},
+{
+"qid": "Q7919896",
+"name": "Vengappally Grama Panchayat",
+"type": "gram panchayat",
+"population": 9114,
+"lon": 76.03968,
+"lat": 11.63245
+}
+]

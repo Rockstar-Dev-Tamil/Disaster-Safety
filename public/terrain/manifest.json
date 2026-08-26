@@ -64,6 +64,14 @@
    },
    "scale": 40,
    "bytes": 37603
+  },
+  "protected": {
+   "file": "/terrain/protected.png",
+   "scale": 255,
+   "classes": {
+    "protected": 255
+   },
+   "bytes": 6411
   }
  },
  "towns": [

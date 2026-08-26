@@ -31,6 +31,8 @@ export const EXCLUSION = {
   BUILT_UP: 8,
   RESTRICTED: 9,
   PADDY: 10,
+  FOREST: 11,
+  PROTECTED: 12,
 } as const;
 
 export type ExclusionCode = (typeof EXCLUSION)[keyof typeof EXCLUSION];
@@ -47,6 +49,8 @@ export const EXCLUSION_LABEL: Record<number, string> = {
   [EXCLUSION.BUILT_UP]: 'Built-up — residential, commercial or industrial',
   [EXCLUSION.RESTRICTED]: 'Restricted use — quarry, cemetery, military',
   [EXCLUSION.PADDY]: 'Paddy — seasonally waterlogged',
+  [EXCLUSION.FOREST]: 'Forest — diversion under Forest (Conservation) Act 1980',
+  [EXCLUSION.PROTECTED]: 'Protected area or eco-sensitive zone',
 };
 
 /** OSM-derived land-use classes on the grid. */
@@ -100,6 +104,12 @@ export interface Rules {
   excludeBuiltUp: boolean;
   /** Exclude paddy: flat, tempting, and seasonally waterlogged. */
   excludePaddy: boolean;
+  /** Permanent tier only. Forest needs diversion under the Forest
+   *  (Conservation) Act 1980, which is not obtainable on a resettlement
+   *  timeline. Camps can sometimes use cleared forest fringe; townships cannot. */
+  excludeForest: boolean;
+  /** Wildlife Protection Act 1972 and notified eco-sensitive zones. */
+  excludeProtected: boolean;
 }
 
 export const DEFAULT_RULES: Rules = {
@@ -112,6 +122,31 @@ export const DEFAULT_RULES: Rules = {
   minSeparationKm: 0,
   excludeBuiltUp: true,
   excludePaddy: true,
+  excludeForest: false,
+  excludeProtected: false,
+};
+
+/* ==========================================================================
+ * PERMANENT RESETTLEMENT RULES
+ *
+ * Looser on gradient, far stricter on everything else. A township can terrace
+ * to 15 degrees where a camp cannot exceed Sphere's 5; but permanent
+ * settlement must sit outside EVERY mapped hazard class, not merely the worst
+ * two -- you do not put people back into Low Hazard Zone for fifty years --
+ * and it must be land that can actually be acquired.
+ * ==========================================================================*/
+export const PERMANENT_RULES: Rules = {
+  radiusKm: 30,
+  maxSlopeDeg: 15,
+  minDrainageMarginM: 0,
+  maxLandslideClass: 1,
+  minZoneHa: 12,
+  openingPasses: 1,
+  minSeparationKm: 0,
+  excludeBuiltUp: true,
+  excludePaddy: true,
+  excludeForest: true,
+  excludeProtected: true,
 };
 
 export interface Weights {
@@ -385,8 +420,12 @@ export function analyse(
       const townM = g('disttown', x, y) * 200;
       const drain = margin[i];
 
+      const prot = grids['protected'] ? g('protected', x, y) : 0;
+
       let code: number = EXCLUSION.NONE;
-      if (rules.excludeBuiltUp && lu === LANDUSE.BUILT_UP) code = EXCLUSION.BUILT_UP;
+      if (rules.excludeProtected && prot > 127) code = EXCLUSION.PROTECTED;
+      else if (rules.excludeBuiltUp && lu === LANDUSE.BUILT_UP) code = EXCLUSION.BUILT_UP;
+      else if (rules.excludeForest && lu === LANDUSE.FOREST) code = EXCLUSION.FOREST;
       else if (lu === LANDUSE.RESTRICTED) code = EXCLUSION.RESTRICTED;
       else if (rules.excludePaddy && lu === LANDUSE.PADDY) code = EXCLUSION.PADDY;
       else if (ls >= rules.maxLandslideClass) code = EXCLUSION.LANDSLIDE;

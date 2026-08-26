@@ -57,12 +57,31 @@ export interface RoadGraphData {
   }>;
 }
 
+export interface HostBody {
+  qid: string;
+  name: string;
+  type: string;
+  population: number;
+  lon: number;
+  lat: number;
+}
+
+export interface Amenities {
+  worship: Array<{ name: string | null; lat: number; lon: number }>;
+  burial: Array<{ name: string | null; lat: number; lon: number }>;
+  common: Array<{ name: string | null; lat: number; lon: number }>;
+}
+
 export interface TerrainStack {
   manifest: TerrainManifest;
   /** Raw 8-bit values, row-major, row 0 = north. Multiply by layer.scale. */
   grids: Record<string, Uint8Array>;
   roads: GeoJSON.FeatureCollection;
   graph: RoadGraphData;
+  /** Long-term tier only; absent until that tab is opened. */
+  taluks?: GeoJSON.FeatureCollection;
+  hosts?: HostBody[];
+  amenities?: Amenities;
 }
 
 export type StageState = 'pending' | 'active' | 'done' | 'failed';
@@ -83,6 +102,7 @@ export const STAGES: Array<{ key: string; label: string; detail: string }> = [
   { key: 'distroad', label: 'Road access', detail: 'Distance surface to tertiary+ roads' },
   { key: 'disttown', label: 'Settlement access', detail: 'Distance surface to towns' },
   { key: 'landuse', label: 'Land use', detail: 'OSM land use — built-up, cultivated, forest' },
+  { key: 'protected', label: 'Protected areas', detail: 'Sanctuaries and eco-sensitive zones' },
   { key: 'roads', label: 'Road network', detail: 'OpenStreetMap linework' },
   { key: 'graph', label: 'Routing graph', detail: 'Ways split at junctions, real topology' },
   { key: 'crop', label: 'Search area', detail: 'Clipping the stack to the operation radius' },
@@ -111,7 +131,7 @@ async function decodePng(url: string, width: number, height: number): Promise<Ui
   return out;
 }
 
-const RASTER_KEYS = ['slope', 'landslide', 'flood', 'distroad', 'disttown', 'landuse'] as const;
+const RASTER_KEYS = ['slope', 'landslide', 'flood', 'distroad', 'disttown', 'landuse', 'protected'] as const;
 
 export async function loadTerrain(
   onStage: (key: string, state: StageState, note?: string) => void,
@@ -165,7 +185,16 @@ export async function loadTerrain(
     `${graph.edges.length.toLocaleString()} edges · ${graph.nodes.length.toLocaleString()} junctions`,
   );
 
-  return { manifest, grids, roads, graph };
+  /* Long-term layers. Fetched with the rest because the stack is loaded once
+   * and both tiers share it; a failure here degrades the long-term tab rather
+   * than blocking short-term. */
+  const [taluks, hosts, amenities] = await Promise.all([
+    fetch('/terrain/taluks.geojson').then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
+    fetch('/terrain/host-population.json').then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
+    fetch('/terrain/amenities.json').then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
+  ]);
+
+  return { manifest, grids, roads, graph, taluks, hosts, amenities };
 }
 
 /* ------------------------------------------------------------ geometry --- */
