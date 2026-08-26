@@ -2,7 +2,10 @@ node_modules/
 dist/
 tsconfig.tsbuildinfo
 # credentials -- never commit
+# `.env` alone does NOT match .env.local, which is where Vite actually looks.
 .env
+.env.*
+!.env.example
 .earthdata_token
 # source archives (large, supplied separately)
 *.zip

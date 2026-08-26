@@ -107,5 +107,5 @@
   --rail-w: 268px;
   --panel-w: 560px;
   --strip-h: 26px;
-  --topbar-h: 32px;
+  --topbar-h: 60px;   /* sized to the wordmark, not to text */
 }

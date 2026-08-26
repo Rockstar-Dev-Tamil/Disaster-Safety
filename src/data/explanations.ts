@@ -21,6 +21,7 @@ export const SCOPE_LABEL: Record<ExplainScope, string> = {
   TIER_SHORT_TERM: 'scope: short-term tier, susceptibility and exposure',
   TIER_LONG_TERM: 'scope: long-term tier, site ranking',
   ROUTING: 'scope: route choice',
+  EVAC_ZONES: 'scope: this search area',
 };
 
 export const SCOPE_HINTS: Record<ExplainScope, string[]> = {
@@ -36,21 +37,86 @@ export const SCOPE_HINTS: Record<ExplainScope, string[]> = {
   ],
   TIER_LONG_TERM: ['why did site a rank above site b', 'why was thariode rejected'],
   ROUTING: [],
+  EVAC_ZONES: [
+    'how much ground passed the filter',
+    'what excluded the most land',
+    'why is the top zone ranked first',
+  ],
 };
 
 const ENTRIES: Record<ExplainScope, ExplainEntry[]> = {
+  /* ---------------------------------------------------- evac workspace --- */
+  EVAC_ZONES: [
+    {
+      match: [['exclud', 'most'], ['why', 'so', 'little'], ['what', 'removed']],
+      answer: {
+        text:
+          'Exclusions are applied as hard constraints, and each cell records the '
+          + 'FIRST rule that removed it, so the table is a partition rather than a '
+          + 'set of overlapping counts. Gradient dominates: the camp limit is 5 '
+          + 'degrees, which in this terrain removes over half the search radius on '
+          + 'its own. Read the exclusion table top to bottom for the rest -- the '
+          + 'rule that removed the most land is listed first.',
+        sources: [
+          'Step 3 exclusion table, per-rule cell counts',
+          'Constraint rules: maximum ground gradient',
+        ],
+      },
+    },
+    {
+      match: [['rank'], ['ranked'], ['first'], ['above']],
+      answer: {
+        text:
+          'Ranking is a weighted sum over six factors, shown under Step 4. Area '
+          + 'carries the heaviest weight because ranking on a mean of per-cell '
+          + 'factors is size-blind: without it a small well-placed fragment '
+          + 'outranks a large one on identical average slope and distance. Area '
+          + 'saturates at three times what this habitation needs, so a very large '
+          + 'zone cannot win on size alone. Open a candidate to see its own '
+          + 'factor table.',
+        sources: [
+          'Step 4 suitability weights',
+          'Candidate list: area, distance from origin, score',
+        ],
+      },
+    },
+    {
+      match: [['ellipse'], ['circle'], ['shape'], ['boundary']],
+      answer: {
+        text:
+          'The ellipse is the second moment of the eligible cells in a cluster, '
+          + 'not a parcel boundary. The hazard sheets are 1:50,000 and the grid is '
+          + '100 m, so nothing here supports drawing an exact edge -- it says '
+          + 'eligible ground clusters here, roughly this size and orientation, go '
+          + 'and look. It is also bounded, so a scattered cluster cannot draw an '
+          + 'outline far larger than the ground that actually passed.',
+        sources: ['Candidate zone geometry', 'Grid resolution, 100 m'],
+      },
+    },
+  ],
+
   /* ------------------------------------------------------- pan-India --- */
   PAN_INDIA: [
     {
       match: [['red'], ['many'], ['tonight'], ['alert']],
       answer: {
         text:
-          'The operating picture is fixed at 29 Jul 2024, 23:30 IST. Habitations shown RED are those whose current score is at or above 78, and at this timestamp that is driven almost entirely by the rainfall feed across the Western Ghats: the Meppadi ARG is reading 472 mm cumulative against a 300 mm trigger and 372 mm in 24 h against the IMD extremely-heavy threshold of 204.5 mm. Coastal habitations are not red at this timestamp because there is no system in the Bay of Bengal.',
+          'The operating picture is fixed at 30 Jul 2024, 02:00 IST. Habitations '
+          + 'shown RED are those whose current score is at or above 78, and at '
+          + 'this timestamp that is driven by the observed rainfall across the '
+          + 'Western Ghats: the IMERG cell over Chooralmala is reading 116.5 mm '
+          + 'cumulative and 106.2 mm in 24 h, which is a 3.8-year return level '
+          + 'against that cell’s own fitted record. Note the comparison is '
+          + 'IMERG against IMERG: the IMD gauge threshold of 204.5 mm cannot be '
+          + 'applied to a satellite estimate that under-reads orographic '
+          + 'extremes here, and doing so would report no exceedance for this '
+          + 'event. Coastal habitations are not red at this timestamp because '
+          + 'there is no system in the Bay of Bengal.',
         sources: [
           'Status strip: operating picture timestamp',
           'Current score band thresholds (RED at 78)',
-          'Meppadi ARG cumulative and 24 h accumulation',
-          'IMD threshold values 300 mm / 204.5 mm',
+          'IMERG cumulative and 24 h accumulation at the operating clock',
+          'Fitted return levels for this IMERG cell (2 y = 87.3 mm)',
         ],
       },
     },
@@ -322,6 +388,10 @@ const MISS: Record<ExplainScope, string> = {
   TIER_LONG_TERM:
     'No answer available for that query in this scope. This input answers only from the mitigation assessment and candidate site tables currently displayed.',
   ROUTING: 'Routing is not in this build.',
+  EVAC_ZONES:
+    'No answer available for that query in this scope. This input answers only '
+    + 'from the exclusion table, constraint rules, suitability weights and '
+    + 'candidate list currently displayed for this search area.',
 };
 
 export function explain(scope: ExplainScope, query: string) {

@@ -11,6 +11,7 @@ import type {
 import { HAZARD_LABEL } from '../data/schema';
 import { FactorTable } from './FactorTable';
 import { ExplainDock } from './ExplainDock';
+import type { Fact, FactBundle } from '../lib/explain';
 import { PublishedBlock, PublishedSummary } from './PublishedClass';
 import {
   AssessmentHead,
@@ -24,7 +25,7 @@ import {
   TIER_STATUS_COLOR,
   TIER_STATUS_LABEL,
 } from './primitives';
-import { ALERT_FILL, ALERT_TEXT, BAND_TEXT } from '../lib/severity';
+import { ALERT_FILL, ALERT_TEXT, BAND_LABEL, BAND_TEXT } from '../lib/severity';
 import { coord, dateOnly, durationShort, int, ts, tsShort } from '../lib/format';
 
 const TIERS: Array<[TierKey, string, string]> = [
@@ -38,6 +39,57 @@ const TIER_SCOPE: Record<TierKey, ExplainScope> = {
   SHORT_TERM: 'TIER_SHORT_TERM',
   LONG_TERM: 'TIER_LONG_TERM',
 };
+
+
+/** What the habitation panel is displaying, and nothing else.
+ *
+ *  Every factor row of both breakdowns goes in, because both tables are on
+ *  screen -- an answer may cite any of them, and the numeric check needs them
+ *  present or a legitimate citation would be withheld as ungrounded. */
+function habitationBundle(h: Habitation, scope: ExplainScope = 'HABITATION'): FactBundle {
+  const facts: Fact[] = [
+    { key: 'name', label: 'Habitation', value: h.name },
+    { key: 'place', label: 'Block and district', value: `${h.block}, ${h.district}, ${h.state}` },
+    { key: 'population', label: 'Population', value: int(h.population), aka: ['people'] },
+    { key: 'households', label: 'Households', value: int(h.households) },
+    { key: 'hazards', label: 'Hazard types', value: h.hazards.join(', ') },
+    {
+      key: 'susceptibility',
+      label: 'Standing susceptibility',
+      value: h.susceptibility.score.toFixed(1),
+      aka: ['static', 'terrain', 'assessed'],
+    },
+    {
+      key: 'susceptibility-band',
+      label: 'Susceptibility band',
+      value: BAND_LABEL[h.susceptibility.band],
+    },
+    {
+      key: 'current',
+      label: 'Current operational score',
+      value: h.current.score.toFixed(1),
+      aka: ['now', 'tonight', 'operational', 'higher'],
+    },
+    { key: 'alert', label: 'IMD alert state', value: h.current.alert, aka: ['warning', 'red'] },
+  ];
+  for (const f of h.susceptibility.factors) {
+    facts.push({
+      key: `sus-${f.key}`,
+      label: `Susceptibility factor, ${f.label}`,
+      value: `${f.raw} (class ${f.normalised}, weight ${f.weight})`,
+      aka: [f.label],
+    });
+  }
+  for (const f of h.current.drivers) {
+    facts.push({
+      key: `cur-${f.key}`,
+      label: `Current-state driver, ${f.label}`,
+      value: `${f.raw} (class ${f.normalised}, weight ${f.weight})`,
+      aka: [f.label],
+    });
+  }
+  return { scope, subject: h.name, facts };
+}
 
 export function HabitationPanel({
   h,
@@ -123,7 +175,7 @@ export function HabitationPanel({
       {/* Habitation-level scope: answers about the header figures and the two
           score breakdowns. The tier-level dock at the foot of the panel answers
           about whichever tier is open. */}
-      <ExplainDock scope="HABITATION" />
+      <ExplainDock scope="HABITATION" bundle={habitationBundle(h)} />
 
       <div className="tierstrip">
         {TIERS.map(([k, label, key]) => {
@@ -152,7 +204,7 @@ export function HabitationPanel({
         <TierBody h={h} tier={activeTier} />
       </div>
 
-      <ExplainDock scope={TIER_SCOPE[activeTier]} />
+      <ExplainDock scope={TIER_SCOPE[activeTier]} bundle={habitationBundle(h, TIER_SCOPE[activeTier])} />
     </div>
   );
 }

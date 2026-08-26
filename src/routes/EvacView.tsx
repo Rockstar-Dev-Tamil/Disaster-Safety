@@ -29,7 +29,10 @@ import {
   type Weights,
   type ZoneResult,
 } from '../lib/zones';
-import { Block, CountUp } from '../components/primitives';
+import { Block, CountUp, OverlayBox } from '../components/primitives';
+import { ExplainDock } from '../components/ExplainDock';
+import { WordmarkProgress } from '../components/Wordmark';
+import type { Fact, FactBundle } from '../lib/explain';
 import { ZonePanel } from '../components/ZonePanel';
 import { LongTermPanel } from '../components/LongTermPanel';
 import {
@@ -82,6 +85,18 @@ export function EvacView({ habitationId }: { habitationId: string }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [shortlistSize, setShortlistSize] = useState(10);
   const [zoom, setZoom] = useState(10.4);
+
+  /* ------------------------------------------------------------- 3D view --- */
+  /* A relief view of the search area. The hazard here is terrain-driven -- the
+   * whole short-term rule set is a gradient threshold -- so seeing the ground
+   * as ground, with the same colour overlays draped on it, is an analytical
+   * view rather than an ornament.
+   *
+   * Vertical exaggeration is a deliberate distortion and is labelled as one:
+   * at x2 a 5-degree slope reads as 10, which is the very threshold the
+   * short-term filter turns on. See the readout in the map overlay. */
+  const [view3d, setView3d] = useState(false);
+  const [exaggeration, setExaggeration] = useState(2);
   const [routeParams, setRouteParams] = useState<RouteParams>(DEFAULT_ROUTE_PARAMS);
   const [blocked, setBlocked] = useState<Set<number>>(new Set());
   const [selectedRoute, setSelectedRoute] = useState(0);
@@ -283,6 +298,19 @@ export function EvacView({ habitationId }: { habitationId: string }) {
             maxzoom: 14,
             attribution: 'Hillshade: Esri · Roads: OpenStreetMap · Hazard: KSDMA',
           },
+          /* Local terrarium DEM -- drives both the 3D mesh and, in 3D, the
+           * shading. Built by scripts/build-dem-tiles.py from the same
+           * Copernicus GLO-30 data the slope layer comes from, so relief and
+           * gradient can never disagree. No network. */
+          dem: {
+            type: 'raster-dem',
+            tiles: ['/dem/{z}/{x}/{y}.png'],
+            encoding: 'terrarium',
+            tileSize: 256,
+            minzoom: 8,
+            maxzoom: 12,
+            attribution: 'Elevation: Copernicus GLO-30',
+          },
         },
         layers: [
           { id: 'ground', type: 'background', paint: { 'background-color': '#05070a' } },
@@ -297,6 +325,22 @@ export function EvacView({ habitationId }: { habitationId: string }) {
               'raster-brightness-max': 0.45,
             },
           },
+          /* Off in 2D. The Esri raster is PRE-shaded imagery: draping it over
+           * a 3D mesh shades the terrain twice, once baked and once by the
+           * camera, and hillsides end up muddy. In 3D we hide that raster and
+           * shade from the DEM instead. */
+          {
+            id: 'hillshade-local',
+            type: 'hillshade',
+            source: 'dem',
+            layout: { visibility: 'none' },
+            paint: {
+              'hillshade-exaggeration': 0.55,
+              'hillshade-shadow-color': '#05070a',
+              'hillshade-highlight-color': '#8c949e',
+              'hillshade-accent-color': '#05070a',
+            },
+          },
         ],
       },
       center: h.lngLat,
@@ -304,7 +348,10 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       maxZoom: 16,
       minZoom: 8,
       attributionControl: { compact: true },
-      dragRotate: false,
+      /* Enabled for the 3D view; a pitched camera without bearing control is
+       * frustrating to read. Left off in 2D via the toggle below. */
+      dragRotate: true,
+      maxPitch: 75,
       fadeDuration: 0,
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
@@ -718,6 +765,108 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       });
   }, [result, longResult, longTerm, tier, areas, selected, mapReady, shortlistSize, rules.minSeparationKm]);
 
+  /* ------------------------------------------------------ explain scope --- */
+  /* Assembled from what the panel is DISPLAYING, not from the underlying
+   * result objects. If a figure is not on screen it must not be in the bundle,
+   * because the bundle is the complete set of things an answer is permitted to
+   * cite -- and, once the model is wired in, the only context it is given. */
+  const explainBundle: FactBundle | undefined = useMemo(() => {
+    if (!activeResult || !h) return undefined;
+    const st = activeResult.stats;
+    const shown = tier === 'LONG' ? activeResult.zones : areas;
+    const top = shown[0];
+    const facts: Fact[] = [
+      { key: 'habitation', label: 'Habitation', value: h.name },
+      { key: 'tier', label: 'Tier', value: tier === 'LONG' ? 'long-term, permanent' : 'short-term, transitional camp' },
+      { key: 'population', label: 'Population to move', value: int(h.population), aka: ['people', 'persons'] },
+      { key: 'households', label: 'Households', value: int(h.households) },
+      { key: 'radius', label: 'Operation radius', value: `${RADIUS_KM} km`, aka: ['search', 'area'] },
+      { key: 'eligible-ha', label: 'Eligible ground', value: `${int(Math.round(st.eligibleHa))} ha`, aka: ['passed', 'filter', 'land'] },
+      { key: 'eligible-pct', label: 'Eligible share of search area', value: `${st.eligiblePct.toFixed(1)}%`, aka: ['percent', 'proportion'] },
+      { key: 'candidates', label: 'Candidate zones', value: int(shown.length), aka: ['sites', 'options', 'zones'] },
+      { key: 'slope-rule', label: 'Maximum ground gradient', value: `${rules.maxSlopeDeg}°`, aka: ['slope', 'steep', 'gradient'] },
+      { key: 'landslide-rule', label: 'Maximum landslide class admitted', value: String(rules.maxLandslideClass), aka: ['hazard', 'susceptibility'] },
+      { key: 'floor', label: 'Minimum zone area', value: `${rules.minZoneHa} ha`, aka: ['floor', 'smallest'] },
+      { key: 'grid', label: 'Analysis grid', value: `${stack?.manifest.cellMetres ?? 100} m`, aka: ['resolution', 'cell'] },
+    ];
+    if (top) {
+      facts.push(
+        {
+          key: 'top-name',
+          label: 'Top-ranked candidate',
+          /* nearestTown is {name, km}, not a string -- interpolating it whole
+           * printed "[object Object]" into an answer. */
+          value: top.nearestTown
+            ? `near ${top.nearestTown.name}, ${top.nearestTown.km.toFixed(1)} km from it`
+            : 'unnamed ground, no settlement within range',
+          aka: ['first', 'best', 'rank', 'closest', 'nearest'],
+        },
+        { key: 'top-area', label: 'Top candidate area', value: `${Math.round(top.areaHa)} ha` },
+        {
+          key: 'top-dist',
+          label: 'Top candidate distance from origin',
+          value: `${top.distOriginKm.toFixed(1)} km`,
+          aka: ['closest', 'nearest', 'far', 'distance', 'away'],
+        },
+        { key: 'top-score', label: 'Top candidate score', value: top.score.toFixed(0), aka: ['ranked', 'ranking'] },
+      );
+    }
+    if (selectedZone) {
+      facts.push(
+        {
+          key: 'sel-name',
+          label: 'Selected zone',
+          value: selectedZone.nearestTown
+            ? `near ${selectedZone.nearestTown.name}`
+            : 'unnamed ground',
+          aka: ['selected', 'chosen'],
+        },
+        { key: 'sel-area', label: 'Selected zone area', value: `${Math.round(selectedZone.areaHa)} ha`, aka: ['selected', 'chosen'] },
+        { key: 'sel-capacity', label: 'Selected zone capacity', value: `${int(selectedZone.capacityPersons)} persons`, aka: ['capacity', 'hold', 'fit'] },
+      );
+    }
+    if (routeResult && routeResult.routes.length) {
+      const r = routeResult.routes.find((x) => x.id === selectedRoute) ?? routeResult.routes[0];
+      facts.push(
+        { key: 'route-km', label: 'Selected route distance', value: `${r.km.toFixed(1)} km`, aka: ['route', 'distance', 'far'] },
+        { key: 'route-min', label: 'Selected route arrival', value: `${Math.round(r.minutes)} min`, aka: ['time', 'arrival', 'long'] },
+        { key: 'route-worst', label: 'Worst segment class on that route', value: `class ${r.worstClass}`, aka: ['risk', 'worst', 'safe', 'danger'] },
+      );
+    }
+    return {
+      scope: 'EVAC_ZONES' as const,
+      subject: `${h.name}, ${tier === 'LONG' ? 'long-term' : 'short-term'} tier`,
+      facts,
+    };
+  }, [activeResult, areas, tier, h, rules, stack, selectedZone, routeResult, selectedRoute]);
+
+  /* ------------------------------------------------------ terrain on/off --- */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    if (view3d) {
+      map.setTerrain({ source: 'dem', exaggeration });
+      map.setLayoutProperty('hillshade', 'visibility', 'none');
+      map.setLayoutProperty('hillshade-local', 'visibility', 'visible');
+      map.easeTo({ pitch: 62, duration: 900, essential: true });
+      map.dragRotate.enable();
+    } else {
+      map.setTerrain(null);
+      map.setLayoutProperty('hillshade', 'visibility', 'visible');
+      map.setLayoutProperty('hillshade-local', 'visibility', 'none');
+      map.easeTo({ pitch: 0, bearing: 0, duration: 900, essential: true });
+      map.dragRotate.disable();
+    }
+  }, [view3d, mapReady]);
+
+  /* Exaggeration alone does not need a camera move. */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !view3d) return;
+    map.setTerrain({ source: 'dem', exaggeration });
+  }, [exaggeration, view3d, mapReady]);
+
   /* --------------------------------------------------- draw the routes --- */
   useEffect(() => {
     const map = mapRef.current;
@@ -847,6 +996,17 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                   <span className="mono">{coord(h.lngLat)}</span>
                 </div>
                 <div className="zoomctx-row">
+                  <span>View</span>
+                  <span className="seg seg-xs">
+                    <button className={view3d ? '' : 'on'} onClick={() => setView3d(false)}>
+                      Plan
+                    </button>
+                    <button className={view3d ? 'on' : ''} onClick={() => setView3d(true)}>
+                      Relief
+                    </button>
+                  </span>
+                </div>
+                <div className="zoomctx-row">
                   <span>Operation radius</span>
                   <span className="mono">{RADIUS_KM} km</span>
                 </div>
@@ -860,11 +1020,42 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                     {mergeKm > 0 ? `${mergeKm.toFixed(1)} km` : 'individual'}
                   </span>
                 </div>
+                {view3d ? (
+                  <>
+                    <div className="zoomctx-row">
+                      <span>Vertical</span>
+                      <span className="mono">&times;{exaggeration.toFixed(1)}</span>
+                    </div>
+                    <input
+                      className="inp"
+                      type="range"
+                      min={1}
+                      max={3}
+                      step={0.5}
+                      value={exaggeration}
+                      onChange={(e) => setExaggeration(Number(e.target.value))}
+                      aria-label="Vertical exaggeration"
+                    />
+                    {/* The distortion is stated, not implied. At x2 a 5-degree
+                        slope -- the short-term gradient limit -- renders as 10,
+                        so the relief view must never be read as evidence about
+                        the very threshold that admitted the ground. */}
+                    {exaggeration > 1 ? (
+                      <div className="exagwarn">
+                        Heights exaggerated &times;{exaggeration.toFixed(1)} for legibility.
+                        Visual only — do not judge gradient from this view.
+                      </div>
+                    ) : (
+                      <div className="exagnote">True vertical scale.</div>
+                    )}
+                  </>
+                ) : null}
               </div>
             </div>
 
             <div className="map-overlay map-legend">
-              <div className="legend-title">Constraint layers</div>
+              <OverlayBox title="Constraint layers">
+                <div>
               {[
                 ['High Hazard Zone', '#e08127'],
                 ['Medium Hazard Zone', '#b0902a'],
@@ -897,9 +1088,10 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                 </>
               ) : null}
               <div className="legend-note">
-                KSDMA sheets at 1:50,000 — boundaries are good to roughly 50–100 m, so do not read
-                them as parcel-accurate at this zoom.
+                KSDMA sheets at 1:50,000 — boundaries good to 50–100 m. Not parcel-accurate.
               </div>
+                </div>
+              </OverlayBox>
             </div>
           </div>
 
@@ -1090,6 +1282,11 @@ export function EvacView({ habitationId }: { habitationId: string }) {
               ) : null}
             </div>
 
+            {/* Docked at the foot of the panel, so the transcript grows upward
+                over the panel rather than pushing the tables it cites out of
+                view. */}
+            <ExplainDock scope="EVAC_ZONES" bundle={explainBundle} />
+
             <div className="provline">
               <span className="src">Picture as of</span>
               <div className="mono">{ts(OPERATING_CLOCK)}</div>
@@ -1128,6 +1325,13 @@ function LoadScreen({
   return (
     <div className="loadscreen">
       <div className="loadscreen-inner">
+        {/* The wordmark IS the progress indicator -- the letterforms fill left
+            to right as stages complete, rather than a bar running beside a
+            logo. One object, not two. */}
+        <div className="loadmark">
+          <WordmarkProgress progress={done / stages.length} height={48} />
+        </div>
+
         <div className="loadscreen-head">
           <span>Preparing evacuation planning</span>
           <span className="mono">
@@ -1136,10 +1340,6 @@ function LoadScreen({
         </div>
         <div className="loadscreen-sub">
           {h.name} · {h.block} block · {h.district} · {RADIUS_KM} km operation radius
-        </div>
-
-        <div className="loadbar">
-          <i style={{ width: `${(done / stages.length) * 100}%` }} />
         </div>
 
         <table className="loadtable">

@@ -3,6 +3,7 @@ import type { Habitation, TierKey } from '../data/schema';
 import { int, ts } from '../lib/format';
 import { ALERT_TEXT } from '../lib/severity';
 import { FlagDot } from './primitives';
+import { Wordmark } from './Wordmark';
 
 /* ---------------------------------------------------------------- top --- */
 
@@ -11,8 +12,12 @@ export function TopBar({ onShowKeys }: { onShowKeys: () => void }) {
   return (
     <header className="topbar">
       <div className="topbar-brand">
-        SDMA Red Zone Console
-        <span className="org">Multi-hazard · Module 1</span>
+        <Wordmark height={27} />
+        <span className="brand-sep" aria-hidden />
+        <span className="brand-app">
+          Red Zone Console
+          <span className="org">Multi-hazard · Module 1</span>
+        </span>
       </div>
       <nav className="topbar-nav">
         <a className={hash.startsWith('#/evac/') ? '' : 'active'} href="#/map">
@@ -22,12 +27,6 @@ export function TopBar({ onShowKeys }: { onShowKeys: () => void }) {
           Evacuation planning
         </a>
       </nav>
-
-      {/* Not dismissible. A screenshot of this app must never be mistakable
-          for an official assessment. */}
-      <div className="databanner">
-        Placeholder values pending overlay ingest — not an official assessment
-      </div>
 
       <div className="topbar-spacer" />
       <div className="topbar-right">

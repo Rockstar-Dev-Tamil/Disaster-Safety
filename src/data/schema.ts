@@ -432,7 +432,9 @@ export type ExplainScope =
   | 'TIER_IMMEDIATE'
   | 'TIER_SHORT_TERM'
   | 'TIER_LONG_TERM'
-  | 'ROUTING';
+  | 'ROUTING'
+  /** Evacuation workspace: the extraction currently on screen. */
+  | 'EVAC_ZONES';
 
 export interface ExplainAnswer {
   /** Short plain text. Narrates only figures already on screen. */

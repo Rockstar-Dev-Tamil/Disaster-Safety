@@ -4,12 +4,14 @@ import type { Habitation, HazardType, TierKey } from '../data/schema';
 
 /** Must match --t-camera in tokens.css. */
 const CAMERA_MS = 800;
+import { HAZARD_LABEL } from '../data/schema';
 import { HABITATIONS, HABITATION_BY_ID, OPERATING_CLOCK, STATES } from '../data/habitations';
 import { OVERLAYS } from '../data/layers';
 import { MapCanvas, type Basemap, type ScoreField } from '../components/MapCanvas';
 import { SideRail, type Filters } from '../components/SideRail';
 import { HabitationPanel } from '../components/HabitationPanel';
 import { ExplainDock } from '../components/ExplainDock';
+import type { Fact, FactBundle } from '../lib/explain';
 import { OverlayBox } from '../components/primitives';
 import { KeyboardSheet, StatusStrip, TopBar } from '../components/Chrome';
 import {
@@ -86,6 +88,7 @@ export function MapView() {
 
   const selected = selectedId ? HABITATION_BY_ID.get(selectedId) ?? null : null;
 
+
   /* Two pieces of state, because a dock has to exist at its closed position
    * before it can travel from there.
    *
@@ -127,6 +130,38 @@ export function MapView() {
     return () => cancelAnimationFrame(raf);
   }, [lingering, selected]);
   const overlay = OVERLAYS.find((o) => o.id === overlayId) ?? null;
+  /* What the national view is displaying: the filter state and the counts it
+   * produces. Not the underlying habitation set -- an answer may only cite
+   * what is on screen. */
+  const nationalBundle: FactBundle = useMemo(() => {
+    const flagged = (t: TierKey) =>
+      HABITATIONS.filter((x) => x.tiers[t] === 'FLAGGED').length;
+    const facts: Fact[] = [
+      { key: 'clock', label: 'Operating picture timestamp', value: OPERATING_CLOCK, aka: ['time', 'when', 'tonight'] },
+      { key: 'plotted', label: 'Habitations in view', value: `${int(filtered.length)} of ${int(HABITATIONS.length)}`, aka: ['plotted', 'shown', 'many'] },
+      { key: 'basis', label: 'Score basis', value: filters.scoreField === 'current' ? 'current operational state' : 'standing susceptibility', aka: ['score', 'basis'] },
+      { key: 'threshold', label: 'Risk threshold', value: `at or above ${filters.threshold}`, aka: ['filter', 'cutoff'] },
+      { key: 'hazards', label: 'Hazard types enabled', value: `${filters.hazards.size} of 5` },
+      /* The rail lists a count per hazard type, so those counts are on screen
+       * and citable. Without them "where are the cloudburst habitations"
+       * missed against a panel that is visibly displaying the answer. */
+      ...(['LANDSLIDE', 'FLOOD', 'CYCLONE', 'COASTAL_EROSION', 'CLOUDBURST'] as HazardType[]).map(
+        (hz): Fact => ({
+          key: `hz-${hz}`,
+          label: `Habitations carrying ${HAZARD_LABEL[hz].toLowerCase()} hazard`,
+          value: int(HABITATIONS.filter((x) => x.hazards.includes(hz)).length),
+          aka: [HAZARD_LABEL[hz], hz.replace('_', ' ')],
+        }),
+      ),
+      { key: 'state', label: 'State filter', value: filters.states || 'all states' },
+      { key: 'overlay', label: 'Active overlay', value: overlay?.label ?? 'none', aka: ['layer', 'map'] },
+      { key: 'immediate', label: 'Immediate tier flagged', value: int(flagged('IMMEDIATE')), aka: ['tier', 'count'] },
+      { key: 'short', label: 'Short-term tier flagged', value: int(flagged('SHORT_TERM')), aka: ['tier', 'count'] },
+      { key: 'long', label: 'Long-term tier flagged', value: int(flagged('LONG_TERM')), aka: ['tier', 'count'] },
+      { key: 'withheld', label: 'Long-term withheld', value: int(HABITATIONS.filter((x) => x.tiers.LONG_TERM === 'WITHHELD').length), aka: ['withheld'] },
+    ];
+    return { scope: 'PAN_INDIA' as const, subject: 'the national view under the current filters', facts };
+  }, [filtered, filters, overlay]);
   const isSequence = overlay?.kind === 'IMAGE_SEQUENCE';
 
   /* Sequence manifest is fetched lazily -- only when that overlay is chosen. */
@@ -386,7 +421,7 @@ export function MapView() {
 
           {/* National-level explanation input, docked to the map stage. */}
           <div className="map-overlay map-explain">
-            <ExplainDock scope="PAN_INDIA" />
+            <ExplainDock scope="PAN_INDIA" bundle={nationalBundle} />
           </div>
         </div>
 

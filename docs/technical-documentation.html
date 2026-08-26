@@ -1,0 +1,1118 @@
+<meta charset="utf-8">
+<title>Red Zone Console — Technical Documentation</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+
+  :root {
+    --ink: #14171a;
+    --ink-2: #3d444c;
+    --ink-3: #6b737c;
+    --rule: #d4d9de;
+    --rule-2: #eceff2;
+    --accent: #1f5f8b;
+    --warn: #8a5a00;
+    --code-bg: #f5f7f9;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: "Charter", "Georgia", "Times New Roman", serif;
+    font-size: 10.2pt;
+    line-height: 1.52;
+    color: var(--ink);
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  h1, h2, h3, h4 { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+
+  h1 { font-size: 21pt; line-height: 1.15; margin: 0 0 4pt; letter-spacing: -0.01em; }
+  h2 {
+    font-size: 13pt; margin: 20pt 0 7pt; padding-bottom: 3pt;
+    border-bottom: 1.6pt solid var(--ink); letter-spacing: -0.005em;
+    page-break-after: avoid;
+  }
+  h3 { font-size: 11pt; margin: 13pt 0 4pt; color: var(--ink); page-break-after: avoid; }
+  h4 {
+    font-size: 9pt; margin: 10pt 0 3pt; color: var(--ink-2);
+    text-transform: uppercase; letter-spacing: 0.07em; page-break-after: avoid;
+  }
+
+  p { margin: 0 0 7pt; }
+  ul, ol { margin: 0 0 7pt; padding-left: 15pt; }
+  li { margin-bottom: 2.5pt; }
+
+  code, .mono {
+    font-family: "Cascadia Mono", "Consolas", "SF Mono", monospace;
+    font-size: 8.6pt;
+    background: var(--code-bg);
+    padding: 0.5pt 2.5pt;
+    border-radius: 2px;
+  }
+  pre {
+    background: var(--code-bg);
+    border-left: 2.5pt solid var(--rule);
+    padding: 7pt 9pt;
+    margin: 0 0 8pt;
+    font-family: "Cascadia Mono", "Consolas", monospace;
+    font-size: 8.2pt;
+    line-height: 1.42;
+    overflow-x: auto;
+    page-break-inside: avoid;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin: 0 0 9pt;
+    font-size: 9pt; page-break-inside: avoid;
+  }
+  th {
+    text-align: left; font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 8pt; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ink-2); border-bottom: 1.2pt solid var(--ink-2);
+    padding: 3pt 5pt 3pt 0; vertical-align: bottom;
+  }
+  td {
+    padding: 3.5pt 5pt 3.5pt 0; border-bottom: 0.5pt solid var(--rule-2);
+    vertical-align: top;
+  }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums;
+               font-family: "Cascadia Mono", Consolas, monospace; font-size: 8.4pt; }
+
+  .lede {
+    font-size: 10.8pt; color: var(--ink-2); line-height: 1.5;
+    margin: 0 0 10pt;
+  }
+
+  .titleblock {
+    border-bottom: 2.5pt solid var(--ink);
+    padding-bottom: 9pt; margin-bottom: 13pt;
+  }
+  .titlemeta {
+    font-family: "Segoe UI", Arial, sans-serif; font-size: 8.4pt;
+    color: var(--ink-3); letter-spacing: 0.05em; text-transform: uppercase;
+    margin-bottom: 7pt;
+  }
+
+  .note {
+    border-left: 2.5pt solid var(--accent);
+    background: #f2f7fb;
+    padding: 7pt 10pt; margin: 0 0 9pt;
+    font-size: 9.4pt;
+    page-break-inside: avoid;
+  }
+  .warn {
+    border-left: 2.5pt solid var(--warn);
+    background: #fdf7ec;
+    padding: 7pt 10pt; margin: 0 0 9pt;
+    font-size: 9.4pt;
+    page-break-inside: avoid;
+  }
+  /* Only the FIRST bold is the callout label. Scoping this to `.note b`
+     turned every inline emphasis inside a callout into a block heading and
+     broke the sentence around it. */
+  .note > b:first-child, .warn > b:first-child {
+    font-family: "Segoe UI", Arial, sans-serif; font-size: 8pt;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    display: block; margin-bottom: 3pt;
+  }
+  .note > b:first-child { color: var(--accent); }
+  .warn > b:first-child { color: var(--warn); }
+
+  .toc { columns: 2; column-gap: 22pt; font-size: 9.2pt; margin-bottom: 6pt; }
+  .toc ol { padding-left: 14pt; margin: 0; }
+  .toc li { margin-bottom: 2pt; break-inside: avoid; }
+
+  .kv { font-size: 9pt; }
+  .kv td:first-child { width: 34%; color: var(--ink-2); }
+
+  .brk { page-break-before: always; }
+  .avoid { page-break-inside: avoid; }
+  .tight li { margin-bottom: 1pt; }
+  small { color: var(--ink-3); font-size: 8.6pt; }
+</style>
+
+<div class="titleblock">
+  <div class="titlemeta">Technical Documentation · Internal</div>
+  <h1>Red Zone Console</h1>
+  <div class="lede">
+    A multi-hazard relocation decision-support console for State Disaster
+    Management Authority officers. Smart India Hackathon problem statement
+    26191, Ministry of Home Affairs.
+  </div>
+  <table class="kv" style="margin-bottom:0">
+    <tr><td>Repository</td><td class="mono">SIH2026</td></tr>
+    <tr><td>Stack</td><td>Vite · React 18 · TypeScript · MapLibre GL JS 4.7.1</td></tr>
+    <tr><td>Demonstration geography</td><td>Wayanad district, Kerala — 30 July 2024 landslide event</td></tr>
+    <tr><td>Source size</td><td class="mono">~14,500 lines across src/ and scripts/</td></tr>
+  </table>
+</div>
+
+<h2 style="margin-top:0">Contents</h2>
+<div class="toc">
+  <ol>
+    <li>What the system does</li>
+    <li>Running it</li>
+    <li>The one design decision everything follows from</li>
+    <li>Technology choices and why</li>
+    <li>Architecture and data flow</li>
+    <li>The data pipeline</li>
+    <li>Rainfall: deriving thresholds instead of borrowing them</li>
+    <li>Candidate zone extraction</li>
+    <li>Route evaluation</li>
+    <li>Long-term resettlement evaluation</li>
+    <li>The 3D relief view</li>
+    <li>Interface system: tokens, disclosure, motion</li>
+    <li>Bugs worth knowing about</li>
+    <li>Known limitations</li>
+    <li>File map — where to change what</li>
+  </ol>
+</div>
+
+<h2>1. What the system does</h2>
+
+<p>
+  An officer has to decide which habitations are in danger, place each into a
+  relocation tier, and then defend that decision to a District Collector, in
+  court, and to the press. The console supports that in two screens.
+</p>
+
+<table>
+  <tr><th style="width:26%">Screen</th><th style="width:16%">Route</th><th>What it holds</th></tr>
+  <tr>
+    <td><b>National view</b></td>
+    <td class="mono">#/</td>
+    <td>358 habitation points across India with hazard scores, published
+        susceptibility overlays, and observed rainfall frozen at the event
+        timestamp. Filter by hazard, tier, state, score.</td>
+  </tr>
+  <tr>
+    <td><b>Evacuation workspace</b></td>
+    <td class="mono">#/evac/&lt;id&gt;</td>
+    <td>Road-level map for one habitation: candidate relocation zones under two
+        different rule sets, route evaluation with live re-planning, and
+        statutory compliance against the RFCTLARR Third Schedule.</td>
+  </tr>
+</table>
+
+<p>
+  The evacuation workspace has two <b>tiers</b>, which are not two views of the
+  same analysis — they run different rule sets over the same ground and produce
+  genuinely different eligible surfaces.
+</p>
+
+<ul>
+  <li><b>Short-term</b> — transitional camp siting, governed by Sphere minimum
+      standards. Answers: where do 1,880 people sleep tonight, and can a convoy
+      get there.</li>
+  <li><b>Long-term</b> — permanent resettlement, governed by the RFCTLARR Act
+      2013 and structured around Cernea's Impoverishment Risks and
+      Reconstruction model. Answers: where can these households actually live.</li>
+</ul>
+
+<h2>2. Running it</h2>
+
+<pre><code>npm install
+npm run dev       # Vite dev server, http://localhost:5173
+npm run build     # tsc -b && vite build
+npm run preview</code></pre>
+
+<p>
+  Node 18+. The interface targets a minimum viewport of 1024 px and is laid out
+  for 1440 px and above; anything narrower shows a notice instead of a squeezed
+  layout.
+</p>
+
+<p>
+  The Python scripts under <code>scripts/</code> are <b>not</b> part of the
+  build. They were run once, their outputs are committed under
+  <code>public/</code> and <code>src/data/</code>, and you only need to re-run
+  them if you are changing the underlying data. They need Python 3 with
+  <code>numpy</code>, <code>rasterio</code> and <code>Pillow</code>.
+</p>
+
+<div class="warn">
+  <b>Credential</b>
+  <code>fetch-imerg.py</code> needs a NASA Earthdata token at
+  <code>.earthdata_token</code>. That file is gitignored and has never been
+  committed. Everything else fetches without authentication.
+</div>
+
+<h2>3. The one design decision everything follows from</h2>
+
+<p>
+  Hazard zoning here is a <b>deterministic weighted overlay</b>, not a trained
+  model. This is a procedural decision rather than a statistical one. A
+  red-zone declaration gets contested, so the officer must be able to state
+  which factor at which weight produced a given number. A learned model can be
+  more predictive and still be unusable in that setting, because "the model
+  said so" is not a defence.
+</p>
+
+<p>Two consequences run through the whole codebase:</p>
+
+<h3>Every score is accompanied by its factor table</h3>
+
+<p>
+  <code>derive()</code> in <code>src/data/sources.ts</code> is the only way a
+  score is ever produced. It throws if the weights do not sum to 1.0:
+</p>
+
+<pre><code>const wsum = factors.reduce((a, f) =&gt; a + f.weight, 0);
+if (Math.abs(wsum - 1) &gt; 1e-6) {
+  throw new Error(`Weights must sum to 1.0, got ${wsum.toFixed(4)} ...`);
+}
+const score = factors.reduce((a, f) =&gt; a + f.normalised * f.weight, 0);</code></pre>
+
+<p>
+  Because the score is computed <i>from</i> the displayed factors rather than
+  alongside them, the components on screen always reconstruct the total. There
+  is no path where they can drift apart. The working rule on this project:
+  <b>a number without its breakdown is a bug.</b>
+</p>
+
+<h3>Every figure carries provenance</h3>
+
+<p>
+  Each value is tagged with a <code>Provenance</code> record — source, agency,
+  method, resolution, citation, and either an assessment date or an observation
+  timestamp. Status is one of:
+</p>
+
+<table>
+  <tr><th style="width:26%">Status</th><th>Meaning</th></tr>
+  <tr><td class="mono">LIVE</td><td>Real data, really ingested.</td></tr>
+  <tr><td class="mono">PENDING_OVERLAY</td><td>Layer identified and specified, not yet ingested.</td></tr>
+  <tr><td class="mono">STUB_M2 / STUB_M4</td><td>Module not implemented; the figure is structural, not observed.</td></tr>
+</table>
+
+<p>
+  This is why unimplemented modules are <i>visible</i> in the interface rather
+  than silently plausible. A stub renders with a distinctly non-semantic colour
+  so it can never be mistaken for a finding.
+</p>
+
+<h3>Two scores, never merged</h3>
+
+<p>
+  <b>Standing susceptibility</b> (assessed on a date, from terrain) and
+  <b>current operational state</b> (observed at a timestamp, from rainfall and
+  alerts) are held separately and never averaged into one number. They answer
+  different questions and move on different clocks.
+</p>
+
+<h3>Tiers are independent flags, not a scale</h3>
+
+<p>
+  <code>TierStatus</code> has three values: <code>FLAGGED</code>,
+  <code>NOT_FLAGGED</code>, and <code>WITHHELD</code>. The last means the
+  criteria are met but no viable destination was found. Collapsing
+  <code>WITHHELD</code> into <code>NOT_FLAGGED</code> would report a siting
+  failure as an absence of risk — so the type makes that impossible. A
+  habitation can hold several tiers at once, which is why the tier counts in
+  the status strip do not sum to the total.
+</p>
+
+<h2 class="brk">4. Technology choices and why</h2>
+
+<table>
+  <tr><th style="width:24%">Choice</th><th>Reasoning</th></tr>
+  <tr>
+    <td><b>MapLibre GL JS</b><br><small>not Leaflet, not Mapbox</small></td>
+    <td>We need GPU-rendered vector layers, raster overlays, data-driven paint
+        expressions, and 3D terrain. Leaflet cannot do the terrain or the paint
+        expressions. Mapbox GL is no longer open source and needs a token,
+        which means a network dependency and an account at demo time.</td>
+  </tr>
+  <tr>
+    <td><b>Plain CSS with design tokens</b><br><small>no Tailwind, no component library</small></td>
+    <td>The interface is a dense operational console, not a web app made of
+        cards. Every component library fights that. The token file is 110 lines
+        and encodes the actual rules — notably that saturated colour may only
+        come from a value-encoding scale.</td>
+  </tr>
+  <tr>
+    <td><b>Hash routing, hand-rolled</b><br><small>13 lines in App.tsx</small></td>
+    <td>Two screens. A router would be more code than the thing it replaces.
+        (Note: <code>react-router-dom</code> is still in
+        <code>package.json</code> and unused — safe to remove.)</td>
+  </tr>
+  <tr>
+    <td><b>Pre-computed rasters as PNG</b><br><small>not a tile server</small></td>
+    <td>The analysis grid is fixed and small enough to ship. Encoding it as
+        8-bit greyscale PNG means it loads as a static file, decodes on the GPU
+        path, and works with no backend at all. The whole app is static files.</td>
+  </tr>
+  <tr>
+    <td><b>Python for the pipeline</b><br><small>numpy, rasterio</small></td>
+    <td>Raster mosaicking, morphological operations, connected components and
+        L-moment fitting are all one-liners in numpy and painful in JS. The
+        pipeline runs once; the output is what ships.</td>
+  </tr>
+  <tr>
+    <td><b>No backend</b></td>
+    <td>Nothing is served dynamically. This removes an entire class of demo-day
+        failure and makes the app deployable to any static host.</td>
+  </tr>
+</table>
+
+<div class="note">
+  <b>Recurring theme</b>
+  Several choices above are driven by the same concern: <b>anything fetched at
+  run time can fail at demo time.</b> We have already been bitten by Overpass
+  mirrors timing out and AWS S3 throttling during the build. The 3D terrain
+  work removed the last significant runtime dependency (a remote Esri hillshade
+  raster).
+</div>
+
+<h2>5. Architecture and data flow</h2>
+
+<pre><code>Python scripts (run once, offline)
+        │
+        ├── public/terrain/*.png      8-bit rasters on a fixed 100 m grid
+        ├── public/terrain/*.json     road graph, boundaries, amenities
+        ├── public/dem/{z}/{x}/{y}.png   terrarium DEM tiles for 3D
+        └── src/data/rainfall.ts      GENERATED — IMERG + fitted return levels
+                    │
+                    ▼
+        src/lib/terrain.ts    decodes PNGs into typed arrays, indexes the grid
+                    │
+      ┌─────────────┼─────────────┬──────────────────┐
+      ▼             ▼             ▼                  ▼
+  zones.ts      routing.ts    longterm.ts        severity.ts
+  extraction    Dijkstra +    RFCTLARR /         CVD-safe ramp
+  clustering    edge risk     Cernea
+      │             │             │
+      └─────────────┴─────────────┴──────────────────┘
+                    ▼
+              React components
+        (panels render the numbers AND their factor tables)</code></pre>
+
+<p>
+  Everything in <code>src/lib/</code> is pure: it takes typed arrays and
+  parameters and returns results. No React, no fetch, no side effects. That is
+  what makes the numbers testable and the panels dumb.
+</p>
+
+<h2>6. The data pipeline</h2>
+
+<h3>Published hazard layers</h3>
+
+<table>
+  <tr><th style="width:32%">Layer</th><th>Publisher</th></tr>
+  <tr><td>Landslide susceptibility</td><td>Geological Survey of India — National Landslide Susceptibility Mapping, 1:50,000 sheets</td></tr>
+  <tr><td>Flood landform / hazard</td><td>Kerala SDMA with NCESS</td></tr>
+  <tr><td>Flood inundation</td><td>National Remote Sensing Centre, ISRO</td></tr>
+  <tr><td>Shoreline change</td><td>NCSCM, MoEFCC <small>(Kendrapara set, not currently wired in)</small></td></tr>
+  <tr><td>Storm surge</td><td>INCOIS, ADCIRC at 1-in-100-year return period <small>(same)</small></td></tr>
+</table>
+
+<h3>The analysis grid</h3>
+
+<p>
+  Every raster is co-registered on one grid so that a cell index means the same
+  thing in every layer:
+</p>
+
+<table class="kv">
+  <tr><td>Bounds</td><td class="mono">75.55–76.65 E, 11.20–12.15 N</td></tr>
+  <tr><td>Dimensions</td><td class="mono">1199 × 1058 cells</td></tr>
+  <tr><td>Cell size</td><td class="mono">100 m</td></tr>
+  <tr><td>Shipped size</td><td class="mono">6.0 MB (terrain) + 8.8 MB (DEM tiles)</td></tr>
+</table>
+
+<div class="note">
+  <b>Why 100 m matters more than it looks</b>
+  At 100 m, <b>one cell is exactly one hectare</b>. The zone-area arithmetic
+  relies on this — a cell count <i>is</i> a hectare count. If you ever change
+  the cell size, every area figure and the minimum-zone floors change with it.
+</div>
+
+<h4>Raster encodings</h4>
+<table>
+  <tr><th>File</th><th>Source</th><th>Encoding</th></tr>
+  <tr><td class="mono">elevation.png</td><td>Copernicus GLO-30</td><td>metres ÷ 10</td></tr>
+  <tr><td class="mono">slope.png</td><td>Horn operator on the DEM</td><td>degrees × 1</td></tr>
+  <tr><td class="mono">landslide.png</td><td>GSI NLSM, rasterised</td><td>class × 80</td></tr>
+  <tr><td class="mono">flood.png</td><td>KSDMA, rasterised</td><td>class × 80</td></tr>
+  <tr><td class="mono">distroad.png</td><td>OSM, distance transform</td><td>metres ÷ 50</td></tr>
+  <tr><td class="mono">disttown.png</td><td>OSM place nodes</td><td>metres ÷ 200</td></tr>
+  <tr><td class="mono">landuse.png</td><td>OSM landuse / natural</td><td>class × 40</td></tr>
+  <tr><td class="mono">protected.png</td><td>OSM boundary + leisure</td><td>binary, 255</td></tr>
+</table>
+
+<p>
+  <b>Slope is computed at build time from the float array, before
+  quantisation.</b> The 10 m greyscale quantisation of <code>elevation.png</code>
+  therefore never touches the analysis — it only affected the 3D view, which is
+  why the DEM had to be re-encoded separately (section 11).
+</p>
+
+<h3>The scripts</h3>
+
+<table>
+  <tr><th style="width:34%">Script</th><th>Output</th></tr>
+  <tr><td class="mono">kmz2geojson.py</td><td>GSI / KSDMA KMZ → GeoJSON</td></tr>
+  <tr><td class="mono">fetch-imerg.py</td><td>IMERG half-hourly and daily archives over OPeNDAP</td></tr>
+  <tr><td class="mono">derive-thresholds.py</td><td>Gumbel fit → writes <code>src/data/rainfall.ts</code></td></tr>
+  <tr><td class="mono">fetch-ecmwf.py</td><td>IFS HRES fields via GRIB index byte-ranges</td></tr>
+  <tr><td class="mono">build-terrain.py</td><td>the eight rasters above + manifest</td></tr>
+  <tr><td class="mono">export-roads.py</td><td>Overpass road extraction</td></tr>
+  <tr><td class="mono">build-roadgraph.py</td><td>routing graph from road geometry</td></tr>
+  <tr><td class="mono">build-longterm-layers.py</td><td>protected areas, taluk boundaries, amenity points</td></tr>
+  <tr><td class="mono">build-dem-tiles.py</td><td>terrarium DEM tile pyramid for 3D terrain</td></tr>
+</table>
+
+<h4>Retrieval notes that affect reproducibility</h4>
+<ul>
+  <li><b>Overpass</b> is cached per tile with a 90 s timeout and a narrowed set
+      of highway classes. An earlier configuration (district-wide
+      <code>residential</code>/<code>unclassified</code>, 300 s × 3 attempts ×
+      3 mirrors) could spend 45 minutes on one tile with nothing cached.</li>
+  <li><b>ECMWF</b> comes from the Google mirror; the AWS S3 endpoint returned
+      sustained 503 throttling.</li>
+  <li><b>KMZ parsing</b> had to isolate the innermost <code>&lt;table&gt;</code> —
+      nested tables broke row-wise attribute extraction because the outer
+      <code>&lt;tr&gt;</code> appears to close at the inner table's first
+      <code>&lt;/tr&gt;</code>.</li>
+  <li><b>Geometry simplification</b> is RDP at 5 decimal places. At 4 dp a
+      waterbody feature collapsed and disappeared.</li>
+</ul>
+
+<h2 class="brk">7. Rainfall: deriving thresholds instead of borrowing them</h2>
+
+<p>
+  This is the most subtle piece of reasoning in the project and worth
+  understanding properly.
+</p>
+
+<p>
+  IMD's "extremely heavy rainfall" boundary is <b>204.5 mm/24 h</b>. That number
+  is calibrated against rain gauges. Our observation is NASA GPM IMERG, a
+  satellite retrieval. Applied directly, IMERG never crosses that threshold for
+  the July 2024 event — the peak 24-hour accumulation is roughly 133 mm against
+  a gauge record several times higher, because satellite retrievals
+  systematically under-read orographic extremes in the Western Ghats.
+</p>
+
+<div class="warn">
+  <b>The trap</b>
+  Applying a gauge-calibrated threshold to a satellite estimate reports
+  <b>no exceedance</b> for an event that killed around 400 people. The
+  threshold is not wrong and the data is not wrong — they are simply not
+  commensurable.
+</div>
+
+<p>
+  So instead of borrowing a threshold, we fit one to the cell's own record.
+  IMERG is compared against IMERG and the bias cancels on both sides:
+</p>
+
+<ul class="tight">
+  <li>Gumbel (EV1) distribution, fitted by L-moments</li>
+  <li>26 annual maximum daily accumulations, monsoon seasons (Jun–Sep) 1998–2023</li>
+  <li><b>The event year is excluded from the baseline</b>, so the event cannot
+      help define the threshold it is tested against</li>
+</ul>
+
+<table>
+  <tr><th>Return period</th><th class="n">2 y</th><th class="n">5 y</th><th class="n">10 y</th><th class="n">25 y</th><th class="n">50 y</th><th class="n">100 y</th></tr>
+  <tr><td>mm / 24 h</td><td class="n">87.3</td><td class="n">112.9</td><td class="n">129.9</td><td class="n">151.3</td><td class="n">167.2</td><td class="n">183.0</td></tr>
+</table>
+
+<h3>The trigger is terrain-conditioned</h3>
+
+<p>
+  Identical rainfall means different things on different ground, so the return
+  period required to raise an alert varies by the published susceptibility band:
+</p>
+
+<table>
+  <tr><th>Susceptibility band</th><th class="n">Very high</th><th class="n">High</th><th class="n">Moderate</th><th class="n">Low</th><th class="n">Very low</th></tr>
+  <tr><td>Trigger at return period</td><td class="n">2 y</td><td class="n">5 y</td><td class="n">15 y</td><td class="n">50 y</td><td class="n">100 y</td></tr>
+</table>
+
+<div class="note">
+  <b>Early stopping was tested and rejected</b>
+  We tried truncating the record once the fitted level appeared to converge. It
+  settled to within −2.8% at 12 years, then moved 6% at year 16 when 2019
+  entered the sample. In extreme-value fitting, <b>a quiet interval is not
+  evidence of convergence.</b> The full 26-year record is fetched and cached.
+</div>
+
+<h3>Resolution honesty</h3>
+
+<p>
+  The IMERG cell is 0.1° (~11 km) centred at 76.15 E, 11.45 N. Chooralmala,
+  Mundakkai, Attamala and Punchirimattom all fall inside that single cell and
+  therefore <b>share one rainfall figure</b>. The interface says so rather than
+  implying four independent observations.
+</p>
+
+<h2>8. Candidate zone extraction</h2>
+
+<p>
+  Implemented in <code>src/lib/zones.ts</code>. Five stages:
+  <b>filter → clean → cluster → fit → rank</b>.
+</p>
+
+<h3>Filter</h3>
+
+<p>
+  Cells are excluded by rule, and <b>each excluded cell records which rule
+  removed it</b>. That is what lets the interface say "153,519 cells excluded
+  for slope, 54.3%" instead of showing grey pixels. An officer can argue with
+  "slope 6.2° exceeds 5°"; they cannot argue with a grey pixel.
+</p>
+
+<table>
+  <tr><th style="width:34%">Parameter</th><th>Short-term (camp)</th><th>Permanent (township)</th></tr>
+  <tr><td>Operation radius</td><td>30 km</td><td>30 km</td></tr>
+  <tr><td>Max slope</td><td>5° <small>(Sphere camp gradient)</small></td><td>15° <small>(terracing viable)</small></td></tr>
+  <tr><td>Max landslide class</td><td>2 — Medium</td><td>1 — Low</td></tr>
+  <tr><td>Minimum zone area</td><td>8 ha</td><td>12 ha</td></tr>
+  <tr><td>Exclude built-up / paddy</td><td>yes</td><td>yes</td></tr>
+  <tr><td>Exclude forest</td><td>no</td><td>yes <small>(Forest Conservation Act 1980)</small></td></tr>
+  <tr><td>Exclude protected</td><td>no</td><td>yes <small>(Wildlife Protection Act 1972)</small></td></tr>
+</table>
+
+<p>
+  The permanent tier is <i>looser</i> on gradient and far <i>stricter</i> on
+  everything else. That is not a mistake: terracing is viable for a permanent
+  build but not for a tent, while forest diversion is simply not obtainable on
+  a resettlement timeline.
+</p>
+
+<div class="warn">
+  <b>Disabled by default: minimum drainage margin</b>
+  The drainage-margin rule defaults to <b>0</b>, i.e. off. As a hard rule it is
+  self-defeating alongside a gradient limit — flat ground is by definition
+  close to its own local minimum, so the two rules jointly eliminate exactly
+  the land that passes both. With both active the result was <b>0% eligible</b>.
+  The published KSDMA flood landform layer, a real survey product, does the job
+  properly.
+</div>
+
+<h3>Clean</h3>
+
+<p>
+  Slope computed at 100 m from a 30 m DEM is genuinely noisy in the Ghats, so
+  the raw eligible mask is speckled with isolated cells ringed by steep ground.
+  Those are real in the data and useless for siting — you cannot pitch a camp
+  on a pixel. <b>Morphological opening</b> (erode then dilate) removes specks
+  and filaments while leaving solid patches at their original extent.
+</p>
+
+<h3>Cluster and merge</h3>
+
+<p>
+  Connected components on the cleaned mask. At coarse zoom levels nearby
+  clusters merge into general areas, using <b>leader clustering</b> with a
+  bounded diameter.
+</p>
+
+<div class="note">
+  <b>Why not single-linkage</b>
+  Single-linkage was tried first. It chained the entire map into one
+  43,122 ha blob, because any two clusters connected by a thread of
+  intermediate clusters merge. Leader clustering bounds the diameter of a
+  group and cannot chain. Merged clusters combine second moments using the
+  <b>parallel-axis theorem</b> rather than re-scanning cells.
+</div>
+
+<h3>Fit — why an ellipse and not a polygon</h3>
+
+<p>
+  Each cluster is drawn as an ellipse fitted from the second moment of its
+  member cells. The hazard sheets are 1:50,000 and the grid is 100 m; neither
+  supports a parcel boundary. The ellipse states <i>"eligible ground clusters
+  here, roughly this big, roughly this shape — go and look"</i>. A crisp
+  polygon would claim a precision the inputs do not have.
+</p>
+
+<p>The drawn ellipse is bounded twice:</p>
+<ul class="tight">
+  <li><b>Area cap</b> — at most 1.6× the cluster's actual eligible hectares</li>
+  <li><b>Absolute cap</b> — semi-major axis at most 3,000 m</li>
+</ul>
+<p>
+  Both scale the two axes by the same factor, so bearing and aspect ratio —
+  which are real properties of the cluster — survive. Without these, a group of
+  37 sub-clusters strung along 15 km of valley fits an ellipse covering most of
+  the search radius, nearly all of which failed the filter. This is rendering
+  only: area, capacity, rank and score are untouched.
+</p>
+
+<h3>Rank</h3>
+
+<table>
+  <tr><th>Factor</th><th class="n">Weight</th><th>Note</th></tr>
+  <tr><td>Contiguous area</td><td class="n">0.25</td><td>saturates at 3× requirement</td></tr>
+  <tr><td>Proximity to origin</td><td class="n">0.20</td><td></td></tr>
+  <tr><td>Road access</td><td class="n">0.20</td><td></td></tr>
+  <tr><td>Ground gradient</td><td class="n">0.15</td><td></td></tr>
+  <tr><td>Settlement access</td><td class="n">0.15</td><td></td></tr>
+  <tr><td>Drainage margin</td><td class="n">0.05</td><td></td></tr>
+</table>
+
+<div class="warn">
+  <b>Why area is a ranking factor at all</b>
+  Ranking on the mean of per-cell factors is <b>size-blind</b>: a 9 ha patch and
+  a 113 ha patch compete on average slope and distance, so small well-placed
+  fragments outrank large ones. For a camp, size <i>is</i> a criterion. Note
+  that the per-cell scores which colour the map deliberately omit the area
+  term, because area is a property of the cluster, not of the cell.
+</div>
+
+<h2 class="brk">9. Route evaluation</h2>
+
+<p>
+  Implemented in <code>src/lib/routing.ts</code>. Dijkstra with a binary heap
+  over the road graph; alternates generated by penalising edges of routes
+  already found.
+</p>
+
+<p>
+  Each edge is sampled at 50 m intervals against the hazard, flood and slope
+  rasters. The risk score is assembled from named components:
+</p>
+
+<table>
+  <tr><th>Component</th><th class="n">Contribution</th></tr>
+  <tr><td>Fraction of segment inside High Hazard Zone</td><td class="n">× 90</td></tr>
+  <tr><td>Fraction inside Medium Hazard Zone</td><td class="n">× 45</td></tr>
+  <tr><td>Fraction across flood landform</td><td class="n">× 50</td></tr>
+  <tr><td>Adjacent slope above 25°</td><td class="n">up to 28</td></tr>
+  <tr><td>Carriageway class</td><td class="n">tertiary 8, secondary 4</td></tr>
+</table>
+
+<div class="note">
+  <b>Drivers are derived from the score, not written alongside it</b>
+  The components live in an array and the human-readable reasons are generated
+  <i>from that array</i>. An earlier version computed the reasons from metre
+  thresholds while the score used length fractions — the worst segment in the
+  network scored 63.6 and reported "no mapped hazard". A number whose stated
+  reasons do not add up to it is a bug. Verified across all 6,877 edges: zero
+  mismatches.
+</div>
+
+<p>
+  Risk class is 4 if more than 100 m of High Hazard Zone or score ≥ 70;
+  otherwise 3 at ≥ 45, 2 at ≥ 20, else 1. Class derates travel speed
+  (0.45 / 0.65 / 0.85 / 1.00), with a further 0.8 factor for night operation.
+</p>
+
+<h3>Routes rank on worst segment, then time — never on mean risk</h3>
+
+<p>
+  A mean would conceal one impassable culvert inside 40 km of good road. If no
+  route clears the acceptable class, the interface <b>says so and names the
+  segments requiring ground observation</b>, rather than silently returning a
+  best-of-bad route. Segments can be marked impassable in the interface, which
+  triggers a re-plan.
+</p>
+
+<p>
+  Two subtleties worth knowing: the sampled-length denominator is floored at
+  100 m (one analysis cell), so a 3 m segment cannot report a hazard fraction
+  above 1 and veto a whole route; and routing is <b>gated to the short-term
+  tier only</b>, because a permanent township is not reached by convoy on the
+  night of the event.
+</p>
+
+<h2>10. Long-term resettlement evaluation</h2>
+
+<p>
+  Implemented in <code>src/lib/longterm.ts</code>. Structured around Cernea's
+  <i>Impoverishment Risks and Reconstruction</i> model (eight risks) and tested
+  against the Third Schedule of the RFCTLARR Act 2013.
+</p>
+
+<h3>Siting tests carry citable thresholds</h3>
+
+<table>
+  <tr><th>Requirement</th><th class="n">Threshold</th><th>Authority</th></tr>
+  <tr><td>Sub-health centre</td><td class="n">2 km</td><td>Third Schedule item 17</td></tr>
+  <tr><td>Primary health centre</td><td class="n">5 km</td><td>Third Schedule item 18</td></tr>
+  <tr><td>Primary school</td><td class="n">1 km</td><td>RTE Act 2009</td></tr>
+  <tr><td>All-weather road</td><td class="n">2 km</td><td>Third Schedule item 1 · Rural Access Index (SDG 9.1.1)</td></tr>
+  <tr><td>Public transport to growth centre</td><td class="n">5 km</td><td>Third Schedule item 11</td></tr>
+  <tr><td>Burial ground</td><td class="n">5 km</td><td>Third Schedule item 12</td></tr>
+  <tr><td>Place of worship</td><td class="n">3 km</td><td>Third Schedule item 21</td></tr>
+</table>
+
+<h3>Construction obligations are listed separately</h3>
+
+<p>
+  Nineteen Third Schedule items — drains, anganwadi, panchayat building and so
+  on — are <b>construction obligations, not siting tests</b>. A site does not
+  "have" a drain; the acquirer must build one. Scoring a site as passing or
+  failing on them would misrepresent both the site and the obligation, so they
+  are presented as the build list instead.
+</p>
+
+<h3>Weights and their basis</h3>
+
+<table>
+  <tr><th>Factor</th><th class="n">Weight</th><th>Cernea risk addressed</th></tr>
+  <tr><td>Community continuity</td><td class="n">0.25</td><td>Community disarticulation</td></tr>
+  <tr><td>Health access</td><td class="n">0.15</td><td>Increased morbidity and mortality</td></tr>
+  <tr><td>Road access</td><td class="n">0.15</td><td>Marginalisation (access)</td></tr>
+  <tr><td>Livelihood proxy</td><td class="n">0.15</td><td>Joblessness <small>— PROXIED</small></td></tr>
+  <tr><td>Education access</td><td class="n">0.10</td><td>Marginalisation (schooling)</td></tr>
+  <tr><td>Settlement access</td><td class="n">0.10</td><td>Social disarticulation</td></tr>
+  <tr><td>Common property</td><td class="n">0.10</td><td>Loss of access to common property</td></tr>
+</table>
+
+<h3>Capacity is a gate, not a score</h3>
+
+<pre><code>residentialHa = areaHa * (1 - 0.35)         // 35% infrastructure overhead
+households    = floor(residentialHa / 0.028328)   // Kerala 7-cent plot norm</code></pre>
+
+<p>
+  A zone that clears every exclusion but cannot hold all households on one site
+  <b>fails</b> rather than partially passing. Centralised resettlement
+  outperforms scattered resettlement on measured resilience, so a partial site
+  is a failure, not a partial success. Currently 149 zones pass and 58 fail on
+  capacity alone.
+</p>
+
+<div class="note">
+  <b>No composite livability score — deliberately</b>
+  Of Cernea's eight risks, only about a third are geospatially addressable, two
+  can be proxied, and three cannot be seen from any layer we have. The system
+  therefore outputs <b>tiered evidence</b> — MEASURED / PROXIED / REQUIRES
+  FIELD SURVEY — rather than a single number that would imply the unobservable
+  had been observed. <code>UNADDRESSED_RISKS</code> and
+  <code>FIELD_SURVEY_REQUIRED</code> enumerate the gaps explicitly.
+</div>
+
+<h2 class="brk">11. The 3D relief view</h2>
+
+<p>
+  The evacuation map has a <b>Plan / Relief</b> toggle. Relief pitches the
+  camera to 62° over a real terrain mesh, with every existing overlay draped on
+  it. This is analytical rather than decorative: the whole short-term rule set
+  is a gradient threshold, and in relief you can see the High Hazard Zones
+  sitting on the steep ridgelines while eligible ground pools in the valleys.
+  It also makes route choices self-evident — a detour that looks arbitrary in
+  plan is obviously avoiding a steep, landslide-prone flank in relief.
+</p>
+
+<h3>Why the DEM had to be rebuilt</h3>
+
+<p>
+  <code>elevation.png</code> stores <code>metres ÷ 10</code> in 8-bit
+  greyscale — 10 m vertical steps. Fine for the analysis, which reads slope
+  computed from the float array before quantisation. But draped on a 3D camera
+  at 2× exaggeration those steps become <b>20 m terraces across every gentle
+  hillside</b>, which reads as a rendering fault. MapLibre also cannot consume a
+  single greyscale image as a <code>raster-dem</code> — it wants RGB-encoded
+  elevation served as tiles.
+</p>
+
+<p>
+  <code>build-dem-tiles.py</code> re-encodes the same Copernicus GLO-30 source
+  into terrarium tiles:
+</p>
+
+<pre><code>elevation_m = (R * 256 + G + B / 256) - 32768</code></pre>
+
+<table class="kv">
+  <tr><td>Zoom levels</td><td class="mono">8 – 12</td></tr>
+  <tr><td>Tiles</td><td class="mono">239</td></tr>
+  <tr><td>Size</td><td class="mono">8.7 MB</td></tr>
+  <tr><td>Verified range</td><td class="mono">51 – 2067 m</td></tr>
+</table>
+
+<p>
+  Capped at z12 (~38 m/px) because GLO-30 is 30 m native and the analysis grid
+  is 100 m — finer tiles would invent detail the source does not carry.
+  MapLibre overzooms z12 for closer cameras, which smooths rather than
+  fabricates.
+</p>
+
+<div class="note">
+  <b>The blue channel is deliberately zero</b>
+  Terrarium's blue channel encodes the fractional metre, but GLO-30's own
+  vertical accuracy is a few metres — so that channel held nothing but noise,
+  and incompressible noise at that. Zeroing it cost no real precision (integer
+  metres is still 10× finer than the greyscale it replaces) and cut the pyramid
+  from <b>23.1 MB to 8.7 MB</b>. Values are rounded rather than floored so the
+  quantisation is unbiased rather than shifting every cell half a metre
+  downhill.
+</div>
+
+<h3>Two things that had to be handled</h3>
+
+<ul>
+  <li><b>Double-shading.</b> The Esri basemap is <i>pre-shaded</i> imagery.
+      Draping it on a 3D mesh shades the terrain twice — once baked, once by
+      the camera — and hillsides go muddy. In Relief the Esri layer is hidden
+      and shading comes from a MapLibre <code>hillshade</code> computed off our
+      own DEM. A useful side effect: that proves the local hillshade works, so
+      the remote Esri dependency can now be dropped entirely.</li>
+  <li><b>Rotation.</b> <code>dragRotate</code> is enabled only in Relief and
+      disabled again in Plan, so the 2D interaction model is unchanged.</li>
+</ul>
+
+<div class="warn">
+  <b>Vertical exaggeration is a stated distortion</b>
+  It defaults to <b>×2</b>, adjustable 1–3. At ×2 a 5° slope renders as 10° —
+  which is exactly the threshold the short-term filter turns on. A judge
+  eyeballing the relief view would otherwise read the ground as far steeper
+  than the rule that admitted it. The view therefore carries a persistent
+  amber line: <i>"Heights exaggerated ×2.0 for legibility. Visual only — do not
+  judge gradient from this view."</i> That label is load-bearing, not
+  decoration. Do not remove it while exaggeration is above 1.
+</div>
+
+<h2>12. Interface system: tokens, disclosure, motion</h2>
+
+<h3>Colour</h3>
+
+<p>
+  The rule, encoded at the top of <code>src/styles/tokens.css</code>: neutrals
+  carry all structure, and <b>saturated colour is only ever emitted by a
+  value-encoding scale</b>. If you are reaching for a hue and it is not in a
+  <code>*-sev-*</code>, <code>*-imd-*</code> or <code>*-risk-*</code> token,
+  stop.
+</p>
+
+<p>
+  The severity ramp is monotonic in CIE L* (approximately 38 / 46 / 58 / 68 /
+  76), so it survives greyscale printing and red-green colour vision
+  deficiency. Hue follows emergency-management convention, but <b>lightness
+  does the actual work</b>. Severity is never encoded by colour alone —
+  markers also vary in radius and stroke weight, and the numeric score is
+  always printed.
+</p>
+
+<p>
+  Three scales are kept deliberately separate and never merged: susceptibility
+  (a static assessment class), IMD warning colour (an operational warning
+  state), and route segment risk.
+</p>
+
+<h3>Progressive disclosure</h3>
+
+<p>
+  Every screen opens showing the decision content; supporting detail is one
+  click away. The contract is strict:
+</p>
+
+<div class="note">
+  <b>Folding hides the rows, never the finding</b>
+  A collapsed section's header carries its own headline — <i>"Step 3 ·
+  Exclusions — 43,122 ha · 15.3% eligible"</i>, <i>"Basemap — dim"</i>,
+  <i>"Hazard type — 5/5"</i>. You can read the entire state of the console
+  without expanding anything. This is why no data point was deleted to make
+  screens cleaner.
+</div>
+
+<p>
+  There is one shared implementation: <code>Block</code> for panel sections,
+  <code>RailSection</code> for filter groups, <code>OverlayBox</code> for
+  floating map boxes. All three use the same <code>.collapse</code> CSS keyed
+  on an <code>.open</code> parent class.
+</p>
+
+<h3>Motion</h3>
+
+<p>
+  Motion only ever confirms a state change the user just caused or the system
+  just recomputed. Nothing animates on load, hover or scroll. <code>ease-out</code>
+  for things appearing or growing, <code>ease-in</code> for things leaving.
+</p>
+
+<table>
+  <tr><th>Token</th><th class="n">Duration</th><th>Used for</th></tr>
+  <tr><td class="mono">--t-collapse</td><td class="n">280 ms</td><td>disclosure rows — small and frequent</td></tr>
+  <tr><td class="mono">--t-panel</td><td class="n">420 ms</td><td>docked panels sliding in and out</td></tr>
+  <tr><td class="mono">--t-count</td><td class="n">520 ms</td><td>recomputed numerals counting to a new value</td></tr>
+  <tr><td class="mono">--t-camera</td><td class="n">800 ms</td><td>map fly-to and zone framing</td></tr>
+  <tr><td class="mono">--t-veil</td><td class="n">240 ms</td><td>half of a route cross-fade</td></tr>
+</table>
+
+<p>
+  Every transition is disabled under <code>prefers-reduced-motion</code>. Map
+  camera moves use <code>essential: true</code> so the viewport still moves for
+  users who need it to.
+</p>
+
+<h4>Two non-obvious implementation details</h4>
+<ul>
+  <li><b>Docks are flex items with negative margins, not grid columns.</b> A
+      grid column cannot be transformed out of the way — a translated child
+      leaves its track behind as a gap.</li>
+  <li><b>A closing panel is kept mounted</b> from a <code>lingering</code> copy
+      of its data, so it slides out rather than vanishing. Opening needs a
+      forced layout read (<code>offsetWidth</code>) between mount and class
+      change, or the browser collapses both into one style recalculation and
+      the panel simply appears.</li>
+</ul>
+
+<h3>Count-up on recomputation</h3>
+
+<p>
+  Headline figures ease to their new value over 520 ms — a direct visual
+  confirmation that the overlay re-ran when you moved a rule slider. Two
+  constraints: it is attached <b>only to headline figures, never to factor
+  table rows</b> (for the duration of the tween the headline does not reconcile
+  with its breakdown, which is tolerable for one confirming number and not for
+  a table someone is reading down); and the tween always <b>lands on the exact
+  computed value</b> rather than the last eased frame.
+</p>
+
+<h2 class="brk">13. Bugs worth knowing about</h2>
+
+<p>
+  These are documented because several of them are easy to reintroduce, and a
+  few changed the design rather than just being fixed.
+</p>
+
+<h4>Analysis</h4>
+<table>
+  <tr><th style="width:33%">Symptom</th><th>Cause and resolution</th></tr>
+  <tr><td>0% eligible land</td><td>Slope limit and drainage margin were contradictory — flat ground <i>is</i> close to its local minimum. Drainage margin defaults to 0; the published flood layer does the job.</td></tr>
+  <tr><td>Zone floor far too small</td><td>At 100 m, one cell is one hectare, so a "1.5 ha minimum" was two cells. Raised to 8 ha — what 1,880 people need at Sphere's 45 m²/person.</td></tr>
+  <tr><td>Speckled eligible mask</td><td>Isolated cells ringed by steep ground. Morphological opening; class-3 count dropped 351 → 186.</td></tr>
+  <tr><td>Ranking favoured tiny fragments</td><td>Score was a mean over cells, so a 9 ha patch beat a 113 ha one. Area added as a weighted factor.</td></tr>
+  <tr><td>Whole map merged into one blob</td><td>Single-linkage chaining, 43,122 ha. Replaced with leader clustering.</td></tr>
+  <tr><td>Two zones both showed #1</td><td><code>mergeZones</code> pushed the same object reference for single-member groups, then reassigned rank — mutating the caller's list. Fixed by cloning.</td></tr>
+  <tr><td>Long-term capacity out by 10,000×</td><td>Divided m² by a hectare-denominated plot norm — 3.4 million households on 15 ha. The capacity gate was silently passing everything.</td></tr>
+</table>
+
+<h4>Routing</h4>
+<table>
+  <tr><th style="width:33%">Symptom</th><th>Cause and resolution</th></tr>
+  <tr><td>Score and stated reasons disagreed</td><td>Drivers used metre thresholds while the score used length fractions. Drivers are now derived from the score components.</td></tr>
+  <tr><td>A 3 m segment reported "111% flood"</td><td>Sub-cell segments scored as fully hazardous and could veto a route. Denominator floored at 100 m.</td></tr>
+  <tr><td>Highlighted route was not #1</td><td>Route ids were assigned in Dijkstra discovery order, before sorting. Ids now match rank.</td></tr>
+  <tr><td>Blocked segments rendered solid</td><td>MapLibre rejects data expressions on <code>line-dasharray</code>; the <code>case</code> expression threw silently. Now a separate filtered layer with a static dash.</td></tr>
+</table>
+
+<h4>Interface</h4>
+<table>
+  <tr><th style="width:33%">Symptom</th><th>Cause and resolution</th></tr>
+  <tr><td>Headline said 544 zones, list said 44</td><td>Headline counted pre-merge clusters. Both now count merged areas.</td></tr>
+  <tr><td>Map badges read 105, 56, 37 while the panel listed #1, #2, #3</td><td>Long-term re-ranks zones through its own evaluation, so raw zone rank ≠ candidate rank. Badges now carry the tier's display rank.</td></tr>
+  <tr><td>Rail sections expanded to blank space</td><td><code>.collapse</code> sets <code>opacity: 0</code> and the restore rule was scoped to <code>.block.open</code>. Now keyed on <code>.open</code>.</td></tr>
+  <tr><td>Panel opened instantly but closed with a slide</td><td>Mount and open-class landed in the same frame, so there was no closed position to animate from. Split into two effects with a forced layout read between.</td></tr>
+  <tr><td>Blank white screen</td><td>Vite served HTTP 200 with zero bytes for <code>App.tsx</code> — a wedged transform cache after the file was rewritten under a running server. Kill the server, <code>rm -rf node_modules/.vite</code>, restart.</td></tr>
+</table>
+
+<h2>14. Known limitations</h2>
+
+<p>
+  Stated plainly, because several affect how the outputs should be read. This
+  list is also in the repository <code>README.md</code>.
+</p>
+
+<h4>Rainfall</h4>
+<ul class="tight">
+  <li>Every habitation inside one 0.1° cell shares a single rainfall figure.</li>
+  <li>The IMERG estimate for this event is substantially below the gauge
+      record. Fitted return levels absorb the bias for comparison but do not
+      correct the underlying estimate.</li>
+  <li>The ECMWF forecast for the event window (52.6 mm) is below the IMERG
+      observation (106.2 mm), which is itself below the gauge record.
+      <b>Of the three products, only the terrain-derived susceptibility layer
+      identifies this location as hazardous.</b></li>
+</ul>
+
+<h4>Geometry</h4>
+<ul class="tight">
+  <li>Chooralmala's recorded coordinate lies <b>551 m outside</b> the nearest
+      GSI High Hazard Zone polygon. The distance is recorded rather than
+      resolved — the coordinate has not been nudged to force a match.</li>
+  <li>Some real sites are absent from OpenStreetMap in this district and
+      therefore cannot be named by the system, even where the terrain analysis
+      marks their ground as eligible.</li>
+  <li>Ellipses fitted to very large clusters cover ineligible ground within
+      their bounds. The ellipse is a second-moment summary, not a boundary.</li>
+</ul>
+
+<h4>Routing</h4>
+<ul class="tight">
+  <li>The graph carries tertiary-classification roads and above. For Wayanad
+      this leaves <b>4.59 km origin-to-network and 2.34 km network-to-zone
+      unrouted</b>. Those legs are drawn dashed and labelled, and their time is
+      <b>not</b> in the stated arrival — which is therefore an underestimate.
+      This is the weakest figure the interface displays.</li>
+  <li>Edge risk is sampled against static rasters. There is no live
+      road-condition input; blockages are entered manually.</li>
+</ul>
+
+<h4>Scope</h4>
+<ul class="tight">
+  <li>Modules 2 and 4 have components marked <code>STUB_M2</code> / <code>STUB_M4</code>.</li>
+  <li>Land records, encumbrance and ownership exist in the schema but are not
+      populated from any register.</li>
+  <li>Generated (non-authored) habitation points give the national map
+      realistic density. They carry complete, internally consistent factor
+      tables, and raw values are back-computed from the normalised score
+      through the stated scale — but they are <b>synthetic, not observations</b>.</li>
+  <li><b>No validation against recorded outcomes has been performed, and none
+      is claimed.</b></li>
+</ul>
+
+<h2 class="brk">15. File map — where to change what</h2>
+
+<h4>Data and schema</h4>
+<table>
+  <tr><th style="width:36%">File</th><th>Responsibility</th></tr>
+  <tr><td class="mono">src/data/schema.ts</td><td>Wire types. Every figure carries <code>Provenance</code>.</td></tr>
+  <tr><td class="mono">src/data/sources.ts</td><td>Source registry and <code>derive()</code> — <b>the only way a score is produced</b>.</td></tr>
+  <tr><td class="mono">src/data/rainfall.ts</td><td><b>GENERATED.</b> Do not hand-edit; re-run <code>derive-thresholds.py</code>.</td></tr>
+  <tr><td class="mono">src/data/wayanad.ts</td><td>Authored Wayanad habitations.</td></tr>
+  <tr><td class="mono">src/data/kendrapara.ts</td><td>Authored coastal set — not currently wired in. One commented import in <code>habitations.ts</code> restores it.</td></tr>
+  <tr><td class="mono">src/data/habitations.ts</td><td>Habitation set; generated points use a seeded LCG so the picture is identical on every load.</td></tr>
+</table>
+
+<h4>Analysis — pure, no React</h4>
+<table>
+  <tr><th style="width:36%">File</th><th>Responsibility</th></tr>
+  <tr><td class="mono">src/lib/terrain.ts</td><td>PNG raster decode, grid indexing, haversine.</td></tr>
+  <tr><td class="mono">src/lib/zones.ts</td><td>Rules, exclusion codes, extraction, merging, ellipse fitting, shortlist.</td></tr>
+  <tr><td class="mono">src/lib/routing.ts</td><td>Edge risk, Dijkstra, alternates, re-planning.</td></tr>
+  <tr><td class="mono">src/lib/longterm.ts</td><td>Thresholds, construction obligations, Cernea mapping, capacity gate.</td></tr>
+  <tr><td class="mono">src/lib/severity.ts</td><td>CVD-safe severity ramp and band labels.</td></tr>
+</table>
+
+<h4>Interface</h4>
+<table>
+  <tr><th style="width:36%">File</th><th>Responsibility</th></tr>
+  <tr><td class="mono">src/routes/MapView.tsx</td><td>National view: rail, map stage, habitation panel, dock slide.</td></tr>
+  <tr><td class="mono">src/routes/EvacView.tsx</td><td>Evacuation workspace: load screen, all map layers, terrain toggle, tier switch.</td></tr>
+  <tr><td class="mono">src/components/primitives.tsx</td><td><code>Block</code>, <code>OverlayBox</code>, <code>CountUp</code>, <code>ProvLine</code> — <b>change disclosure behaviour here, once</b>.</td></tr>
+  <tr><td class="mono">src/styles/tokens.css</td><td>Colour, type, spacing, motion. The colour rule is stated at the top.</td></tr>
+  <tr><td class="mono">src/styles/app.css</td><td>Everything else.</td></tr>
+</table>
+
+<h4>Common tasks</h4>
+<table>
+  <tr><th style="width:36%">Task</th><th>Where</th></tr>
+  <tr><td>Change a siting rule or threshold</td><td><code>DEFAULT_RULES</code> / <code>PERMANENT_RULES</code> in <code>zones.ts</code>; <code>THRESHOLD</code> in <code>longterm.ts</code></td></tr>
+  <tr><td>Change a weight</td><td><code>DEFAULT_WEIGHTS</code> in <code>zones.ts</code>; <code>LONG_TERM_WEIGHTS</code> in <code>longterm.ts</code>. Both must still sum to 1.0 or <code>derive()</code> throws.</td></tr>
+  <tr><td>Add an exclusion rule</td><td>Add to <code>EXCLUSION</code> + <code>EXCLUSION_LABEL</code>, then apply it in the filter pass. The label appears automatically in the exclusion table.</td></tr>
+  <tr><td>Change how fast something animates</td><td><code>tokens.css</code> only. Nothing should hard-code a duration except the two JS constants that mirror <code>--t-camera</code> and <code>--t-veil</code>.</td></tr>
+  <tr><td>Make a panel section fold</td><td>Add <code>collapsible</code> to its <code>&lt;Block&gt;</code> and put the headline in <code>aux</code>.</td></tr>
+  <tr><td>Re-generate the terrain rasters</td><td><code>build-terrain.py</code>, then <code>build-longterm-layers.py</code>, then <code>build-dem-tiles.py</code>.</td></tr>
+</table>
+
+<h2>Appendix — references</h2>
+<ul class="tight" style="font-size:9.2pt">
+  <li>Cernea, M. M. (1997). The Risks and Reconstruction Model for Resettling Displaced Populations. <i>World Development</i> 25(10).</li>
+  <li>Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 — Third Schedule.</li>
+  <li>Sphere Association (2018). <i>The Sphere Handbook.</i></li>
+  <li>Right of Children to Free and Compulsory Education Act, 2009.</li>
+  <li>Forest (Conservation) Act, 1980; Wildlife Protection Act, 1972.</li>
+  <li>Hosking, J. R. M. (1990). L-moments. <i>JRSS-B</i> 52(1).</li>
+  <li>Horn, B. K. P. (1981). Hill Shading and the Reflectance Map. <i>Proceedings of the IEEE</i> 69(1).</li>
+  <li>Huffman, G. J. et al. (2023). GPM IMERG Final Precipitation L3 Half Hourly 0.1° V07. NASA GES DISC. doi:10.5067/GPM/IMERG/3B-HH/07</li>
+  <li>Geological Survey of India — National Landslide Susceptibility Mapping.</li>
+  <li>SDG indicator 9.1.1 — Rural Access Index.</li>
+</ul>
