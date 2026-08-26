@@ -1023,11 +1023,28 @@ a.inline:hover { text-decoration: underline; }
 }
 
 /* =================== EVACUATION WORKSPACE =================== */
+/* Flex, not grid, for the same reason as .mapview: a grid column cannot be
+   moved out of the way -- a translated child leaves its track behind as a gap.
+   As a flex item with a negative margin the panel slides off its own edge and
+   the map takes the width back continuously. */
 .evacview {
-  display: grid;
-  grid-template-columns: 1fr 420px;
+  display: flex;
   min-height: 0;
   overflow: hidden;
+}
+.evacview > .mapstage { flex: 1 1 auto; min-width: 0; }
+.evacview > .evacpanel {
+  width: 420px;
+  flex: none;
+  transition: margin-right var(--t-panel) var(--e-out);
+}
+.evacview.panel-out > .evacpanel {
+  margin-right: -420px;
+  transition: margin-right var(--t-panel) var(--e-in);
+}
+.dockhandle.right { right: 0; border-right: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .evacview > .evacpanel { transition: none; }
 }
 .evacpanel {
   background: var(--bg-1);
@@ -1432,3 +1449,16 @@ a.inline:hover { text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) {
   .wordmark-progress .wm-clip { transition: none; }
 }
+
+/* Which explanation backend is live. Visible as soon as the dock is open, so
+   a key that did not load is obvious before you spend a question finding out. */
+.explain-foot .backend {
+  flex: none;
+  font-family: var(--ff-mono);
+  font-size: var(--fs-xs);
+  padding: 0 5px;
+  border: 1px solid var(--line-2);
+  letter-spacing: 0;
+}
+.explain-foot .backend.on { color: var(--sev-low-fg); border-color: #2f5a3a; }
+.explain-foot .backend.off { color: var(--fg-3); }

@@ -184,17 +184,25 @@ export function ExplainDock({
           </div>
         ) : null}
 
-        {engaged ? (
-          <div className="explain-foot">
-            <span>
-              Answers narrate only figures displayed in this scope. Numbers are checked back
-              against the panel. <span className="mono">{backendLabel()}</span>
-            </span>
+        {/* Always shown once the dock is open, not only after a question: the
+            backend is the first thing you want to know when checking whether a
+            key took, and it was previously invisible until you had already
+            asked something. */}
+        <div className="explain-foot">
+          <span>
+            {engaged
+              ? 'Answers narrate only figures displayed in this scope. Numbers are checked back against the panel.'
+              : 'Answers narrate only figures displayed in this scope.'}
+          </span>
+          <span className={`backend ${backendLabel() === 'offline' ? 'off' : 'on'}`}>
+            {backendLabel()}
+          </span>
+          {engaged ? (
             <button type="button" onClick={() => setTurns([])}>
               Clear
             </button>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );

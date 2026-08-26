@@ -95,6 +95,21 @@ export function EvacView({ habitationId }: { habitationId: string }) {
    * Vertical exaggeration is a deliberate distortion and is labelled as one:
    * at x2 a 5-degree slope reads as 10, which is the very threshold the
    * short-term filter turns on. See the readout in the map overlay. */
+  /* The panel can be dismissed to the right so the relief view can be read
+   * full-width. The map is the subject; the tables are the argument for it. */
+  const [panelOut, setPanelOut] = useState(false);
+
+  /* MapLibre measures its container, so a dock sliding over ~420 ms needs the
+   * canvas re-measured across those frames rather than only once it settles. */
+  const nudgeMap = () => {
+    const until = performance.now() + 520;
+    const tick = () => {
+      window.dispatchEvent(new Event('resize'));
+      if (performance.now() < until) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
   const [view3d, setView3d] = useState(false);
   const [exaggeration, setExaggeration] = useState(2);
   const [routeParams, setRouteParams] = useState<RouteParams>(DEFAULT_ROUTE_PARAMS);
@@ -207,8 +222,107 @@ export function EvacView({ habitationId }: { habitationId: string }) {
     };
   }, [stack, routeResult, selectedRoute, h, selectedZone]);
 
+  /* ------------------------------------------- recompute animation --- */
+  /* When a segment is blocked the plan does not change everywhere at once: it
+   * changes AT the blockage and the consequence spreads outward. So the old
+   * route retracts from the blocked segment outward, and the replacement draws
+   * in from that same point. A route that simply swapped would say "here is a
+   * different answer"; this says "this is what your blockage did".
+   *
+   * Implemented as a wavefront over per-segment distance from the blockage.
+   * Each feature carries `reveal` (0-1) and every route layer multiplies its
+   * opacity by it, so one number drives glow, casing, core and the blocked
+   * dashes together. */
+  const RETRACT_MS = 340;
+  const DRAW_MS = 620;
+  /** Width of the soft edge of the wavefront, km. Without it segments pop. */
+  const FEATHER_KM = 1.4;
+
+  const routeFeats = useRef<GeoJSON.Feature[]>([]);
+  const pendingFeats = useRef<GeoJSON.Feature[] | null>(null);
+  const anim = useRef<{
+    origin: [number, number];
+    phase: 'retract' | 'draw';
+    start: number;
+    raf: number;
+  } | null>(null);
+
+  /** Segment midpoint -- what the wavefront measures distance to. */
+  const midOf = (g: [number, number][]): [number, number] => g[Math.floor(g.length / 2)] ?? g[0];
+
+  const paint = (feats: GeoJSON.Feature[], origin: [number, number] | null, front: number, invert: boolean) => {
+    const map = mapRef.current;
+    const src = map?.getSource('routes') as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+    const out = feats.map((f) => {
+      let reveal = 1;
+      if (origin) {
+        const d = haversineKm(origin, midOf((f.geometry as GeoJSON.LineString).coordinates as [number, number][]));
+        const t = Math.max(0, Math.min(1, (front - d) / FEATHER_KM));
+        reveal = invert ? 1 - t : t;
+      }
+      return { ...f, properties: { ...f.properties, reveal } };
+    });
+    src.setData({ type: 'FeatureCollection', features: out });
+  };
+
+  const runRecompute = (origin: [number, number]) => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (anim.current) cancelAnimationFrame(anim.current.raf);
+
+    const span = (feats: GeoJSON.Feature[]) =>
+      feats.reduce((m, f) => {
+        const d = haversineKm(origin, midOf((f.geometry as GeoJSON.LineString).coordinates as [number, number][]));
+        return Math.max(m, d);
+      }, 0) + FEATHER_KM;
+
+    const step = (now: number) => {
+      const a = anim.current;
+      if (!a) return;
+      const dur = a.phase === 'retract' ? RETRACT_MS : DRAW_MS;
+      const t = Math.min(1, (now - a.start) / dur);
+
+      if (a.phase === 'retract') {
+        paint(routeFeats.current, origin, t * span(routeFeats.current), true);
+        if (t >= 1) {
+          /* The replacement was computed while the old one was retracting; it
+           * has been held back so the swap happens behind an empty map rather
+           * than as a visible jump. */
+          if (pendingFeats.current) {
+            routeFeats.current = pendingFeats.current;
+            pendingFeats.current = null;
+          }
+          a.phase = 'draw';
+          a.start = now;
+        }
+      } else {
+        paint(routeFeats.current, origin, t * span(routeFeats.current), false);
+        if (t >= 1) {
+          paint(routeFeats.current, null, 0, false); // settle at full opacity
+          anim.current = null;
+          return;
+        }
+      }
+      a.raf = requestAnimationFrame(step);
+    };
+
+    anim.current = { origin, phase: 'retract', start: performance.now(), raf: 0 };
+    anim.current.raf = requestAnimationFrame(step);
+  };
+
+  useEffect(() => () => { if (anim.current) cancelAnimationFrame(anim.current.raf); }, []);
+
   const toggleBlock = (edgeIndex: number) => {
     const route = routeResult?.routes.find((r) => r.id === selectedRoute) ?? routeResult?.routes[0];
+
+    /* Kick the wavefront off from the blocked segment BEFORE the state change,
+     * so the retract runs against the route that is still on screen. */
+    if (!blocked.has(edgeIndex) && stack) {
+      const g = stack.graph.edges[edgeIndex]?.g as [number, number][] | undefined;
+      if (g?.length) runRecompute(midOf(g));
+    }
+
     setBlocked((prev) => {
       const next = new Set(prev);
       if (next.has(edgeIndex)) {
@@ -309,7 +423,34 @@ export function EvacView({ habitationId }: { habitationId: string }) {
             tileSize: 256,
             minzoom: 8,
             maxzoom: 12,
+            /* The pyramid only covers the AOI. Without `bounds`, MapLibre
+             * requests tiles outside it, and Vite's SPA fallback answers those
+             * with index.html at 200 OK / text/html -- which MapLibre then
+             * tries to decode as a PNG, throwing "The source image could not be
+             * decoded" once per missing tile. Not a 404 anywhere, so it never
+             * showed up as a failed request. */
+            bounds: [75.55, 11.2, 76.65, 12.15],
             attribution: 'Elevation: Copernicus GLO-30',
+          },
+          /* A SECOND source over the same tiles, for the hillshade layer.
+           *
+           * Sharing one raster-dem between `setTerrain` and a hillshade layer
+           * is what MapLibre warns about, and it is not only a quality issue:
+           * a decoded tile arrives as an ImageBitmap, which can be consumed
+           * once. Whichever consumer reads second gets a closed bitmap and
+           * throws "The source image could not be decoded" -- once per tile,
+           * which is why the console filled with them.
+           *
+           * Two sources means two decodes. The bytes are served from the HTTP
+           * cache, so it costs a decode, not a download. */
+          'dem-shade': {
+            type: 'raster-dem',
+            tiles: ['/dem/{z}/{x}/{y}.png'],
+            encoding: 'terrarium',
+            tileSize: 256,
+            minzoom: 8,
+            maxzoom: 12,
+            bounds: [75.55, 11.2, 76.65, 12.15],
           },
         },
         layers: [
@@ -332,7 +473,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
           {
             id: 'hillshade-local',
             type: 'hillshade',
-            source: 'dem',
+            source: 'dem-shade',
             layout: { visibility: 'none' },
             paint: {
               'hillshade-exaggeration': 0.55,
@@ -354,6 +495,9 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       maxPitch: 75,
       fadeDuration: 0,
     });
+    /* Dev-only handle for inspecting layers and source data from the console.
+     * Stripped from production builds by the DEV guard. */
+    if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__map = map;
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     map.addControl(new maplibregl.ScaleControl({ maxWidth: 130, unit: 'metric' }), 'bottom-right');
 
@@ -496,7 +640,11 @@ export function EvacView({ habitationId }: { habitationId: string }) {
         paint: {
           'line-color': ['get', 'color'],
           'line-width': ['case', ['get', 'primary'], 18, 6],
-          'line-opacity': ['case', ['get', 'primary'], 0.6, 0.25],
+          'line-opacity': [
+            '*',
+            ['case', ['get', 'primary'], 0.6, 0.25],
+            ['coalesce', ['get', 'reveal'], 1],
+          ],
           'line-blur': 4,
         },
       });
@@ -508,7 +656,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
         paint: {
           'line-color': '#05070a',
           'line-width': ['case', ['==', ['get', 'primary'], true], 10, 4],
-          'line-opacity': 0.9,
+          'line-opacity': ['*', 0.9, ['coalesce', ['get', 'reveal'], 1]],
         },
       });
       map.addLayer({
@@ -525,9 +673,9 @@ export function EvacView({ habitationId }: { habitationId: string }) {
           ],
           'line-width': ['case', ['==', ['get', 'primary'], true], 6, 2],
           'line-opacity': [
-            'case',
-            ['get', 'primary'], ['coalesce', ['feature-state', 'reveal'], 1],
-            ['*', 0.5, ['coalesce', ['feature-state', 'reveal'], 1]],
+            '*',
+            ['case', ['get', 'primary'], 1, 0.5],
+            ['coalesce', ['get', 'reveal'], 1],
           ],
         },
       });
@@ -543,6 +691,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
         paint: {
           'line-color': '#ff3b28',
           'line-width': ['case', ['==', ['get', 'primary'], true], 6, 2],
+          'line-opacity': ['coalesce', ['get', 'reveal'], 1],
           'line-dasharray': [1.5, 1.5],
         },
       });
@@ -893,7 +1042,15 @@ export function EvacView({ habitationId }: { habitationId: string }) {
         });
       }
     }
-    src.setData({ type: 'FeatureCollection', features: feats });
+    /* If a retract is in flight, hold this until the wavefront has cleared the
+     * old route -- otherwise the replacement appears on top of the thing it is
+     * replacing and the whole point of the sequence is lost. */
+    if (anim.current?.phase === 'retract') {
+      pendingFeats.current = feats;
+    } else {
+      routeFeats.current = feats;
+      src.setData({ type: 'FeatureCollection', features: feats });
+    }
 
     const conn = map.getSource('connector') as maplibregl.GeoJSONSource | undefined;
     const route = routeResult.routes.find((r) => r.id === selectedRoute);
@@ -985,9 +1142,20 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       {!ready ? (
         <LoadScreen h={h} stages={stages} error={error} />
       ) : (
-        <div className="evacview">
+        <div className={`evacview${panelOut ? ' panel-out' : ''}`}>
           <div className="mapstage">
             <div ref={holder} className="mapcanvas" />
+
+            {/* The handle stays on the map edge when the panel slides off, so
+                a dismissed panel is never unreachable. */}
+            <button
+              className="dockhandle right"
+              onClick={() => { setPanelOut((v) => !v); nudgeMap(); }}
+              title={panelOut ? 'Show analysis panel' : 'Hide analysis panel'}
+              aria-expanded={!panelOut}
+            >
+              {panelOut ? '‹' : '›'}
+            </button>
 
             <div className="map-overlay map-scale">
               <div className="zoomctx">
