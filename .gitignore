@@ -1,0 +1,9 @@
+node_modules/
+dist/
+tsconfig.tsbuildinfo
+# credentials -- never commit
+.env
+.earthdata_token
+# source archives (large, supplied separately)
+*.zip
+*.rar

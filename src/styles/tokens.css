@@ -1,0 +1,97 @@
+/* ------------------------------------------------------------------
+   Design tokens.
+   Colour rule: neutrals carry all structure. Saturated colour is only
+   ever emitted by a value-encoding scale below. If you are reaching for
+   a hue and it is not in a *-sev-*, *-imd-*, or *-risk-* token, stop.
+   ------------------------------------------------------------------ */
+:root {
+  /* structural neutrals ------------------------------------------- */
+  --bg-0: #0b0c0e;          /* app ground */
+  --bg-1: #121417;          /* panel */
+  --bg-2: #191c20;          /* raised row / header */
+  --bg-3: #212529;          /* input, hover */
+  --bg-sel: #2b3138;        /* selected row */
+
+  --line-1: #22262b;        /* hairline between regions */
+  --line-2: #313740;        /* stronger divider */
+  --line-3: #454d57;        /* focus / active border */
+
+  --fg-0: #e4e7ea;          /* primary text */
+  --fg-1: #b3b9c0;          /* secondary */
+  --fg-2: #7d858f;          /* label / muted */
+  --fg-3: #575e68;          /* disabled, rules */
+
+  --accent: #4d9fd6;        /* interactive affordance ONLY (links, focus) */
+  --accent-dim: #2f6d96;
+
+  /* ---------------------------------------------------------------
+     Susceptibility ramp — 5 class, GSI NLSM convention.
+     Monotonic in LIGHTNESS (L* ≈ 38 → 46 → 58 → 68 → 76) so the ramp
+     survives deuteranopia/protanopia and greyscale print. Hue follows
+     emergency-management convention; lightness does the actual work.
+     Never the sole channel: markers also vary in shape and ring weight.
+     --------------------------------------------------------------- */
+  --sev-vlow:  #1d5e46;
+  --sev-low:   #3f7a34;
+  --sev-mod:   #b0902a;
+  --sev-high:  #e08127;
+  --sev-vhigh: #ff7563;
+
+  --sev-vlow-fg:  #7fc9a8;
+  --sev-low-fg:   #8fc47f;
+  --sev-mod-fg:   #e0c968;
+  --sev-high-fg:  #ffb173;
+  --sev-vhigh-fg: #ffa495;
+
+  /* ---------------------------------------------------------------
+     IMD warning colour code — 4 class. A DIFFERENT scale from
+     susceptibility and deliberately not merged with it: one is a static
+     assessment class, the other is an operational warning state.
+     --------------------------------------------------------------- */
+  --imd-green:  #2f7d54;
+  --imd-yellow: #bfa02e;
+  --imd-orange: #e08127;
+  --imd-red:    #ff5f4d;
+
+  /* route segment risk — 4 class, same lightness discipline --------- */
+  --risk-1: #4a8f70;
+  --risk-2: #b0902a;
+  --risk-3: #e08127;
+  --risk-4: #ff6b57;
+
+  /* status semantics ----------------------------------------------- */
+  --flag-on:   #ff7563;   /* tier FLAGGED */
+  --flag-off:  #575e68;   /* tier NOT FLAGGED */
+  --flag-held: #bfa02e;   /* tier WITHHELD */
+  --blocked:   #ff5f4d;
+
+  /* provenance chips ------------------------------------------------ */
+  --prov-pending: #8a6d1f;
+  --prov-stub:    #6b4a86;   /* only non-semantic hue in the system, and
+                                deliberately so: it marks NOT-REAL data.
+                                See PROVENANCE.md rationale. */
+
+  /* type ------------------------------------------------------------ */
+  --ff-ui: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --ff-mono: "Cascadia Mono", "Consolas", ui-monospace, "SFMono-Regular", monospace;
+
+  --fs-xs: 10px;
+  --fs-sm: 11px;
+  --fs-md: 12px;
+  --fs-lg: 13px;
+  --fs-xl: 15px;
+
+  /* spacing — tight scale, 2px base */
+  --s-1: 2px;
+  --s-2: 4px;
+  --s-3: 6px;
+  --s-4: 8px;
+  --s-5: 12px;
+  --s-6: 16px;
+  --s-7: 24px;
+
+  --rail-w: 268px;
+  --panel-w: 560px;
+  --strip-h: 26px;
+  --topbar-h: 32px;
+}
