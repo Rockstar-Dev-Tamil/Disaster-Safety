@@ -19,7 +19,10 @@ Two screens, deep-linkable by URL hash:
 | Route | Screen | Contents |
 |---|---|---|
 | `#/` | National view | Habitation points across India with hazard scores, published susceptibility overlays, observed rainfall at a fixed event timestamp |
-| `#/evac/<habitation-id>` | Evacuation workspace | Road-level map for one habitation: candidate relocation zones, route evaluation, statutory compliance |
+| `#/evac/<habitation-id>` | Evacuation workspace | Road-level map for one habitation: candidate relocation zones, route evaluation, statutory compliance. Plan or Relief camera (section 4.5) |
+
+Both screens carry scoped explanation docks, which answer questions about the
+figures on the panel they belong to and nothing else (section 4.6).
 
 The demonstration geography is Wayanad district, Kerala, at the timestamp of
 the 30 July 2024 landslide event. A second habitation set for Kendrapara,
@@ -95,7 +98,7 @@ differenced between steps to give per-interval totals.
 
 | Layer | Source | Encoding on the grid |
 |---|---|---|
-| Elevation | Copernicus GLO-30 DEM | metres x 10 |
+| Elevation | Copernicus GLO-30 DEM | metres / 10, so decode is byte x 10 |
 | Slope | Horn operator on the DEM | degrees x 1 |
 | Landslide class | GSI NLSM, rasterised | class x 80 |
 | Flood landform | KSDMA, rasterised | class x 80 |
@@ -108,6 +111,11 @@ All layers are co-registered on one grid: bounds 75.55-76.65 E, 11.20-12.15 N;
 **1199 x 1058 cells at 100 m**. At that cell size one cell is exactly one
 hectare, which the zone-area arithmetic relies on. Layers are stored as 8-bit
 greyscale PNG (about 6 MB total in `public/terrain/`) and decoded client-side.
+
+A **second elevation product** ships alongside these for the 3D relief view: a
+terrarium-encoded RGB tile pyramid under `public/dem/`, z8 to z12, 239 tiles,
+8.7 MB. It is built from the same Copernicus source but is not
+interchangeable with `elevation.png` -- see section 4.5 for why both exist.
 
 Roads are extracted from OpenStreetMap via Overpass
 ([scripts/export-roads.py](scripts/export-roads.py)) and built into a routing
@@ -277,7 +285,90 @@ cannot be observed from any layer here; `UNADDRESSED_RISKS` and
 (measured, proxied, requires field survey) is reported instead of a single
 number that would imply the unobservable had been observed.
 
-### 4.5 Tier status
+### 4.5 Relief view
+
+The evacuation map has a **Plan / Relief** toggle. Relief pitches the camera to
+62 degrees over a terrain mesh, with every existing overlay draped on it. It is
+an analytical view rather than an ornament: the short-term rule set is a
+gradient threshold, and in relief the High Hazard Zones are visibly on the
+steep ridgelines while eligible ground pools in the valleys. Route choices that
+look arbitrary in plan are legible as avoidance in relief.
+
+**Why a second elevation product exists.** `elevation.png` stores metres / 10
+in 8-bit greyscale, i.e. 10 m vertical steps. That does not affect the
+analysis, which reads slope computed from the float array before quantisation.
+Draped on a 3D camera at 2x exaggeration, however, those steps become 20 m
+terraces across every gentle hillside. MapLibre also cannot consume a single
+greyscale image as a `raster-dem`; it requires RGB-encoded elevation served as
+tiles. [scripts/build-dem-tiles.py](scripts/build-dem-tiles.py) therefore
+re-encodes the same Copernicus source as terrarium tiles:
+
+    elevation_m = (R * 256 + G + B / 256) - 32768
+
+The blue channel is written as zero. It carries the fractional metre, which is
+below GLO-30's own vertical accuracy and is therefore incompressible noise;
+dropping it reduced the pyramid from 23.1 MB to 8.7 MB at no real cost in
+precision. Values are rounded rather than floored so quantisation is unbiased.
+
+Capped at z12 (about 38 m/px here) because GLO-30 is 30 m native and the
+analysis grid is 100 m; finer tiles would invent detail the source does not
+carry. MapLibre overzooms z12 for closer cameras, which smooths rather than
+fabricates.
+
+Two implementation notes:
+
+- **Terrain and hillshade use separate sources** over the same tiles. Sharing
+  one is a documented MapLibre quality warning, and a decoded tile arrives as
+  an `ImageBitmap`, which can be consumed once.
+- **Both sources declare `bounds`.** Without them MapLibre requests tiles
+  outside the pyramid's coverage, and a dev server's SPA fallback answers those
+  with `index.html` at 200 OK, which then fails to decode as a PNG.
+
+In Relief the pre-shaded Esri basemap raster is hidden and shading comes from a
+MapLibre `hillshade` layer computed from the same DEM. Draping pre-shaded
+imagery over a mesh shades the terrain twice.
+
+**Vertical exaggeration defaults to x2**, adjustable 1 to 3, and is labelled as
+a distortion wherever it is above 1. At x2 a 5 degree slope renders as 10,
+which is the exact threshold the short-term filter turns on; the view must
+therefore not be read as evidence about gradient. See section 7.
+
+### 4.6 Explanation docks
+
+Each panel carries a dock scoped to what that panel displays. The engine is
+[src/lib/explain.ts](src/lib/explain.ts); everything above it is written
+against one function, `ask(bundle, question)`.
+
+A panel does not pass a question alone. It passes a **fact bundle** -- the
+figures it is currently displaying, rendered exactly as displayed -- and an
+answer may narrate nothing else. It may not compute, convert or infer a new
+number. The bundle is both the permitted citation set and, when a hosted model
+is configured, its entire context.
+
+Three sources are tried in order, each falling through to the next on failure
+or decline:
+
+1. **A hosted model** (`gpt-4o-mini` by default), when configured. See
+   section 8.
+2. **Authored answers**, a keyword-matched table in `src/data/explanations.ts`.
+3. **The bundle itself**, reporting the matching figures verbatim.
+
+A miss is a correct answer. Reaching for general knowledge is the one thing
+this surface must not do.
+
+**Numeric grounding.** Generated text is passed through `validate()`, which
+extracts every numeral and checks it against the bundle. An answer naming a
+figure the panel does not display is **withheld rather than annotated**, so an
+invented number never reaches an officer as something they might repeat.
+Authored answers are exempt: they are reviewed source code and legitimately
+cite published constants such as the 1:50,000 sheet scale, which no live panel
+displays.
+
+Docks degrade rather than break. With no key, no network, or a failed call they
+fall back to the offline paths, and the live backend is named in the dock
+footer.
+
+### 4.7 Tier status
 
 Relocation tiers are independent booleans, not an ordered scale. `TierStatus`
 has three values: `FLAGGED`, `NOT_FLAGGED`, and `WITHHELD`, the last meaning
@@ -307,15 +398,23 @@ src/
     zones.ts         candidate zone extraction, merging, shortlisting
     routing.ts       edge risk, Dijkstra, alternates, replanning
     longterm.ts      RFCTLARR / Cernea evaluation
+    explain.ts       fact bundles, ask(), numeric grounding check
+    explain-model.ts hosted-model backend and transport
     severity.ts      CVD-safe severity ramp
     format.ts        number formatting
   routes/
     MapView.tsx      national view
     EvacView.tsx     habitation evacuation workspace
-  components/        panels, factor tables, map canvas, explanation dock
+  components/
+    primitives.tsx   Block, OverlayBox, CountUp, ProvLine -- disclosure lives here
+    ExplainDock.tsx  scoped question surface and transcript
+    Wordmark.tsx     wordmark; also the load-screen progress fill
+    ...              panels, factor tables, map canvas
   styles/            design tokens and application CSS
 scripts/             data preparation (see section 6)
 public/terrain/      generated raster stack, road graph, boundaries, amenities
+public/dem/          terrarium DEM tile pyramid for the relief view
+docs/                technical documentation, HTML source and rendered PDF
 ```
 
 Colour is used only for data semantics. The severity ramp is monotonic in
@@ -323,12 +422,21 @@ CIE L* (approximately 38, 46, 58, 68, 76) so it survives greyscale printing and
 common colour-vision deficiencies, and severity is encoded redundantly through
 marker radius, stroke width, and a printed numeral.
 
+Progressive disclosure is shared: `Block` for panel sections, `RailSection` for
+filter groups, `OverlayBox` for floating map boxes, all keyed on the same
+`.collapse` rule. A collapsed section keeps its finding in its header, so the
+state of the console is readable without expanding anything.
+
+Motion durations live only in `tokens.css`. Nothing hard-codes one except two
+JavaScript constants that mirror `--t-camera` and `--t-veil`.
+
 ---
 
 ## 6. Data preparation
 
 Scripts are run manually and their outputs are committed under
-`public/terrain/` and `src/data/`. They are not part of the application build.
+`public/terrain/`, `public/dem/` and `src/data/`. They are not part of the
+application build.
 
 | Script | Output |
 |---|---|
@@ -341,7 +449,11 @@ Scripts are run manually and their outputs are committed under
 | `export-roads.py` | Overpass road extraction |
 | `build-roadgraph.py` | routing graph from road geometry |
 | `build-longterm-layers.py` | protected areas, taluk boundaries, amenity points |
+| `build-dem-tiles.py` | terrarium DEM tile pyramid for the relief view |
 | `browser-probe.mjs` | headless screenshot and console check |
+
+`build-dem-tiles.py` reads the Copernicus GeoTIFFs that `build-terrain.py`
+caches, so run that first.
 
 `fetch-imerg.py` requires a NASA Earthdata token at `.earthdata_token`, which
 is gitignored and not committed.
@@ -400,6 +512,26 @@ Stated plainly, because several of these affect how the outputs should be read.
 - Edge risk is sampled against static rasters. There is no live road-condition
   input; blockages are entered manually.
 
+**Relief view.**
+
+- Vertical exaggeration defaults to **x2**. At that setting a 5 degree slope
+  renders as 10 degrees, which is exactly the gradient threshold the short-term
+  filter applies. The view therefore states its exaggeration factor and must
+  not be read as evidence about gradient; the factor tables are the record.
+- The DEM pyramid is capped at z12. Closer cameras overzoom rather than gain
+  detail.
+
+**Explanation docks.**
+
+- An answer can only cite figures present in the panel's fact bundle. A figure
+  that is on screen but missing from the bundle produces a miss -- a bundle gap
+  is a defect, distinct from a correct refusal.
+- The numeric check verifies that a stated figure exists in the bundle. It does
+  not verify that the answer reasons correctly about it.
+- Authored answers bypass the numeric check, being reviewed source code. They
+  can therefore go stale against the data: one was found citing pre-IMERG
+  rainfall values and a superseded threshold.
+
 **Scope.**
 
 - Modules 2 and 4 have components marked `STUB_M2` and `STUB_M4`.
@@ -420,13 +552,41 @@ Requires Node 18 or later.
 
 ```
 npm install
-npm run dev       # Vite dev server
+npm run dev       # Vite dev server, http://localhost:5180
 npm run build     # tsc -b && vite build
 npm run preview
 ```
 
-Stack: Vite, React 18, TypeScript, MapLibre GL JS. Styling is plain CSS with
-design tokens; no component library. Routing is hash-based.
+Stack: Vite, React 18, TypeScript, MapLibre GL JS 4.7. Styling is plain CSS
+with design tokens; no component library. Routing is hash-based. There is no
+backend: the build is static files.
+
+### Explanation backend (optional)
+
+The docks work with no configuration, answering from authored text and the
+fact bundles. To route them through a hosted model instead, copy
+`.env.example` to `.env.local` and set a key:
+
+```
+VITE_OPENAI_API_KEY=sk-...
+VITE_OPENAI_MODEL=gpt-4o-mini      # optional, this is the default
+```
+
+Vite reads env files at startup, so restart the dev server after editing one.
+The live backend is named in the dock footer (`offline`, the model id, or
+`proxy`).
+
+> **A `VITE_`-prefixed key is compiled into the client bundle** and is readable
+> by anyone who opens devtools. That is a property of building a frontend with
+> no server. It is acceptable for local development and a laptop demo, with a
+> spend cap set on the key; it is not acceptable for a public deployment. For
+> that, set `VITE_EXPLAIN_PROXY` to an endpoint of your own that holds the key
+> and leave `VITE_OPENAI_API_KEY` unset -- the browser then sends no
+> credential. The proxy takes precedence when both are present.
+
+`.env.local` is gitignored. Note that the pattern `.env` alone does not match
+it, which is why `.gitignore` carries `.env.*` with an exception for
+`.env.example`.
 
 The interface targets a minimum viewport width of 1024 px and is laid out for
 1440 px and above; narrower viewports show a notice instead.
