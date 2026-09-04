@@ -5,12 +5,13 @@ import type { Habitation, HazardType, TierKey } from '../data/schema';
 /** Must match --t-camera in tokens.css. */
 const CAMERA_MS = 800;
 import { HAZARD_LABEL } from '../data/schema';
-import { HABITATIONS, HABITATION_BY_ID, OPERATING_CLOCK, STATES } from '../data/habitations';
+import { HABITATIONS, HABITATION_BY_ID, STATES } from '../data/habitations';
 import { OVERLAYS } from '../data/layers';
 import { MapCanvas, type Basemap, type ScoreField } from '../components/MapCanvas';
 import { SideRail, type Filters } from '../components/SideRail';
 import { HabitationPanel } from '../components/HabitationPanel';
 import { ExplainDock } from '../components/ExplainDock';
+import { useCase } from '../lib/useCase';
 import type { Fact, FactBundle } from '../lib/explain';
 import { OverlayBox } from '../components/primitives';
 import { KeyboardSheet, StatusStrip, TopBar } from '../components/Chrome';
@@ -51,6 +52,7 @@ export function MapView() {
   /** Filter dock slid off to the left. The map is the subject; the controls
    *  that set it should be dismissable once they are set. */
   const [railOut, setRailOut] = useState(false);
+  const activeCase = useCase();
 
   /* MapLibre sizes itself from its container, so a dock that slides over
    * ~220 ms needs the canvas re-measured across those frames -- otherwise the
@@ -137,7 +139,8 @@ export function MapView() {
     const flagged = (t: TierKey) =>
       HABITATIONS.filter((x) => x.tiers[t] === 'FLAGGED').length;
     const facts: Fact[] = [
-      { key: 'clock', label: 'Operating picture timestamp', value: OPERATING_CLOCK, aka: ['time', 'when', 'tonight'] },
+      { key: 'clock', label: 'Operating picture timestamp', value: activeCase.clock || 'live, no fixed timestamp', aka: ['time', 'when', 'tonight'] },
+      { key: 'case', label: 'Active case', value: `${activeCase.region} — ${activeCase.event}`, aka: ['case', 'event', 'scenario', 'which'] },
       { key: 'plotted', label: 'Habitations in view', value: `${int(filtered.length)} of ${int(HABITATIONS.length)}`, aka: ['plotted', 'shown', 'many'] },
       { key: 'basis', label: 'Score basis', value: filters.scoreField === 'current' ? 'current operational state' : 'standing susceptibility', aka: ['score', 'basis'] },
       { key: 'threshold', label: 'Risk threshold', value: `at or above ${filters.threshold}`, aka: ['filter', 'cutoff'] },
@@ -161,7 +164,7 @@ export function MapView() {
       { key: 'withheld', label: 'Long-term withheld', value: int(HABITATIONS.filter((x) => x.tiers.LONG_TERM === 'WITHHELD').length), aka: ['withheld'] },
     ];
     return { scope: 'PAN_INDIA' as const, subject: 'the national view under the current filters', facts };
-  }, [filtered, filters, overlay]);
+  }, [filtered, filters, overlay, activeCase]);
   const isSequence = overlay?.kind === 'IMAGE_SEQUENCE';
 
   /* Sequence manifest is fetched lazily -- only when that overlay is chosen. */
@@ -303,12 +306,28 @@ export function MapView() {
             overlayField={overlay?.derivedField ?? null}
             overlayOpacity={overlay?.opacity ?? 0.4}
             vectorOverlay={
-              overlay && overlay.kind === 'GEOJSON' && overlay.url && overlay.classField
+              overlay &&
+              overlay.kind === 'GEOJSON' &&
+              overlay.url &&
+              (overlay.classField || overlay.rampField)
                 ? {
                     id: overlay.id,
                     url: overlay.url,
                     classField: overlay.classField,
                     classColors: overlay.classColors ?? {},
+                    rampField: overlay.rampField,
+                    ramp: overlay.ramp,
+                  }
+                : null
+            }
+            tileOverlay={
+              overlay && overlay.kind === 'XYZ' && overlay.url && overlay.bounds
+                ? {
+                    id: overlay.id,
+                    url: overlay.url,
+                    bounds: overlay.bounds,
+                    opacity: overlay.opacity,
+                    maxzoom: overlay.maxzoom ?? 10,
                   }
                 : null
             }
@@ -415,7 +434,20 @@ export function MapView() {
 
           {sequence ? (
             <div className="map-overlay map-timeline">
-              <ForecastTimeline meta={sequence} onBlend={setBlend} />
+              <ForecastTimeline
+                meta={sequence}
+                onBlend={setBlend}
+                /* A live case has no fixed clock by definition, so its operating
+                 * picture is now. Reading the wall clock here is what makes the
+                 * playhead sit on real time against a real forecast -- and if
+                 * the run on disk has gone stale, now falls outside its window
+                 * and the timeline says so rather than pretending. */
+                focus={{
+                  key: activeCase.id,
+                  clock: activeCase.clock || new Date().toISOString(),
+                  live: !activeCase.clock,
+                }}
+              />
             </div>
           ) : null}
 
@@ -439,7 +471,7 @@ export function MapView() {
         ) : null}
       </div>
 
-      <StatusStrip clock={OPERATING_CLOCK} all={HABITATIONS} filtered={filtered} />
+      <StatusStrip clock={activeCase.clock} all={HABITATIONS} filtered={filtered} />
 
       {showKeys ? <KeyboardSheet onClose={() => setShowKeys(false)} /> : null}
     </>

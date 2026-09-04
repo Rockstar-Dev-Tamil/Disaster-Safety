@@ -63,6 +63,34 @@ export const SRC_NCSCM_SHORELINE = pending({
   assessedOn: '2021-12-31T00:00:00+05:30',
 });
 
+/* The first source in this registry that is actually ingested rather than
+ * awaiting an overlay. The transects are pulled by scripts/fetch-shoreline.py
+ * and reduced by scripts/build-shoreline-factors.py; every rate the console
+ * shows from it is measured at the habitation's own reach.
+ *
+ * It does not replace SRC_NCSCM_SHORELINE. NCSCM is the statutory Indian
+ * assessment and remains the authority for a shoreline-change figure entering
+ * an official record; this is an independent satellite-derived measurement
+ * that happens to be obtainable today. Where the two disagree, both are shown.
+ *
+ * CC-BY-4.0. The attribution below is a licence condition, not a courtesy. */
+export const SRC_DELTARES_SHORELINE: Provenance = {
+  status: 'LIVE',
+  source: 'ShorelineMonitor / Global Coastal Transect Repository (GCTR)',
+  agency: 'Deltares',
+  method:
+    'Satellite-derived shoreline positions from Landsat and Sentinel-2 '
+    + 'composites, sampled on 100 m transects. Rate is the ordinary '
+    + 'least-squares slope of shoreline position against year over '
+    + 'observations flagged primary; standard error and R-squared published '
+    + 'per transect.',
+  resolution: '100 m transect spacing',
+  citation:
+    'ShorelineMonitor, Deltares, CC-BY-4.0. Retrieved via the OGC WFS at '
+    + 'shoreline-monitor.openearth.eu, 3 September 2026.',
+  assessedOn: '2026-09-03T00:00:00+05:30',
+};
+
 export const SRC_INCOIS_SURGE = pending({
   source: 'Storm surge and coastal inundation hazard maps',
   agency: 'Indian National Centre for Ocean Information Services',

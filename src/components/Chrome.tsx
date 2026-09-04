@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import type { Habitation, TierKey } from '../data/schema';
-import { int, ts } from '../lib/format';
+import { dateOnly, int, ts } from '../lib/format';
 import { ALERT_TEXT } from '../lib/severity';
 import { FlagDot } from './primitives';
 import { Wordmark } from './Wordmark';
+import { CASES, setCase, useCase } from '../lib/useCase';
 
 /* ---------------------------------------------------------------- top --- */
 
 export function TopBar({ onShowKeys }: { onShowKeys: () => void }) {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
+  const active = useCase();
   return (
     <header className="topbar">
       <div className="topbar-brand">
@@ -27,6 +29,33 @@ export function TopBar({ onShowKeys }: { onShowKeys: () => void }) {
           Evacuation planning
         </a>
       </nav>
+
+      {/* The case is the most consequential control in the app -- it moves the
+          operating clock and changes which ground the evacuation workspace
+          analyses -- so it sits in the chrome rather than inside a panel. */}
+      <div className="casepick">
+        <span className="casepick-label">Case</span>
+        <span className="seg seg-xs">
+          {CASES.map((c) => (
+            <button
+              key={c.id}
+              className={active.id === c.id ? 'on' : ''}
+              onClick={() => setCase(c.id)}
+              title={`${c.region} — ${c.event}`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </span>
+        <span className="casepick-when mono">
+          {active.live ? 'live' : dateOnly(active.clock)}
+        </span>
+        {active.stack ? null : (
+          <span className="casepick-warn" title={active.unavailable}>
+            no terrain stack
+          </span>
+        )}
+      </div>
 
       <div className="topbar-spacer" />
       <div className="topbar-right">

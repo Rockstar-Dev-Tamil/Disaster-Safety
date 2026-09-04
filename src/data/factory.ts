@@ -7,9 +7,16 @@
  * the same basis -- which is the whole defensibility argument.
  * ==========================================================================*/
 
-import type { Factor, HazardType } from './schema';
+import type { Factor, HazardType, Provenance } from './schema';
 
-type Row = [raw: string, normalised: number, scale?: string, note?: string];
+type Row = [
+  raw: string,
+  normalised: number,
+  scale?: string,
+  note?: string,
+  /** Only when this row's source differs from the assessment's. */
+  provenance?: Provenance,
+];
 
 function build(
   spec: Array<{ key: string; label: string; weight: number }>,
@@ -23,6 +30,7 @@ function build(
     normalised: rows[i][1],
     scale: rows[i][2],
     note: rows[i][3],
+    provenance: rows[i][4],
   }));
 }
 

@@ -22,14 +22,37 @@ from concurrent.futures import ThreadPoolExecutor
 COLLECTION = 'C2723754847-GES_DISC'
 BASE = f'https://opendap.earthdata.nasa.gov/collections/{COLLECTION}/granules/'
 
-# IMERG V07 grid: 0.1 deg, lon origin -180, lat origin -90
-LON0, LON1 = 2556, 2564          # 75.65 .. 76.45 E
-LAT0, LAT1 = 1014, 1020          # 11.45 .. 12.05 N
+# IMERG V07 grid: 0.1 deg, lon origin -180, lat origin -90. Cell centres sit
+# on the half-step, so index -> centre is idx*0.1 - 180 + 0.05.
+def cell_index(lon, lat):
+    return (int(round((lon + 180 - 0.05) / 0.1)),
+            int(round((lat + 90 - 0.05) / 0.1)))
+
+
+# Which area of interest to subset. Wayanad by default so the existing
+# invocation is unchanged; --aoi selects another without editing indices,
+# because hand-computed grid offsets are exactly the kind of constant that
+# gets copied once and then quietly describes the wrong place.
+AOIS = {
+    'wayanad': (76.05, 11.75, 4, 3),      # lon, lat, half-width, half-height
+    'kendrapara': (86.95, 20.65, 4, 3),
+}
+
+AOI = os.environ.get('IMERG_AOI', 'wayanad')
+_lon, _lat, _hw, _hh = AOIS[AOI]
+_ci, _cj = cell_index(_lon, _lat)
+LON0, LON1 = _ci - _hw, _ci + _hw
+LAT0, LAT1 = _cj - _hh, _cj + _hh
 CE = (f'/Grid/precipitation[0][{LON0}:{LON1}][{LAT0}:{LAT1}];'
       f'/Grid/lon[{LON0}:{LON1}];/Grid/lat[{LAT0}:{LAT1}]')
 
 TOKEN = open('.earthdata_token').read().strip()
-DAYS = [('20240728', 210), ('20240729', 211), ('20240730', 212)]
+# Which days to pull, as (yyyymmdd, day-of-year). Defaults to the Wayanad
+# event so the existing invocation is unchanged; IMERG_DAYS overrides with a
+# comma-separated list, e.g. 20190501:121,20190502:122.
+_DEFAULT_DAYS = '20240728:210,20240729:211,20240730:212'
+DAYS = [(d.split(':')[0], int(d.split(':')[1]))
+        for d in os.environ.get('IMERG_DAYS', _DEFAULT_DAYS).split(',')]
 
 
 def granule_names():
@@ -81,6 +104,7 @@ def parse(text):
 
 def main():
     items = granule_names()
+    print(f'AOI {AOI}: centre {_lon}, {_lat}  grid [{LON0}:{LON1}][{LAT0}:{LAT1}]')
     print(f'fetching {len(items)} granules, subset {LON1 - LON0 + 1} x {LAT1 - LAT0 + 1} cells')
     series, lons, lats, failed = [], None, None, 0
     with ThreadPoolExecutor(max_workers=8) as pool:
@@ -96,7 +120,7 @@ def main():
                 print(f'  {n}/{len(items)}')
     series.sort(key=lambda s: (s['ymd'], s['mins']))
     out = {'lons': lons, 'lats': lats, 'series': series, 'failed': failed}
-    dest = os.path.join(os.environ.get('SCRATCH', '.'), 'imerg-wayanad.json')
+    dest = os.path.join(os.environ.get('SCRATCH', '.'), f'imerg-{AOI}.json')
     with open(dest, 'w') as f:
         json.dump(out, f)
     print(f'wrote {dest}: {len(series)} timesteps, {failed} failed')

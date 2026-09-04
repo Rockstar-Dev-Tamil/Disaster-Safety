@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl, { type Map as MLMap } from 'maplibre-gl';
 import type { Habitation } from '../data/schema';
-import { HABITATION_BY_ID, OPERATING_CLOCK } from '../data/habitations';
+import { HABITATION_BY_ID } from '../data/habitations';
 import { PUBLISHED, PUBLISHED_SOURCE } from '../data/published';
 import { TopBar } from '../components/Chrome';
 import {
@@ -31,6 +31,8 @@ import {
 } from '../lib/zones';
 import { Block, CountUp, OverlayBox } from '../components/primitives';
 import { ExplainDock } from '../components/ExplainDock';
+import { useCase } from '../lib/useCase';
+import { caseForHabitation, caseForPoint } from '../data/cases';
 import { WordmarkProgress } from '../components/Wordmark';
 import type { Fact, FactBundle } from '../lib/explain';
 import { ZonePanel } from '../components/ZonePanel';
@@ -62,6 +64,13 @@ const EMPTY_FC: GeoJSON.FeatureCollection = { type: 'FeatureCollection', feature
 
 export function EvacView({ habitationId }: { habitationId: string }) {
   const h = HABITATION_BY_ID.get(habitationId) ?? null;
+
+  /* Which shipped stack, if any, actually contains this habitation. Computed
+   * here rather than in the render path because an early `return` does NOT
+   * stop the hooks above it: the load effect had already begun pulling one
+   * area's rasters for a point 1,100 km outside them, and the crop over that
+   * mismatch exhausted the array buffer before anything rendered at all. */
+  const covering = h ? caseForPoint(h.lngLat) : undefined;
 
   const [stages, setStages] = useState<Stage[]>(
     STAGES.map((s) => ({ ...s, state: 'pending' as StageState })),
@@ -98,6 +107,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
   /* The panel can be dismissed to the right so the relief view can be read
    * full-width. The map is the subject; the tables are the argument for it. */
   const [panelOut, setPanelOut] = useState(false);
+  const activeCase = useCase();
 
   /* MapLibre measures its container, so a dock sliding over ~420 ms needs the
    * canvas re-measured across those frames rather than only once it settles. */
@@ -347,17 +357,29 @@ export function EvacView({ habitationId }: { habitationId: string }) {
   blockRef.current = toggleBlock;
 
   const aoi = useMemo(() => (h ? aoiAround(h.lngLat, RADIUS_KM) : null), [h]);
+  /* Fraction of the 30 km search disc the terrain stack actually covers.
+   * Null until the crop stage has run. */
+  const [coverage, setCoverage] = useState<number | null>(null);
+  /* Mean slope inside the search radius. Drives an honest note on the relief
+   * view: on a floodplain that view looks flat because the ground IS flat, and
+   * an officer should be told that rather than left wondering whether the 3D
+   * is broken. */
+  const [meanSlopeDeg, setMeanSlopeDeg] = useState<number | null>(null);
 
   /* ------------------------------------------------------------- load --- */
   useEffect(() => {
-    if (!h) return;
+    if (!h || !covering) return;
     let cancelled = false;
     const mark = (key: string, state: StageState, note?: string) => {
       if (cancelled) return;
       setStages((prev) => prev.map((s) => (s.key === key ? { ...s, state, note } : s)));
     };
 
-    loadTerrain(mark)
+    /* The covering case decides which stack loads. `covering` is resolved by
+     * geographic containment, not by which case is selected in the top bar, so
+     * a deep link into another case's habitation still loads the ground that
+     * habitation actually stands on. */
+    loadTerrain(mark, covering.stack!.base)
       .then((s) => {
         if (cancelled) return;
         mark('crop', 'active');
@@ -379,8 +401,46 @@ export function EvacView({ habitationId }: { habitationId: string }) {
           }
           return n;
         })();
+        /* Same traversal, one more statistic: what the ground actually does.
+         * Cheap here, and it is the difference between "the relief view is
+         * broken" and "this terrain has no relief, which is the finding". */
+        (() => {
+          const g = s.grids['slope'];
+          if (!g || !aoi) return;
+          const { manifest } = s;
+          const [w, so, e, no] = manifest.bounds;
+          let sum = 0;
+          let n = 0;
+          for (let y = 0; y < manifest.height; y += 2) {
+            const lat = no - ((no - so) * y) / (manifest.height - 1);
+            if (lat < aoi.south || lat > aoi.north) continue;
+            for (let x = 0; x < manifest.width; x += 2) {
+              const lon = w + ((e - w) * x) / (manifest.width - 1);
+              if (lon < aoi.west || lon > aoi.east) continue;
+              if (haversineKm([lon, lat], h.lngLat) > RADIUS_KM) continue;
+              sum += g[y * manifest.width + x];
+              n++;
+            }
+          }
+          if (n) setMeanSlopeDeg(sum / n);
+        })();
+
         const areaKm2 = (inside * s.manifest.cellMetres ** 2) / 1e6;
-        mark('crop', 'done', `${int(inside)} cells · ${areaKm2.toFixed(0)} km² within ${RADIUS_KM} km`);
+        /* Against the disc the radius DESCRIBES, not against whatever the
+         * stack happened to contain. Counting cells alone cannot distinguish
+         * "this ground was assessed and rejected" from "this ground was never
+         * looked at", and those are opposite findings. A stack whose bounds
+         * cut the disc renders as a straight edge across the search area,
+         * which reads as a result rather than as an absence. */
+        const full = Math.PI * RADIUS_KM * RADIUS_KM;
+        const cov = Math.min(1, areaKm2 / full);
+        setCoverage(cov);
+        mark(
+          'crop',
+          'done',
+          `${int(inside)} cells · ${areaKm2.toFixed(0)} km² of ${full.toFixed(0)} km²`
+            + ` within ${RADIUS_KM} km · ${(cov * 100).toFixed(1)}% covered`,
+        );
         setStack(s);
         setTimeout(() => !cancelled && setReady(true), 250);
       })
@@ -396,7 +456,10 @@ export function EvacView({ habitationId }: { habitationId: string }) {
 
   /* -------------------------------------------------------------- map --- */
   useEffect(() => {
-    if (!ready || !h || !stack || !holder.current || mapRef.current) return;
+    /* `covering` gates this alongside `stack`: the DEM pyramid and its bounds
+     * are read from it, and a stack without a covering case would put another
+     * AOI's relief under this habitation. */
+    if (!ready || !h || !stack || !covering?.stack || !holder.current || mapRef.current) return;
 
     const map = new maplibregl.Map({
       container: holder.current,
@@ -410,7 +473,8 @@ export function EvacView({ habitationId }: { habitationId: string }) {
             ],
             tileSize: 256,
             maxzoom: 14,
-            attribution: 'Hillshade: Esri · Roads: OpenStreetMap · Hazard: KSDMA',
+            attribution:
+              `Hillshade: Esri · Roads: OpenStreetMap · ${covering.stack!.hazardAttribution}`,
           },
           /* Local terrarium DEM -- drives both the 3D mesh and, in 3D, the
            * shading. Built by scripts/build-dem-tiles.py from the same
@@ -418,7 +482,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
            * gradient can never disagree. No network. */
           dem: {
             type: 'raster-dem',
-            tiles: ['/dem/{z}/{x}/{y}.png'],
+            tiles: [covering.stack!.demTiles],
             encoding: 'terrarium',
             tileSize: 256,
             minzoom: 8,
@@ -429,8 +493,8 @@ export function EvacView({ habitationId }: { habitationId: string }) {
              * tries to decode as a PNG, throwing "The source image could not be
              * decoded" once per missing tile. Not a 404 anywhere, so it never
              * showed up as a failed request. */
-            bounds: [75.55, 11.2, 76.65, 12.15],
-            attribution: 'Elevation: Copernicus GLO-30',
+            bounds: covering.stack!.bounds,
+            attribution: covering.stack!.demAttribution,
           },
           /* A SECOND source over the same tiles, for the hillshade layer.
            *
@@ -445,12 +509,12 @@ export function EvacView({ habitationId }: { habitationId: string }) {
            * cache, so it costs a decode, not a download. */
           'dem-shade': {
             type: 'raster-dem',
-            tiles: ['/dem/{z}/{x}/{y}.png'],
+            tiles: [covering.stack!.demTiles],
             encoding: 'terrarium',
             tileSize: 256,
             minzoom: 8,
             maxzoom: 12,
-            bounds: [75.55, 11.2, 76.65, 12.15],
+            bounds: covering.stack!.bounds,
           },
         },
         layers: [
@@ -613,6 +677,32 @@ export function EvacView({ habitationId }: { habitationId: string }) {
     });
 
     map.on('load', () => {
+      /* Hazard raster for this AOI, when one has been tiled. Added FIRST so it
+       * sits under the eligible surface, the candidate ellipses and the routes:
+       * it is context for why ground was rejected, not a thing to read over the
+       * top of the answer. Tiles, so it survives the terrain pass that a draped
+       * image source does not. */
+      const ht = covering.stack!.hazardTiles;
+      if (ht) {
+        map.addSource('hazard-tiles', {
+          type: 'raster',
+          tiles: [ht],
+          tileSize: 256,
+          bounds: covering.stack!.bounds,
+          maxzoom: covering.stack!.hazardTilesMaxZoom ?? 12,
+        });
+        map.addLayer({
+          id: 'hazard-tiles-layer',
+          type: 'raster',
+          source: 'hazard-tiles',
+          paint: {
+            'raster-opacity': 0.55,
+            'raster-resampling': 'nearest',
+            'raster-fade-duration': 0,
+          },
+        });
+      }
+
       map.addSource('eligible', {
         type: 'image',
         url: TRANSPARENT_PX,
@@ -843,7 +933,25 @@ export function EvacView({ habitationId }: { habitationId: string }) {
      * is a sparse finding worth showing boldly, at 51% it is a background the
      * candidate outlines have to sit on top of. */
     const pct = (tier === 'LONG' ? longResult : result)?.stats.eligiblePct ?? 0;
-    map.setPaintProperty('eligible-layer', 'raster-opacity', pct > 35 ? 0.42 : 0.85);
+    /* Hidden entirely under terrain.
+     *
+     * MapLibre drapes an image source through the terrain render-to-texture
+     * pass, and here it reaches only a fraction of the terrain tiles: measured
+     * against this component's own `reason` array, eligible ground runs west to
+     * 93.9766 at latitude 26.8345 -- exactly the search circle's edge -- while
+     * the drawn surface stopped at 94.22, some 24 km short, with the east side
+     * clipped too. In plan view the same image renders in full.
+     *
+     * A partially drawn eligibility surface is worse than none: the missing
+     * ground reads as excluded, which is the opposite of what it is. The
+     * candidate zones and routes are GeoJSON and drape correctly, so relief
+     * keeps what it is for -- terrain context -- and plan stays authoritative
+     * for extent. */
+    map.setPaintProperty(
+      'eligible-layer',
+      'raster-opacity',
+      view3d ? 0 : pct > 35 ? 0.42 : 0.85,
+    );
 
     /* Every cluster above the size floor gets an ellipse. The shortlist is a
      * ranking, not a filter on what exists -- an officer scanning the map has
@@ -912,7 +1020,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
         });
         return new maplibregl.Marker({ element: el }).setLngLat(z.centroid).addTo(map);
       });
-  }, [result, longResult, longTerm, tier, areas, selected, mapReady, shortlistSize, rules.minSeparationKm]);
+  }, [result, longResult, longTerm, tier, areas, selected, mapReady, shortlistSize, rules.minSeparationKm, view3d]);
 
   /* ------------------------------------------------------ explain scope --- */
   /* Assembled from what the panel is DISPLAYING, not from the underlying
@@ -1133,6 +1241,30 @@ export function EvacView({ habitationId }: { habitationId: string }) {
     );
   }
 
+  /* Refuse rather than analyse the wrong ground. */
+  if (!covering) {
+    const nominal = caseForHabitation(h.id, h.state);
+    return (
+      <>
+        <TopBar onShowKeys={() => {}} />
+        <div className="empty out-of-coverage">
+          <strong>No terrain stack covers this habitation</strong>
+          {nominal?.unavailable ??
+            'The evacuation workspace reads a pre-computed 100 m grid, and none of the '
+              + 'stacks that ship cover this area of interest.'}
+          <div style={{ marginTop: 'var(--s-4)', color: 'var(--fg-2)' }}>
+            {h.name} sits at <span className="mono">{coord(h.lngLat)}</span>. Analysing it
+            against another area&rsquo;s rasters would return a complete set of figures about
+            the wrong ground, so the workspace does not open.
+          </div>
+          <a className="inline" style={{ marginTop: 'var(--s-4)' }} href="#/map">
+            Return to the red zone map
+          </a>
+        </div>
+      </>
+    );
+  }
+
   const pub = PUBLISHED[h.id];
 
   return (
@@ -1216,6 +1348,25 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                     ) : (
                       <div className="exagnote">True vertical scale.</div>
                     )}
+                    {/* A floodplain renders flat at any exaggeration. Saying so
+                        turns a view that looks broken into a stated finding:
+                        where gradient is uniformly near zero it cannot be the
+                        constraint, and inundation is. */}
+                    <div className="exagnote">
+                      Eligible-ground shading is hidden here: MapLibre drapes it
+                      through the terrain pass and reaches only part of the search
+                      area, and a half-drawn eligibility surface reads as exclusion.
+                      Use Plan for extent; candidate zones and routes below are
+                      unaffected.
+                    </div>
+                    {meanSlopeDeg !== null && meanSlopeDeg < 2 ? (
+                      <div className="exagnote">
+                        Mean slope across this search area is{' '}
+                        {meanSlopeDeg.toFixed(1)}°. The relief view will look nearly
+                        flat because the ground is — gradient does not discriminate
+                        here, and inundation is what rules ground in or out.
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
               </div>
@@ -1256,7 +1407,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                 </>
               ) : null}
               <div className="legend-note">
-                KSDMA sheets at 1:50,000 — boundaries good to 50–100 m. Not parcel-accurate.
+                {covering?.stack?.hazardNote}
               </div>
                 </div>
               </OverlayBox>
@@ -1369,7 +1520,20 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                     <dd className="mono">{int(stack?.manifest.towns.length ?? 0)}</dd>
                     <dt>Facilities</dt>
                     <dd className="mono">{int(stack?.manifest.facilities.length ?? 0)}</dd>
+                    <dt>Stack coverage</dt>
+                    <dd className="mono">
+                      {coverage === null ? '—' : `${(coverage * 100).toFixed(1)}%`}
+                    </dd>
                   </dl>
+                  {coverage !== null && coverage < 0.99 ? (
+                    <p className="exagwarn">
+                      The terrain stack covers {(coverage * 100).toFixed(1)}% of the{' '}
+                      {RADIUS_KM} km search area. The remainder was not assessed and is
+                      not shown as rejected — the straight edge on the map is the limit
+                      of the data, not a finding. Rebuild the stack over a wider area of
+                      interest before treating this shortlist as complete.
+                    </p>
+                  ) : null}
                 </div>
               </Block>
 
@@ -1457,7 +1621,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
 
             <div className="provline">
               <span className="src">Picture as of</span>
-              <div className="mono">{ts(OPERATING_CLOCK)}</div>
+              <div className="mono">{activeCase.clock ? ts(activeCase.clock) : 'live'}</div>
             </div>
           </aside>
         </div>
@@ -1489,7 +1653,9 @@ function LoadScreen({
   stages: Stage[];
   error: string | null;
 }) {
-  const done = stages.filter((s) => s.state === 'done').length;
+  /* Skipped stages count as settled: the wordmark should fill to the end on an
+   * AOI that legitimately has fewer layers, not stall short of it. */
+  const done = stages.filter((s) => s.state === 'done' || s.state === 'skipped').length;
   return (
     <div className="loadscreen">
       <div className="loadscreen-inner">
@@ -1515,7 +1681,15 @@ function LoadScreen({
             {stages.map((s) => (
               <tr key={s.key} className={`ls-${s.state}`}>
                 <td className="ls-mark">
-                  {s.state === 'done' ? '✓' : s.state === 'failed' ? '×' : s.state === 'active' ? '·' : ''}
+                  {s.state === 'done'
+                    ? '✓'
+                    : s.state === 'failed'
+                      ? '×'
+                      : s.state === 'skipped'
+                        ? '–'
+                        : s.state === 'active'
+                          ? '·'
+                          : ''}
                 </td>
                 <td className="ls-label">{s.label}</td>
                 <td className="ls-detail">{s.note ?? s.detail}</td>

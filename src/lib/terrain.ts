@@ -84,7 +84,11 @@ export interface TerrainStack {
   amenities?: Amenities;
 }
 
-export type StageState = 'pending' | 'active' | 'done' | 'failed';
+/** `skipped` is not `failed`. A layer that was never built for this area of
+ *  interest has not gone wrong, and marking it with a cross on the load screen
+ *  reports a fault that did not happen. Only a layer that was present and
+ *  could not be read is a failure. */
+export type StageState = 'pending' | 'active' | 'done' | 'failed' | 'skipped';
 
 export interface Stage {
   key: string;
@@ -97,8 +101,18 @@ export interface Stage {
 export const STAGES: Array<{ key: string; label: string; detail: string }> = [
   { key: 'manifest', label: 'Analysis grid', detail: 'Grid definition, settlements, facilities' },
   { key: 'slope', label: 'Terrain', detail: 'Copernicus GLO-30 derived slope, 100 m' },
-  { key: 'landslide', label: 'Landslide hazard', detail: 'KSDMA zonation, rasterised' },
-  { key: 'flood', label: 'Flood landform', detail: 'KSDMA landform, rasterised' },
+  { key: 'landslide', label: 'Landslide hazard', detail: 'hazard zonation, rasterised' },
+  { key: 'flood', label: 'Flood layer', detail: 'flood sheet, rasterised' },
+  {
+    key: 'floodrp',
+    label: 'Flood return period',
+    detail: 'WRI Aqueduct, smallest return period that inundates',
+  },
+  {
+    key: 'hand',
+    label: 'Height above drainage',
+    detail: 'HAND, calibrated against observed extent',
+  },
   { key: 'distroad', label: 'Road access', detail: 'Distance surface to tertiary+ roads' },
   { key: 'disttown', label: 'Settlement access', detail: 'Distance surface to towns' },
   { key: 'landuse', label: 'Land use', detail: 'OSM land use — built-up, cultivated, forest' },
@@ -131,13 +145,23 @@ async function decodePng(url: string, width: number, height: number): Promise<Ui
   return out;
 }
 
-const RASTER_KEYS = ['slope', 'landslide', 'flood', 'distroad', 'disttown', 'landuse', 'protected'] as const;
+/* `hand` is present only for AOIs where it has been computed; a layer absent
+ * from the manifest is reported as such rather than treated as zeros. */
+const RASTER_KEYS = ['slope', 'landslide', 'flood', 'floodrp', 'distroad', 'disttown', 'landuse', 'protected', 'hand'] as const;
 
+/**
+ * @param base Directory the stack was built into, from the active case's
+ *   `stack.base`. NOT optional in practice: hardcoding '/terrain' here meant
+ *   selecting a different case loaded Kerala's rasters and then cropped them
+ *   around a point 1,800 km away, which fails as an array allocation rather
+ *   than as anything that names the real problem.
+ */
 export async function loadTerrain(
   onStage: (key: string, state: StageState, note?: string) => void,
+  base = '/terrain',
 ): Promise<TerrainStack> {
   onStage('manifest', 'active');
-  const manifest: TerrainManifest = await fetch('/terrain/manifest.json').then((r) => {
+  const manifest: TerrainManifest = await fetch(`${base}/manifest.json`).then((r) => {
     if (!r.ok) throw new Error(`manifest ${r.status}`);
     return r.json();
   });
@@ -151,12 +175,17 @@ export async function loadTerrain(
   for (const key of RASTER_KEYS) {
     const layer = manifest.layers[key];
     if (!layer) {
-      onStage(key, 'failed', 'layer absent from manifest');
+      onStage(key, 'skipped', 'not built for this area of interest');
       continue;
     }
     onStage(key, 'active');
     try {
-      grids[key] = await decodePng(layer.file, manifest.width, manifest.height);
+      /* Resolved against `base` rather than taken verbatim. A manifest that
+       * names another stack's files is not a hypothetical -- it shipped once,
+       * and the symptom was an allocation failure rather than anything that
+       * said "wrong AOI". */
+      const file = `${base}/${layer.file.split('/').pop()}`;
+      grids[key] = await decodePng(file, manifest.width, manifest.height);
       onStage(key, 'done', `${(layer.bytes / 1024).toFixed(0)} KB decoded`);
     } catch (err) {
       onStage(key, 'failed', String(err));
@@ -164,7 +193,7 @@ export async function loadTerrain(
   }
 
   onStage('roads', 'active');
-  const roads: GeoJSON.FeatureCollection = await fetch('/terrain/roads.geojson').then((r) => {
+  const roads: GeoJSON.FeatureCollection = await fetch(`${base}/roads.geojson`).then((r) => {
     if (!r.ok) throw new Error(`roads ${r.status}`);
     return r.json();
   });
@@ -175,7 +204,7 @@ export async function loadTerrain(
   onStage('roads', 'done', `${roads.features.length.toLocaleString()} ways · ${vertices.toLocaleString()} vertices`);
 
   onStage('graph', 'active');
-  const graph: RoadGraphData = await fetch('/terrain/road-graph.json').then((r) => {
+  const graph: RoadGraphData = await fetch(`${base}/road-graph.json`).then((r) => {
     if (!r.ok) throw new Error(`graph ${r.status}`);
     return r.json();
   });
@@ -189,9 +218,9 @@ export async function loadTerrain(
    * and both tiers share it; a failure here degrades the long-term tab rather
    * than blocking short-term. */
   const [taluks, hosts, amenities] = await Promise.all([
-    fetch('/terrain/taluks.geojson').then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
-    fetch('/terrain/host-population.json').then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
-    fetch('/terrain/amenities.json').then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
+    fetch(`${base}/taluks.geojson`).then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
+    fetch(`${base}/host-population.json`).then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
+    fetch(`${base}/amenities.json`).then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
   ]);
 
   return { manifest, grids, roads, graph, taluks, hosts, amenities };

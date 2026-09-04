@@ -1,0 +1,874 @@
+{
+ "event": "Cyclone Fani, landfall near Puri 03 May 2019 ~08:00 IST",
+ "point": [
+  86.9381,
+  20.6284
+ ],
+ "note": "ERA5-Land reanalysis, NOT a forecast",
+ "series": [
+  {
+   "t": "2019-05-01 00:00",
+   "windKmh": 17.5,
+   "gustKmh": 31.0,
+   "dirDeg": 182.0,
+   "mslpHpa": 1005.7,
+   "waveM": 1.76,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-01 01:00",
+   "windKmh": 16.9,
+   "gustKmh": 30.1,
+   "dirDeg": 178.0,
+   "mslpHpa": 1006.1,
+   "waveM": 1.83,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-01 02:00",
+   "windKmh": 17.0,
+   "gustKmh": 31.6,
+   "dirDeg": 175.0,
+   "mslpHpa": 1007.2,
+   "waveM": 1.89,
+   "rainMm": 0.04
+  },
+  {
+   "t": "2019-05-01 03:00",
+   "windKmh": 17.7,
+   "gustKmh": 32.4,
+   "dirDeg": 175.0,
+   "mslpHpa": 1007.4,
+   "waveM": 1.95,
+   "rainMm": 0.04
+  },
+  {
+   "t": "2019-05-01 04:00",
+   "windKmh": 17.9,
+   "gustKmh": 32.5,
+   "dirDeg": 174.0,
+   "mslpHpa": 1007.6,
+   "waveM": 2.09,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-01 05:00",
+   "windKmh": 19.4,
+   "gustKmh": 33.4,
+   "dirDeg": 173.0,
+   "mslpHpa": 1007.3,
+   "waveM": 2.31,
+   "rainMm": 0.02
+  },
+  {
+   "t": "2019-05-01 06:00",
+   "windKmh": 19.5,
+   "gustKmh": 34.2,
+   "dirDeg": 172.0,
+   "mslpHpa": 1007.0,
+   "waveM": 2.37,
+   "rainMm": 0.13
+  },
+  {
+   "t": "2019-05-01 07:00",
+   "windKmh": 18.7,
+   "gustKmh": 33.8,
+   "dirDeg": 171.0,
+   "mslpHpa": 1006.1,
+   "waveM": 2.43,
+   "rainMm": 0.0
+  },
+  {
+   "t": "2019-05-01 08:00",
+   "windKmh": 19.2,
+   "gustKmh": 34.2,
+   "dirDeg": 171.0,
+   "mslpHpa": 1005.4,
+   "waveM": 2.49,
+   "rainMm": 0.0
+  },
+  {
+   "t": "2019-05-01 09:00",
+   "windKmh": 20.2,
+   "gustKmh": 34.0,
+   "dirDeg": 171.0,
+   "mslpHpa": 1004.6,
+   "waveM": 2.53,
+   "rainMm": 0.03
+  },
+  {
+   "t": "2019-05-01 10:00",
+   "windKmh": 21.0,
+   "gustKmh": 33.8,
+   "dirDeg": 178.0,
+   "mslpHpa": 1003.8,
+   "waveM": 2.57,
+   "rainMm": 0.02
+  },
+  {
+   "t": "2019-05-01 11:00",
+   "windKmh": 20.0,
+   "gustKmh": 33.1,
+   "dirDeg": 176.0,
+   "mslpHpa": 1004.0,
+   "waveM": 2.6,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-01 12:00",
+   "windKmh": 19.8,
+   "gustKmh": 32.7,
+   "dirDeg": 177.0,
+   "mslpHpa": 1004.4,
+   "waveM": 2.61,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-01 13:00",
+   "windKmh": 19.0,
+   "gustKmh": 31.7,
+   "dirDeg": 181.0,
+   "mslpHpa": 1005.0,
+   "waveM": 2.61,
+   "rainMm": 0.02
+  },
+  {
+   "t": "2019-05-01 14:00",
+   "windKmh": 17.9,
+   "gustKmh": 30.0,
+   "dirDeg": 179.0,
+   "mslpHpa": 1005.5,
+   "waveM": 2.6,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-01 15:00",
+   "windKmh": 16.2,
+   "gustKmh": 27.2,
+   "dirDeg": 172.0,
+   "mslpHpa": 1005.8,
+   "waveM": 2.58,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-01 16:00",
+   "windKmh": 16.2,
+   "gustKmh": 25.0,
+   "dirDeg": 170.0,
+   "mslpHpa": 1006.4,
+   "waveM": 2.55,
+   "rainMm": 0.02
+  },
+  {
+   "t": "2019-05-01 17:00",
+   "windKmh": 17.0,
+   "gustKmh": 27.6,
+   "dirDeg": 169.0,
+   "mslpHpa": 1006.8,
+   "waveM": 2.39,
+   "rainMm": 0.09
+  },
+  {
+   "t": "2019-05-01 18:00",
+   "windKmh": 18.0,
+   "gustKmh": 28.5,
+   "dirDeg": 171.0,
+   "mslpHpa": 1006.3,
+   "waveM": 2.37,
+   "rainMm": 0.14
+  },
+  {
+   "t": "2019-05-01 19:00",
+   "windKmh": 17.3,
+   "gustKmh": 28.4,
+   "dirDeg": 175.0,
+   "mslpHpa": 1005.7,
+   "waveM": 2.34,
+   "rainMm": 0.14
+  },
+  {
+   "t": "2019-05-01 20:00",
+   "windKmh": 11.4,
+   "gustKmh": 26.0,
+   "dirDeg": 178.0,
+   "mslpHpa": 1004.9,
+   "waveM": 2.31,
+   "rainMm": 0.17
+  },
+  {
+   "t": "2019-05-01 21:00",
+   "windKmh": 6.5,
+   "gustKmh": 18.4,
+   "dirDeg": 155.0,
+   "mslpHpa": 1004.0,
+   "waveM": 2.27,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-01 22:00",
+   "windKmh": 8.1,
+   "gustKmh": 11.6,
+   "dirDeg": 119.0,
+   "mslpHpa": 1004.0,
+   "waveM": 2.24,
+   "rainMm": 0.12
+  },
+  {
+   "t": "2019-05-01 23:00",
+   "windKmh": 13.2,
+   "gustKmh": 15.4,
+   "dirDeg": 116.0,
+   "mslpHpa": 1004.0,
+   "waveM": 2.22,
+   "rainMm": 0.0
+  },
+  {
+   "t": "2019-05-02 00:00",
+   "windKmh": 17.7,
+   "gustKmh": 22.5,
+   "dirDeg": 118.0,
+   "mslpHpa": 1004.6,
+   "waveM": 2.22,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-02 01:00",
+   "windKmh": 20.9,
+   "gustKmh": 31.9,
+   "dirDeg": 119.0,
+   "mslpHpa": 1004.9,
+   "waveM": 2.25,
+   "rainMm": 0.05
+  },
+  {
+   "t": "2019-05-02 02:00",
+   "windKmh": 22.9,
+   "gustKmh": 36.9,
+   "dirDeg": 118.0,
+   "mslpHpa": 1005.8,
+   "waveM": 2.27,
+   "rainMm": 0.02
+  },
+  {
+   "t": "2019-05-02 03:00",
+   "windKmh": 25.8,
+   "gustKmh": 38.2,
+   "dirDeg": 117.0,
+   "mslpHpa": 1006.0,
+   "waveM": 2.29,
+   "rainMm": 0.0
+  },
+  {
+   "t": "2019-05-02 04:00",
+   "windKmh": 28.6,
+   "gustKmh": 38.7,
+   "dirDeg": 119.0,
+   "mslpHpa": 1006.3,
+   "waveM": 2.33,
+   "rainMm": -0.0
+  },
+  {
+   "t": "2019-05-02 05:00",
+   "windKmh": 29.4,
+   "gustKmh": 41.0,
+   "dirDeg": 120.0,
+   "mslpHpa": 1006.0,
+   "waveM": 2.4,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-02 06:00",
+   "windKmh": 29.6,
+   "gustKmh": 44.4,
+   "dirDeg": 121.0,
+   "mslpHpa": 1005.8,
+   "waveM": 2.48,
+   "rainMm": 0.06
+  },
+  {
+   "t": "2019-05-02 07:00",
+   "windKmh": 30.2,
+   "gustKmh": 48.3,
+   "dirDeg": 123.0,
+   "mslpHpa": 1005.1,
+   "waveM": 2.57,
+   "rainMm": 0.3
+  },
+  {
+   "t": "2019-05-02 08:00",
+   "windKmh": 32.0,
+   "gustKmh": 49.9,
+   "dirDeg": 133.0,
+   "mslpHpa": 1004.8,
+   "waveM": 2.67,
+   "rainMm": 0.36
+  },
+  {
+   "t": "2019-05-02 09:00",
+   "windKmh": 31.6,
+   "gustKmh": 53.1,
+   "dirDeg": 139.0,
+   "mslpHpa": 1003.5,
+   "waveM": 2.77,
+   "rainMm": 1.81
+  },
+  {
+   "t": "2019-05-02 10:00",
+   "windKmh": 20.7,
+   "gustKmh": 51.1,
+   "dirDeg": 136.0,
+   "mslpHpa": 1003.5,
+   "waveM": 2.82,
+   "rainMm": 0.31
+  },
+  {
+   "t": "2019-05-02 11:00",
+   "windKmh": 19.7,
+   "gustKmh": 43.2,
+   "dirDeg": 120.0,
+   "mslpHpa": 1003.3,
+   "waveM": 2.87,
+   "rainMm": 0.19
+  },
+  {
+   "t": "2019-05-02 12:00",
+   "windKmh": 21.0,
+   "gustKmh": 44.8,
+   "dirDeg": 109.0,
+   "mslpHpa": 1003.2,
+   "waveM": 2.95,
+   "rainMm": 1.58
+  },
+  {
+   "t": "2019-05-02 13:00",
+   "windKmh": 23.5,
+   "gustKmh": 44.9,
+   "dirDeg": 100.0,
+   "mslpHpa": 1003.3,
+   "waveM": 3.05,
+   "rainMm": 2.97
+  },
+  {
+   "t": "2019-05-02 14:00",
+   "windKmh": 27.7,
+   "gustKmh": 45.9,
+   "dirDeg": 103.0,
+   "mslpHpa": 1004.0,
+   "waveM": 3.18,
+   "rainMm": 2.13
+  },
+  {
+   "t": "2019-05-02 15:00",
+   "windKmh": 31.8,
+   "gustKmh": 49.8,
+   "dirDeg": 98.0,
+   "mslpHpa": 1004.0,
+   "waveM": 3.32,
+   "rainMm": 0.9
+  },
+  {
+   "t": "2019-05-02 16:00",
+   "windKmh": 31.2,
+   "gustKmh": 57.7,
+   "dirDeg": 99.0,
+   "mslpHpa": 1004.5,
+   "waveM": 3.46,
+   "rainMm": 1.13
+  },
+  {
+   "t": "2019-05-02 17:00",
+   "windKmh": 33.3,
+   "gustKmh": 61.3,
+   "dirDeg": 110.0,
+   "mslpHpa": 1004.2,
+   "waveM": 3.59,
+   "rainMm": 4.55
+  },
+  {
+   "t": "2019-05-02 18:00",
+   "windKmh": 32.3,
+   "gustKmh": 60.6,
+   "dirDeg": 119.0,
+   "mslpHpa": 1003.8,
+   "waveM": 3.69,
+   "rainMm": 4.55
+  },
+  {
+   "t": "2019-05-02 19:00",
+   "windKmh": 32.2,
+   "gustKmh": 51.2,
+   "dirDeg": 124.0,
+   "mslpHpa": 1002.5,
+   "waveM": 3.73,
+   "rainMm": 4.51
+  },
+  {
+   "t": "2019-05-02 20:00",
+   "windKmh": 32.0,
+   "gustKmh": 49.2,
+   "dirDeg": 130.0,
+   "mslpHpa": 1001.9,
+   "waveM": 3.74,
+   "rainMm": 3.77
+  },
+  {
+   "t": "2019-05-02 21:00",
+   "windKmh": 31.3,
+   "gustKmh": 47.6,
+   "dirDeg": 135.0,
+   "mslpHpa": 1001.3,
+   "waveM": 3.73,
+   "rainMm": 3.21
+  },
+  {
+   "t": "2019-05-02 22:00",
+   "windKmh": 28.5,
+   "gustKmh": 47.1,
+   "dirDeg": 117.0,
+   "mslpHpa": 999.6,
+   "waveM": 3.69,
+   "rainMm": 0.75
+  },
+  {
+   "t": "2019-05-02 23:00",
+   "windKmh": 33.5,
+   "gustKmh": 54.1,
+   "dirDeg": 118.0,
+   "mslpHpa": 999.2,
+   "waveM": 3.68,
+   "rainMm": 1.11
+  },
+  {
+   "t": "2019-05-03 00:00",
+   "windKmh": 39.0,
+   "gustKmh": 62.8,
+   "dirDeg": 126.0,
+   "mslpHpa": 999.8,
+   "waveM": 4.07,
+   "rainMm": 3.92
+  },
+  {
+   "t": "2019-05-03 01:00",
+   "windKmh": 44.8,
+   "gustKmh": 69.0,
+   "dirDeg": 139.0,
+   "mslpHpa": 1000.0,
+   "waveM": 4.28,
+   "rainMm": 2.81
+  },
+  {
+   "t": "2019-05-03 02:00",
+   "windKmh": 46.8,
+   "gustKmh": 72.3,
+   "dirDeg": 144.0,
+   "mslpHpa": 1000.2,
+   "waveM": 4.58,
+   "rainMm": 2.89
+  },
+  {
+   "t": "2019-05-03 03:00",
+   "windKmh": 53.9,
+   "gustKmh": 75.6,
+   "dirDeg": 155.0,
+   "mslpHpa": 999.8,
+   "waveM": 5.02,
+   "rainMm": 1.32
+  },
+  {
+   "t": "2019-05-03 04:00",
+   "windKmh": 55.7,
+   "gustKmh": 83.5,
+   "dirDeg": 156.0,
+   "mslpHpa": 999.5,
+   "waveM": 5.49,
+   "rainMm": 1.49
+  },
+  {
+   "t": "2019-05-03 05:00",
+   "windKmh": 57.5,
+   "gustKmh": 87.7,
+   "dirDeg": 149.0,
+   "mslpHpa": 998.4,
+   "waveM": 5.93,
+   "rainMm": 1.86
+  },
+  {
+   "t": "2019-05-03 06:00",
+   "windKmh": 64.9,
+   "gustKmh": 94.6,
+   "dirDeg": 153.0,
+   "mslpHpa": 997.3,
+   "waveM": 6.31,
+   "rainMm": 2.96
+  },
+  {
+   "t": "2019-05-03 07:00",
+   "windKmh": 71.0,
+   "gustKmh": 111.7,
+   "dirDeg": 164.0,
+   "mslpHpa": 995.1,
+   "waveM": 6.72,
+   "rainMm": 3.07
+  },
+  {
+   "t": "2019-05-03 08:00",
+   "windKmh": 72.8,
+   "gustKmh": 116.0,
+   "dirDeg": 177.0,
+   "mslpHpa": 993.5,
+   "waveM": 7.17,
+   "rainMm": 1.94
+  },
+  {
+   "t": "2019-05-03 09:00",
+   "windKmh": 72.2,
+   "gustKmh": 119.6,
+   "dirDeg": 182.0,
+   "mslpHpa": 992.1,
+   "waveM": 7.45,
+   "rainMm": 1.16
+  },
+  {
+   "t": "2019-05-03 10:00",
+   "windKmh": 68.1,
+   "gustKmh": 119.5,
+   "dirDeg": 193.0,
+   "mslpHpa": 991.7,
+   "waveM": 7.36,
+   "rainMm": 0.97
+  },
+  {
+   "t": "2019-05-03 11:00",
+   "windKmh": 66.3,
+   "gustKmh": 115.6,
+   "dirDeg": 197.0,
+   "mslpHpa": 991.0,
+   "waveM": 7.12,
+   "rainMm": 1.01
+  },
+  {
+   "t": "2019-05-03 12:00",
+   "windKmh": 67.6,
+   "gustKmh": 111.4,
+   "dirDeg": 215.0,
+   "mslpHpa": 990.9,
+   "waveM": 6.72,
+   "rainMm": 1.29
+  },
+  {
+   "t": "2019-05-03 13:00",
+   "windKmh": 64.7,
+   "gustKmh": 107.5,
+   "dirDeg": 226.0,
+   "mslpHpa": 992.2,
+   "waveM": 6.64,
+   "rainMm": 2.36
+  },
+  {
+   "t": "2019-05-03 14:00",
+   "windKmh": 62.5,
+   "gustKmh": 104.7,
+   "dirDeg": 232.0,
+   "mslpHpa": 994.1,
+   "waveM": 6.03,
+   "rainMm": 4.02
+  },
+  {
+   "t": "2019-05-03 15:00",
+   "windKmh": 61.7,
+   "gustKmh": 105.3,
+   "dirDeg": 237.0,
+   "mslpHpa": 996.2,
+   "waveM": 5.5,
+   "rainMm": 5.53
+  },
+  {
+   "t": "2019-05-03 16:00",
+   "windKmh": 59.3,
+   "gustKmh": 105.7,
+   "dirDeg": 240.0,
+   "mslpHpa": 997.6,
+   "waveM": 5.07,
+   "rainMm": 5.37
+  },
+  {
+   "t": "2019-05-03 17:00",
+   "windKmh": 57.0,
+   "gustKmh": 102.5,
+   "dirDeg": 244.0,
+   "mslpHpa": 999.0,
+   "waveM": 4.71,
+   "rainMm": 2.7
+  },
+  {
+   "t": "2019-05-03 18:00",
+   "windKmh": 52.8,
+   "gustKmh": 93.9,
+   "dirDeg": 247.0,
+   "mslpHpa": 1000.2,
+   "waveM": 4.37,
+   "rainMm": 1.15
+  },
+  {
+   "t": "2019-05-03 19:00",
+   "windKmh": 47.1,
+   "gustKmh": 89.5,
+   "dirDeg": 244.0,
+   "mslpHpa": 1001.1,
+   "waveM": 4.03,
+   "rainMm": 2.46
+  },
+  {
+   "t": "2019-05-03 20:00",
+   "windKmh": 42.3,
+   "gustKmh": 77.7,
+   "dirDeg": 239.0,
+   "mslpHpa": 1001.4,
+   "waveM": 3.71,
+   "rainMm": 0.58
+  },
+  {
+   "t": "2019-05-03 21:00",
+   "windKmh": 37.4,
+   "gustKmh": 63.2,
+   "dirDeg": 239.0,
+   "mslpHpa": 1001.5,
+   "waveM": 3.4,
+   "rainMm": 0.07
+  },
+  {
+   "t": "2019-05-03 22:00",
+   "windKmh": 32.3,
+   "gustKmh": 55.4,
+   "dirDeg": 243.0,
+   "mslpHpa": 1002.6,
+   "waveM": 3.14,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-03 23:00",
+   "windKmh": 29.7,
+   "gustKmh": 50.6,
+   "dirDeg": 250.0,
+   "mslpHpa": 1003.4,
+   "waveM": 2.94,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 00:00",
+   "windKmh": 25.9,
+   "gustKmh": 45.1,
+   "dirDeg": 264.0,
+   "mslpHpa": 1004.4,
+   "waveM": 2.77,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 01:00",
+   "windKmh": 22.9,
+   "gustKmh": 38.4,
+   "dirDeg": 269.0,
+   "mslpHpa": 1005.1,
+   "waveM": 2.62,
+   "rainMm": -0.0
+  },
+  {
+   "t": "2019-05-04 02:00",
+   "windKmh": 20.7,
+   "gustKmh": 32.4,
+   "dirDeg": 260.0,
+   "mslpHpa": 1005.5,
+   "waveM": 2.49,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 03:00",
+   "windKmh": 20.9,
+   "gustKmh": 32.7,
+   "dirDeg": 249.0,
+   "mslpHpa": 1005.9,
+   "waveM": 2.38,
+   "rainMm": 0.0
+  },
+  {
+   "t": "2019-05-04 04:00",
+   "windKmh": 20.8,
+   "gustKmh": 34.8,
+   "dirDeg": 241.0,
+   "mslpHpa": 1006.2,
+   "waveM": 2.29,
+   "rainMm": 0.0
+  },
+  {
+   "t": "2019-05-04 05:00",
+   "windKmh": 19.8,
+   "gustKmh": 38.5,
+   "dirDeg": 235.0,
+   "mslpHpa": 1006.2,
+   "waveM": 2.22,
+   "rainMm": -0.0
+  },
+  {
+   "t": "2019-05-04 06:00",
+   "windKmh": 20.1,
+   "gustKmh": 41.5,
+   "dirDeg": 228.0,
+   "mslpHpa": 1006.3,
+   "waveM": 2.15,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 07:00",
+   "windKmh": 20.9,
+   "gustKmh": 30.9,
+   "dirDeg": 222.0,
+   "mslpHpa": 1005.7,
+   "waveM": 2.09,
+   "rainMm": 0.0
+  },
+  {
+   "t": "2019-05-04 08:00",
+   "windKmh": 20.9,
+   "gustKmh": 31.1,
+   "dirDeg": 220.0,
+   "mslpHpa": 1005.2,
+   "waveM": 2.04,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 09:00",
+   "windKmh": 20.2,
+   "gustKmh": 30.6,
+   "dirDeg": 218.0,
+   "mslpHpa": 1004.6,
+   "waveM": 2.0,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 10:00",
+   "windKmh": 17.6,
+   "gustKmh": 29.5,
+   "dirDeg": 211.0,
+   "mslpHpa": 1004.1,
+   "waveM": 1.96,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 11:00",
+   "windKmh": 19.9,
+   "gustKmh": 32.0,
+   "dirDeg": 202.0,
+   "mslpHpa": 1004.7,
+   "waveM": 1.91,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 12:00",
+   "windKmh": 20.2,
+   "gustKmh": 34.2,
+   "dirDeg": 202.0,
+   "mslpHpa": 1004.7,
+   "waveM": 1.87,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 13:00",
+   "windKmh": 19.0,
+   "gustKmh": 34.2,
+   "dirDeg": 201.0,
+   "mslpHpa": 1005.8,
+   "waveM": 1.83,
+   "rainMm": 0.0
+  },
+  {
+   "t": "2019-05-04 14:00",
+   "windKmh": 17.8,
+   "gustKmh": 33.3,
+   "dirDeg": 202.0,
+   "mslpHpa": 1006.6,
+   "waveM": 1.79,
+   "rainMm": -0.0
+  },
+  {
+   "t": "2019-05-04 15:00",
+   "windKmh": 17.3,
+   "gustKmh": 31.1,
+   "dirDeg": 204.0,
+   "mslpHpa": 1007.7,
+   "waveM": 1.75,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 16:00",
+   "windKmh": 16.3,
+   "gustKmh": 29.6,
+   "dirDeg": 204.0,
+   "mslpHpa": 1007.9,
+   "waveM": 1.71,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 17:00",
+   "windKmh": 14.6,
+   "gustKmh": 28.1,
+   "dirDeg": 204.0,
+   "mslpHpa": 1008.4,
+   "waveM": 1.68,
+   "rainMm": 0
+  },
+  {
+   "t": "2019-05-04 18:00",
+   "windKmh": 13.5,
+   "gustKmh": 26.3,
+   "dirDeg": 205.0,
+   "mslpHpa": 1008.1,
+   "waveM": 1.64,
+   "rainMm": 0.0
+  },
+  {
+   "t": "2019-05-04 19:00",
+   "windKmh": 12.8,
+   "gustKmh": 19.4,
+   "dirDeg": 206.0,
+   "mslpHpa": 1007.6,
+   "waveM": 1.61,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-04 20:00",
+   "windKmh": 12.7,
+   "gustKmh": 19.3,
+   "dirDeg": 203.0,
+   "mslpHpa": 1007.2,
+   "waveM": 1.58,
+   "rainMm": 0.01
+  },
+  {
+   "t": "2019-05-04 21:00",
+   "windKmh": 14.0,
+   "gustKmh": 21.1,
+   "dirDeg": 201.0,
+   "mslpHpa": 1006.6,
+   "waveM": 1.56,
+   "rainMm": 0.02
+  },
+  {
+   "t": "2019-05-04 22:00",
+   "windKmh": 14.5,
+   "gustKmh": 22.5,
+   "dirDeg": 212.0,
+   "mslpHpa": 1007.3,
+   "waveM": 1.53,
+   "rainMm": 0.02
+  },
+  {
+   "t": "2019-05-04 23:00",
+   "windKmh": 12.8,
+   "gustKmh": 22.4,
+   "dirDeg": 210.0,
+   "mslpHpa": 1006.9,
+   "waveM": 1.51,
+   "rainMm": 0.01
+  }
+ ]
+}

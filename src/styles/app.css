@@ -675,6 +675,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb { background: var(--accent
 .badge.prov-pending { color: #d9b04a; border-color: #6b5216; background: #2a2109; }
 .badge.prov-stub    { color: #b491d1; border-color: #4d3661; background: #201829; }
 .badge.prov-live    { color: var(--fg-2); border-color: var(--line-2); background: var(--bg-0); }
+/* Deliberately closer to the pending amber than to live: the officer should
+   read "not yet citable", not "fine". */
+.badge.prov-unattributed { color: #d98f4a; border-color: #6b4116; background: #2a1809; }
 .badge.reject       { color: var(--fg-2); border-color: var(--line-2); background: var(--bg-0); }
 .badge.accept       { color: var(--sev-low-fg); border-color: #2c5426; background: #14210f; }
 
@@ -1126,6 +1129,10 @@ a.inline:hover { text-decoration: underline; }
 .loadtable tr.ls-done .ls-mark { color: var(--sev-low-fg); }
 .loadtable tr.ls-done .ls-label { color: var(--fg-1); }
 .loadtable tr.ls-done .ls-detail { color: var(--fg-2); }
+/* Neutral, not alarming: a layer absent for this AOI is a fact about the
+   build, not a fault at load time. */
+.loadtable tr.ls-skipped td { color: var(--fg-3); }
+.loadtable tr.ls-skipped .ls-mark { color: var(--fg-3); }
 .loadtable tr.ls-failed .ls-mark { color: var(--sev-vhigh-fg); }
 .loadtable tr.ls-failed .ls-detail { color: var(--sev-vhigh-fg); }
 
@@ -1462,3 +1469,34 @@ a.inline:hover { text-decoration: underline; }
 }
 .explain-foot .backend.on { color: var(--sev-low-fg); border-color: #2f5a3a; }
 .explain-foot .backend.off { color: var(--fg-3); }
+
+/* ---------------- case selector ----------------
+   Sits in the chrome because it is the most consequential control here: it
+   moves the operating clock and changes which ground gets analysed. */
+.casepick {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: 0 var(--s-6);
+  border-right: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+.casepick-label {
+  font-family: var(--ff-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.casepick-when { font-size: var(--fs-xs); color: var(--fg-2); }
+/* A case with no terrain stack cannot open the evacuation workspace. Said in
+   the chrome so it is known before the click, not after it. */
+.casepick-warn {
+  font-family: var(--ff-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c8a94e;
+  border: 1px solid #6b5216;
+  padding: 1px 5px;
+}

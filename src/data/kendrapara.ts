@@ -3,10 +3,16 @@
  *
  * Same operating picture clock as the Wayanad scenario (29 Jul 2024, 23:30
  * IST): one moment, one national picture. At that moment there is no system
- * in the Bay of Bengal, so this habitation sits at VERY HIGH standing
+ * in the Bay of Bengal, so this habitation sits at HIGH standing
  * susceptibility and a YELLOW current state simultaneously. That divergence
  * is the reason the header carries two scores instead of one -- a single
  * "risk" number would have to lie in one direction or the other.
+ *
+ * The standing band is HIGH rather than VERY HIGH because the shoreline
+ * retreat factor now runs on measured transects rather than an authored rate.
+ * The measurement is roughly half the figure the NCSCM atlas carries, and it
+ * moved the score by fourteen points. That is the system working: a number
+ * with a derivation behind it displaced one without, and the band followed.
  *
  * DESTINATION CANDIDATES ARE DERIVED FROM GEOGRAPHY ONLY: inland of the
  * 1-in-100-year surge envelope, outside CRZ-I, outside the Bhitarkanika
@@ -16,8 +22,15 @@
  * ==========================================================================*/
 
 import { capacityFrom, coastalFactors, currentCoastalDrivers, livabilityFactors, siteFactors } from './factory';
+import { SHORELINE, retreatNormalised, retreatSummary } from './shoreline-kendrapara';
+import {
+  KDP_RAINFALL_CELL,
+  KDP_RAINFALL_PROVENANCE,
+  KDP_RAIN_FRAMES,
+} from './rainfall-kendrapara';
 import {
   SRC_CENSUS,
+  SRC_DELTARES_SHORELINE,
   SRC_INCOIS_SURGE,
   SRC_M2_STRUCTURES,
   SRC_M4_LIVABILITY,
@@ -32,9 +45,49 @@ export const KENDRAPARA_CLOCK = '2024-07-29T23:30:00+05:30';
 
 /* ------------------------------------------------------------- scoring   */
 
+/* Measured, not assumed. See src/data/shoreline-kendrapara.ts. */
+const SHORE = SHORELINE['Kanhupur'];
+
+/* Residual distance from the habitation boundary to the active shoreline,
+ * authored, and carried on the shoredist factor row below. Kept here so the
+ * time-to-boundary figures downstream are arithmetic rather than prose. */
+const SHORE_DIST_M = 180;
+
+const MEDIAN_RETREAT = Math.abs(SHORE.medianRate ?? 0);
+const WORST_RETREAT = Math.abs(SHORE.worstRate ?? 0);
+
+/* At the reach median and at its fastest transect. Quoting a single figure
+ * here would hide that the two ends of this reach differ by seven years. */
+const YEARS_TO_BOUNDARY = Math.round(SHORE_DIST_M / MEDIAN_RETREAT);
+const YEARS_TO_BOUNDARY_WORST = Math.round(SHORE_DIST_M / WORST_RETREAT);
+
+/* The NCSCM shoreline change atlas records 14.6 m/yr end-point retreat for
+ * this reach over 1990-2018. The satellite-derived transects do not reproduce
+ * it: 90 transects within 5 km give a median of 6.5 m/yr, the fastest single
+ * transect in the reach is 8.5 m/yr, and the nearest transect is 6.5 m/yr with
+ * a standard error of 0.17 and an R-squared of 0.98 -- a well-constrained
+ * measurement roughly a factor of two below the atlas figure.
+ *
+ * Both are kept. The score now moves on the measurement, because it is the one
+ * with an auditable derivation behind it; the atlas figure stays on the row so
+ * the disagreement is visible to whoever has to sign the recommendation. It is
+ * not resolved here, and it should not be resolved silently: the two differ in
+ * method (end-point versus least-squares), in period, and possibly in the
+ * stretch of coast each describes. */
+const NCSCM_RETREAT_NOTE =
+  'NCSCM shoreline change atlas records 14.6 m/yr (DSAS end-point, 1990-2018) '
+  + 'for this reach. Not reproduced by the satellite-derived transects; '
+  + 'both figures retained pending reconciliation.';
+
 const kanhupurSusceptibility = derive(
   coastalFactors([
-    ['-14.6 m/yr, 1990-2018 (DSAS end-point rate)', 92, '0 m/yr = 0, >15 m/yr erosion = 100'],
+    [
+      retreatSummary(SHORE),
+      retreatNormalised(SHORE),
+      '0 m/yr = 0, >15 m/yr erosion = 100',
+      NCSCM_RETREAT_NOTE,
+      SRC_DELTARES_SHORELINE,
+    ],
     ['3.2 m modelled, 1-in-100-yr cyclone', 87, '0 m = 0, >4 m = 100'],
     ['1.4 m above MSL', 89, '>8 m = 0, <2 m = 100'],
     ['40 m residual, from 1,150 m in 1990', 90, '>500 m = 0, <50 m = 100'],
@@ -47,7 +100,15 @@ const kanhupurSusceptibility = derive(
 const kanhupurCurrent = derive(
   currentCoastalDrivers([
     ['None in Bay of Bengal within 72 h', 8, 'IMD cyclone warning stage, 0-4 mapped to 0-100'],
-    [`${kanhupurSusceptibility.score} (VERY HIGH)`, 88, 'Carried from standing assessment'],
+    /* Derived, not restated. This row previously hardcoded both the band label
+     * and the class score; when the retreat factor moved onto measured data
+     * the standing assessment changed band, and a hardcoded copy would have
+     * quietly disagreed with the number it claims to carry. */
+    [
+      `${kanhupurSusceptibility.score} (${kanhupurSusceptibility.band.replace('_', ' ')})`,
+      Math.round(kanhupurSusceptibility.score),
+      'Carried from standing assessment',
+    ],
     ['Neap tide; next spring tide 04 Aug', 34, 'Phase position within the spring-neap cycle'],
     ['Swell 1.6 m; no INCOIS high-wave alert', 26, 'Significant wave height against alert threshold'],
     ['Monsoon westerly, 28 km/h onshore component', 44, 'Onshore component against 45 km/h threshold'],
@@ -57,15 +118,23 @@ const kanhupurCurrent = derive(
 
 /* --------------------------------------------------------------- feeds   */
 
-/* Coastal erosion is chronic rather than nowcast-driven, so the series here
- * carries surge and tide state rather than rainfall. Same shape, so the same
- * component renders it. */
-const gahirmathaFeed: NowcastSeries = {
-  stationId: 'AWS-OD-KDP-002',
-  stationName: 'Gahirmatha AWS',
-  lngLat: [86.9204, 20.6604],
-  distanceKm: 6.2,
-  provenance: { ...SRC_INCOIS_SURGE, observedAt: KENDRAPARA_CLOCK },
+/* Coastal erosion is chronic rather than nowcast-driven, so the THRESHOLDS
+ * here are surge and wave rather than rainfall. Same shape, so the same
+ * component renders it.
+ *
+ * The rainfall values are observed, from the IMERG cell containing Kanhupur.
+ * An earlier version of this feed presented them as readings from a named
+ * automatic weather station, "Gahirmatha AWS". They were not: they were
+ * authored placeholders, and once real satellite figures replaced them the
+ * station name would have attributed a satellite retrieval to a ground gauge.
+ * The feed is named for the cell it actually reads, as Wayanad's is. */
+const kanhupurRainFeed: NowcastSeries = {
+  stationId: 'IMERG-C-2669-1106',
+  stationName: `GPM IMERG cell ${KDP_RAINFALL_CELL.lat.toFixed(2)} N `
+    + `${KDP_RAINFALL_CELL.lon.toFixed(2)} E`,
+  lngLat: [KDP_RAINFALL_CELL.lon, KDP_RAINFALL_CELL.lat],
+  distanceKm: 2.7,
+  provenance: KDP_RAINFALL_PROVENANCE,
   thresholds: [
     {
       key: 'surge',
@@ -82,15 +151,14 @@ const gahirmathaFeed: NowcastSeries = {
       basis: 'INCOIS high-wave alert threshold',
     },
   ],
-  frames: [
-    { t: '2024-07-29T05:30:00+05:30', rain3h: 0.3, rain24h: 1.4, rainCumulative: 0.3, alert: 'GREEN' },
-    { t: '2024-07-29T08:30:00+05:30', rain3h: 0.3, rain24h: 1.4, rainCumulative: 0.4, alert: 'GREEN' },
-    { t: '2024-07-29T11:30:00+05:30', rain3h: 0.4, rain24h: 1.5, rainCumulative: 0.4, alert: 'YELLOW' },
-    { t: '2024-07-29T14:30:00+05:30', rain3h: 0.4, rain24h: 1.6, rainCumulative: 0.4, alert: 'YELLOW' },
-    { t: '2024-07-29T17:30:00+05:30', rain3h: 0.4, rain24h: 1.6, rainCumulative: 0.4, alert: 'YELLOW' },
-    { t: '2024-07-29T20:30:00+05:30', rain3h: 0.4, rain24h: 1.6, rainCumulative: 0.4, alert: 'YELLOW' },
-    { t: '2024-07-29T23:30:00+05:30', rain3h: 0.4, rain24h: 1.6, rainCumulative: 0.4, alert: 'YELLOW' },
-  ],
+  /* Alerts stay authored and are NOT derived from the rainfall beside them.
+   * They are coastal alert states set by surge and tide; letting a rain figure
+   * drive them would quietly convert this into a pluvial case. */
+  frames: KDP_RAIN_FRAMES.map((f, i) => ({
+    ...f,
+    alert: (['GREEN', 'GREEN', 'YELLOW', 'YELLOW', 'YELLOW', 'YELLOW', 'YELLOW'] as const)[i]
+      ?? 'YELLOW',
+  })),
 };
 
 /* ---------------------------------------------------------- candidates   */
@@ -407,7 +475,7 @@ export const KANHUPUR: Habitation = {
       },
       redZoneStatus: 'NOT DECLARED - standing watch only, 2 weak embankment reaches monitored',
       routingScenarioId: 'KDP-KANHUPUR',
-      nowcast: gahirmathaFeed,
+      nowcast: kanhupurRainFeed,
       triggers: [
         {
           key: 'system',
@@ -577,12 +645,21 @@ export const KANHUPUR: Habitation = {
       flag: {
         status: 'FLAGGED',
         rationale:
-          'Shoreline retreat of 14.6 m/yr makes any in-situ protection a delaying measure; three viable destinations identified, highest-ranked carries 684 households against 214 required.',
+          `Measured shoreline retreat of ${MEDIAN_RETREAT.toFixed(1)} m/yr across `
+          + `the reach (fastest transect ${WORST_RETREAT.toFixed(1)} m/yr) makes any `
+          + 'in-situ protection a delaying measure; three viable destinations '
+          + 'identified, highest-ranked carries 684 households against 214 required.',
         since: '2024-03-10T00:00:00+05:30',
       },
       mitigationRejection: {
         summary:
-          'At an end-point retreat rate of 14.6 m/yr the active shoreline reaches the habitation boundary within 12 years. Hard protection transfers erosion downdrift and has failed twice on this reach.',
+          `At the measured reach median of ${MEDIAN_RETREAT.toFixed(1)} m/yr the active `
+          + `shoreline reaches the habitation boundary in about ${YEARS_TO_BOUNDARY} years, `
+          + `and in about ${YEARS_TO_BOUNDARY_WORST} at the fastest transect in the reach. `
+          + 'That is a longer horizon than the NCSCM atlas rate implies, and it does not '
+          + 'change the finding: the residual mangrove buffer is 40 m, every protection '
+          + 'option below fails on its own terms, and hard protection transfers erosion '
+          + 'downdrift and has failed twice on this reach.',
         options: [
           {
             option: 'Geotextile tube revetment along the exposed reach',

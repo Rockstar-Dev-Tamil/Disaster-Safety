@@ -14,3 +14,9 @@ tsconfig.tsbuildinfo
 # local diagnostics
 shot*.png
 __*.mjs
+
+# Range-fetched GRIB cache from scripts/fetch-ecmwf.py. Resumable scratch, not
+# source: the script writes it to $SCRATCH, which defaults to the working
+# directory, so a run without SCRATCH set drops 13 MB here.
+ec-tp-*.grib2
+tp*.grib2

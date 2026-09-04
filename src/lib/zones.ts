@@ -33,6 +33,9 @@ export const EXCLUSION = {
   PADDY: 10,
   FOREST: 11,
   PROTECTED: 12,
+  FLOOD_RP: 15,
+  HAND: 13,
+  HAND_UNRESOLVED: 14,
 } as const;
 
 export type ExclusionCode = (typeof EXCLUSION)[keyof typeof EXCLUSION];
@@ -50,7 +53,9 @@ export const EXCLUSION_LABEL: Record<number, string> = {
   [EXCLUSION.RESTRICTED]: 'Restricted use — quarry, cemetery, military',
   [EXCLUSION.PADDY]: 'Paddy — seasonally waterlogged',
   [EXCLUSION.FOREST]: 'Forest — diversion under Forest (Conservation) Act 1980',
-  [EXCLUSION.PROTECTED]: 'Protected area or eco-sensitive zone',
+  [EXCLUSION.FLOOD_RP]: 'Inside the design flood (Aqueduct return period)',
+  [EXCLUSION.HAND]: 'Flood susceptibility above the tier limit (HAND)',
+  [EXCLUSION.HAND_UNRESOLVED]: 'Flood susceptibility not resolved — withheld, not cleared',
 };
 
 /** OSM-derived land-use classes on the grid. */
@@ -110,6 +115,37 @@ export interface Rules {
   excludeForest: boolean;
   /** Wildlife Protection Act 1972 and notified eco-sensitive zones. */
   excludeProtected: boolean;
+  /** Flood AOIs only. Exclude cells whose Aqueduct return-period class is at
+   *  or above this. Classes are 3 (inundated at a return period of 10 years or
+   *  less), 2 (11-100 years), 1 (101-1000), 0 (dry at every modelled return
+   *  period). The 1-in-100 boundary is the standard design return period in
+   *  Indian and international practice, so `2` means literally "outside the
+   *  design flood".
+   *
+   *  This supersedes maxHandClass as the flood constraint: Aqueduct is a
+   *  published, physically modelled product carrying nine return periods,
+   *  where HAND was a local model calibrated to AUC 0.715 against three
+   *  sampled years. HAND remains available as a finer-grained layer -- it is
+   *  100 m against Aqueduct's ~900 m -- but no longer gates siting. */
+  maxFloodRpClass?: number;
+  /** Flood AOIs only. Exclude cells whose HAND susceptibility class is at or
+   *  above this, on the same "at or above is excluded" convention as
+   *  maxLandslideClass. Classes are 3 High, 2 Moderate, 1 Low, 0 Negligible,
+   *  calibrated against observed flood extent -- see scripts/build-hand.py.
+   *
+   *  Undefined where no HAND layer exists, and the test then does not run.
+   *  Cells the model could not resolve are excluded separately and labelled as
+   *  withheld rather than cleared: on the Majuli grid those cells flood MORE
+   *  often than resolved ones (0.376 against 0.308), so silence there is not
+   *  evidence of safety. */
+  maxHandClass?: number;
+  /** Coastal AOIs only. Exclude land inside the shoreline position projected
+   *  this many years forward at the locally measured retreat rate.
+   *
+   *  Optional and absent everywhere inland, where there is no shoreline to
+   *  retreat and no distance raster to measure against. Undefined and 0 both
+   *  mean the test does not run -- see COASTAL_RULES for why it exists. */
+  retreatSetbackYears?: number;
 }
 
 export const DEFAULT_RULES: Rules = {
@@ -124,6 +160,12 @@ export const DEFAULT_RULES: Rules = {
   excludePaddy: true,
   excludeForest: false,
   excludeProtected: false,
+  /* Camp tier: exclude ground that floods at least once a decade. A
+   * transitional camp stands for one season and is sited under time pressure;
+   * holding it to the 1-in-100 standard would remove 39% of the Majuli search
+   * area and leave nowhere to put people this week. The tier that must not
+   * compromise is the permanent one. */
+  maxFloodRpClass: 3,
 };
 
 /* ==========================================================================
@@ -147,6 +189,71 @@ export const PERMANENT_RULES: Rules = {
   excludePaddy: true,
   excludeForest: true,
   excludeProtected: true,
+  /* Permanent tier: outside the design flood. A township built to a fifty-year
+   * life must not sit inside the 1-in-100, which is the return period every
+   * Indian planning standard is written against. */
+  maxFloodRpClass: 2,
+};
+
+/* ==========================================================================
+ * COASTAL RESETTLEMENT RULES
+ *
+ * A separate rule set because the Wayanad rules do not merely need retuning
+ * on a delta -- their binding constraint stops existing. In the Ghats the
+ * 5-degree gradient limit is what eliminates land. On the Kendrapara delta
+ * almost nothing exceeds 5 degrees, so the same rule excludes nothing, and a
+ * run would return a confident shortlist selected on essentially no criterion
+ * at all. maxLandslideClass is likewise inert: there is no landslide raster
+ * for a delta and nothing to exclude with it.
+ *
+ * What binds here instead is horizontal: distance from a shoreline that is
+ * measurably moving inland, and elevation above the surge envelope. The first
+ * of those is now a measurement rather than a judgement -- see
+ * src/data/shoreline-kendrapara.ts.
+ *
+ * NOT YET RUNNABLE. Zone derivation reads a terrain stack, and none has been
+ * built for this area of interest; `retreatSetbackYears` also needs a
+ * shoreline distance raster that does not exist yet. The rules are defined
+ * here so the constraint set is reviewable before the stack is built, not so
+ * that something can be run against the wrong ground.
+ * ==========================================================================*/
+export const COASTAL_RULES: Rules = {
+  radiusKm: 30,
+  /* Not a real constraint on a delta. Left at the permanent-tier value so it
+   * is never the reason a cell passes, and so nothing here reads as if a
+   * gradient test were doing work it is not. */
+  maxSlopeDeg: 15,
+  minDrainageMarginM: 0,
+  /* No landslide raster exists for this AOI. 1 rather than 0 so that if one is
+   * ever supplied, the permanent-tier standard applies rather than a value
+   * chosen to be inert. */
+  maxLandslideClass: 1,
+  minZoneHa: 12,
+  openingPasses: 1,
+  minSeparationKm: 0,
+  excludeBuiltUp: true,
+  /* Paddy is most of the cultivable delta. Excluding it here would be
+   * excluding the district, so the exclusion moves to the land-tenure check
+   * that a coastal candidate has to pass anyway. */
+  excludePaddy: false,
+  excludeForest: true,
+  /* Bhitarkanika and its eco-sensitive zone. Non-negotiable on this coast:
+   * Wildlife Protection Act 1972 with the ESZ notification bars residential
+   * township use outright. */
+  excludeProtected: true,
+
+  /* Coastal-only. A site must sit outside the shoreline position projected
+   * this many years forward at the local measured retreat rate.
+   *
+   * Fifty years is the design life a resettlement township is built to, and
+   * siting inside the envelope means relocating the same people twice. At the
+   * Kanhupur reach median of ~6.5 m/yr that is a setback of roughly 325 m;
+   * at the fastest transect in the same reach, roughly 425 m. The rate is
+   * per-transect, so the setback varies along the coast rather than being one
+   * national number.
+   *
+   * Zero disables the test, which is the correct value for every inland AOI. */
+  retreatSetbackYears: 50,
 };
 
 export interface Weights {
@@ -421,6 +528,10 @@ export function analyse(
       const drain = margin[i];
 
       const prot = grids['protected'] ? g('protected', x, y) : 0;
+      /* Raw, not divided: 255 is the "not resolved" sentinel and must not be
+       * rounded into a class. See scripts/build-hand.py. */
+      const handRaw = grids['hand'] ? g('hand', x, y) : -1;
+      const frp = grids['floodrp'] ? Math.round(g('floodrp', x, y) / 80) : -1;
 
       let code: number = EXCLUSION.NONE;
       if (rules.excludeProtected && prot > 127) code = EXCLUSION.PROTECTED;
@@ -429,6 +540,22 @@ export function analyse(
       else if (lu === LANDUSE.RESTRICTED) code = EXCLUSION.RESTRICTED;
       else if (rules.excludePaddy && lu === LANDUSE.PADDY) code = EXCLUSION.PADDY;
       else if (ls >= rules.maxLandslideClass) code = EXCLUSION.LANDSLIDE;
+      else if (
+        rules.maxFloodRpClass !== undefined &&
+        frp >= 0 &&
+        frp >= rules.maxFloodRpClass
+      )
+        code = EXCLUSION.FLOOD_RP;
+      else if (handRaw === 255) code = EXCLUSION.HAND_UNRESOLVED;
+      else if (
+        rules.maxHandClass !== undefined &&
+        handRaw >= 0 &&
+        Math.round(handRaw / 80) >= rules.maxHandClass
+      )
+        code = EXCLUSION.HAND;
+      /* Kept alongside HAND rather than replaced by it. The flood sheet is the
+       * OBSERVED record and HAND is a model calibrated against it; where the
+       * two disagree, observed extent wins. */
       else if (fl >= 1) code = EXCLUSION.FLOOD;
       else if (slope > rules.maxSlopeDeg) code = EXCLUSION.SLOPE;
       else if (rules.minDrainageMarginM > 0 && drain < rules.minDrainageMarginM)

@@ -24,15 +24,36 @@ export interface MapCanvasProps {
   overlayId: string | null;
   overlayField: 'susceptibility' | 'alert' | null;
   overlayOpacity: number;
-  /** GEOJSON overlay: url + class->colour. Null when none is active. */
+  /** GEOJSON overlay. Either categorical (classField + classColors, drawn as
+   *  filled polygons) or continuous (rampField + ramp, drawn as points). A
+   *  measured rate is a number on a scale, not a class, and forcing it into
+   *  bands would throw away the distinction between -6 and -14 m/yr. */
   vectorOverlay: {
     id: string;
     url: string;
-    classField: string;
-    classColors: Record<string, string>;
+    classField?: string;
+    classColors?: Record<string, string>;
+    rampField?: string;
+    /** [value, colour] stops, ascending by value. */
+    ramp?: Array<[number, string]>;
+    circleRadius?: number;
   } | null;
-  /** Georeferenced PNG overlay (forecast fields), or null. */
+  /** Georeferenced PNG overlay (forecast fields), or null.
+   *
+   *  Suitable only for SMALL images. A single MapLibre image source was
+   *  measured rendering as an opaque black rectangle at 256 px and above in
+   *  this build's test environment, while rendering correctly at 119x127.
+   *  Anything larger belongs in `tileOverlay`. */
   imageOverlay: { id: string; url: string; bounds: [number, number, number, number]; opacity: number } | null;
+  /** XYZ raster pyramid, for rasters too large to drape as one image. */
+  tileOverlay: {
+    id: string;
+    /** Tile template, e.g. /flood-assam/{z}/{x}/{y}.png */
+    url: string;
+    bounds: [number, number, number, number];
+    opacity: number;
+    maxzoom: number;
+  } | null;
   /** Animated forecast: two frames cross-faded by `f` so the field morphs
    *  continuously rather than snapping every 3 h. */
   sequenceOverlay: {
@@ -69,6 +90,7 @@ export function MapCanvas(props: MapCanvasProps) {
     overlayOpacity,
     vectorOverlay,
     imageOverlay,
+    tileOverlay,
     sequenceOverlay,
     basemap,
     onMapReady,
@@ -269,6 +291,26 @@ export function MapCanvas(props: MapCanvasProps) {
         source: 'vector-overlay',
         paint: { 'line-color': '#05070a', 'line-width': 0.4, 'line-opacity': 0 },
       });
+      /* Point form of the same source, for continuous measurements. Radius
+       * grows with zoom because at 100 m transect spacing the points merge
+       * into a line at district zoom and want to separate when you go in. */
+      map.addLayer({
+        id: 'vector-overlay-circle',
+        type: 'circle',
+        source: 'vector-overlay',
+        paint: {
+          'circle-color': '#888888',
+          'circle-opacity': 0,
+          'circle-stroke-width': 0,
+          'circle-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            6, 1.4,
+            9, 2.6,
+            12, 5,
+            15, 9,
+          ],
+        },
+      });
 
       map.addLayer({
         id: 'habitation-halo',
@@ -397,6 +439,57 @@ export function MapCanvas(props: MapCanvasProps) {
     map.setPaintProperty('image-overlay-layer', 'raster-opacity', imageOverlay.opacity);
   }, [imageOverlay, ready]);
 
+  /* ------------------------------------------------------ tile overlay --- */
+  /* A raster source's tiles and bounds are fixed when it is constructed, so
+   * unlike the image overlay this one is torn down and rebuilt when the layer
+   * changes. `bounds` matters: without it MapLibre requests tiles across the
+   * whole world, every one of which 404s, and this app reports a raster tile
+   * error as a basemap failure. */
+  const tileId = useRef<string | null>(null);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready) return;
+
+    const teardown = () => {
+      if (map.getLayer('tile-overlay-layer')) map.removeLayer('tile-overlay-layer');
+      if (map.getSource('tile-overlay')) map.removeSource('tile-overlay');
+      tileId.current = null;
+    };
+
+    if (!tileOverlay) {
+      teardown();
+      return;
+    }
+    if (tileId.current === tileOverlay.id) {
+      map.setPaintProperty('tile-overlay-layer', 'raster-opacity', tileOverlay.opacity);
+      return;
+    }
+    teardown();
+    map.addSource('tile-overlay', {
+      type: 'raster',
+      tiles: [tileOverlay.url],
+      tileSize: 256,
+      bounds: tileOverlay.bounds,
+      maxzoom: tileOverlay.maxzoom,
+    });
+    map.addLayer(
+      {
+        id: 'tile-overlay-layer',
+        type: 'raster',
+        source: 'tile-overlay',
+        paint: {
+          'raster-opacity': tileOverlay.opacity,
+          'raster-resampling': 'nearest',
+          'raster-fade-duration': 0,
+        },
+      },
+      /* Same slot the image overlay occupies: above boundaries, below the
+       * habitation points, so a point is never hidden by its own hazard. */
+      map.getLayer('seq-a-layer') ? 'seq-a-layer' : undefined,
+    );
+    tileId.current = tileOverlay.id;
+  }, [tileOverlay, ready]);
+
   /* -------------------------------------------------- sequence overlay --- */
   const seqUrls = useRef<{ a: string | null; b: string | null }>({ a: null, b: null });
   useEffect(() => {
@@ -445,9 +538,14 @@ export function MapCanvas(props: MapCanvasProps) {
     const src = map.getSource('vector-overlay') as maplibregl.GeoJSONSource | undefined;
     if (!src) return;
 
-    if (!vectorOverlay) {
+    const hideAll = () => {
       map.setPaintProperty('vector-overlay-fill', 'fill-opacity', 0);
       map.setPaintProperty('vector-overlay-line', 'line-opacity', 0);
+      map.setPaintProperty('vector-overlay-circle', 'circle-opacity', 0);
+    };
+
+    if (!vectorOverlay) {
+      hideAll();
       src.setData({ type: 'FeatureCollection', features: [] });
       return;
     }
@@ -458,8 +556,25 @@ export function MapCanvas(props: MapCanvasProps) {
       .then((gj) => {
         if (cancelled || !mapRef.current) return;
         src.setData(gj);
+        hideAll();
+
+        if (vectorOverlay.rampField && vectorOverlay.ramp?.length) {
+          /* Continuous. Stops must ascend or MapLibre rejects the expression,
+           * and a rejected paint property leaves the layer at its default
+           * grey -- which would read as "measured, and uniform". */
+          const stops = [...vectorOverlay.ramp].sort((a, b) => a[0] - b[0]).flat();
+          map.setPaintProperty('vector-overlay-circle', 'circle-color', [
+            'interpolate',
+            ['linear'],
+            ['to-number', ['get', vectorOverlay.rampField]],
+            ...stops,
+          ] as unknown as ExpressionSpecification);
+          map.setPaintProperty('vector-overlay-circle', 'circle-opacity', overlayOpacity);
+          return;
+        }
+
         const pairs: string[] = [];
-        for (const [k, v] of Object.entries(vectorOverlay.classColors)) pairs.push(k, v);
+        for (const [k, v] of Object.entries(vectorOverlay.classColors ?? {})) pairs.push(k, v);
         map.setPaintProperty('vector-overlay-fill', 'fill-color', [
           'match',
           ['get', vectorOverlay.classField],

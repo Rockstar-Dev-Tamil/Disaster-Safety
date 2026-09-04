@@ -1,0 +1,249 @@
+{
+ "run": "2026-09-04T00:00:00Z",
+ "runIst": "2026-09-04T05:30:00+05:30",
+ "bounds": [
+  67.875,
+  5.875,
+  97.625,
+  37.625
+ ],
+ "shape": [
+  127,
+  119
+ ],
+ "stepHours": 3,
+ "cells": {
+  "WAYANAD": {
+   "lon": 76.15,
+   "lat": 11.45,
+   "label": "Wayanad",
+   "gridLon": 76.25,
+   "gridLat": 11.5
+  },
+  "KENDRAPARA": {
+   "lon": 86.94,
+   "lat": 20.63,
+   "label": "Kendrapara",
+   "gridLon": 87.0,
+   "gridLat": 20.75
+  },
+  "ASSAM": {
+   "lon": 94.22,
+   "lat": 26.95,
+   "label": "Majuli",
+   "gridLon": 94.25,
+   "gridLat": 27.0
+  }
+ },
+ "operatingPictureMinutes": 1230,
+ "frames": [
+  {
+   "step": 3,
+   "file": "/layers/ecmwf-live-inc-03.png",
+   "validMinutes": 180,
+   "windowHours": 3,
+   "maxMm": 62.7,
+   "cellMm": {
+    "WAYANAD": 0.1,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 3.0
+   },
+   "bytes": 1837
+  },
+  {
+   "step": 6,
+   "file": "/layers/ecmwf-live-inc-06.png",
+   "validMinutes": 360,
+   "windowHours": 3,
+   "maxMm": 36.0,
+   "cellMm": {
+    "WAYANAD": 0.7,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 0.4
+   },
+   "bytes": 2056
+  },
+  {
+   "step": 9,
+   "file": "/layers/ecmwf-live-inc-09.png",
+   "validMinutes": 540,
+   "windowHours": 3,
+   "maxMm": 47.9,
+   "cellMm": {
+    "WAYANAD": 1.7,
+    "KENDRAPARA": 3.6,
+    "ASSAM": 1.4
+   },
+   "bytes": 2806
+  },
+  {
+   "step": 12,
+   "file": "/layers/ecmwf-live-inc-12.png",
+   "validMinutes": 720,
+   "windowHours": 3,
+   "maxMm": 33.0,
+   "cellMm": {
+    "WAYANAD": 2.1,
+    "KENDRAPARA": 0.2,
+    "ASSAM": 0.4
+   },
+   "bytes": 2586
+  },
+  {
+   "step": 15,
+   "file": "/layers/ecmwf-live-inc-15.png",
+   "validMinutes": 900,
+   "windowHours": 3,
+   "maxMm": 32.3,
+   "cellMm": {
+    "WAYANAD": 0.1,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 0.1
+   },
+   "bytes": 1630
+  },
+  {
+   "step": 18,
+   "file": "/layers/ecmwf-live-inc-18.png",
+   "validMinutes": 1080,
+   "windowHours": 3,
+   "maxMm": 42.1,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 7.7
+   },
+   "bytes": 1885
+  },
+  {
+   "step": 21,
+   "file": "/layers/ecmwf-live-inc-21.png",
+   "validMinutes": 1260,
+   "windowHours": 3,
+   "maxMm": 30.5,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 6.6
+   },
+   "bytes": 2042
+  },
+  {
+   "step": 24,
+   "file": "/layers/ecmwf-live-inc-24.png",
+   "validMinutes": 1440,
+   "windowHours": 3,
+   "maxMm": 60.5,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 2.9
+   },
+   "bytes": 2094
+  },
+  {
+   "step": 27,
+   "file": "/layers/ecmwf-live-inc-27.png",
+   "validMinutes": 1620,
+   "windowHours": 3,
+   "maxMm": 71.5,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 1.4
+   },
+   "bytes": 1880
+  },
+  {
+   "step": 30,
+   "file": "/layers/ecmwf-live-inc-30.png",
+   "validMinutes": 1800,
+   "windowHours": 3,
+   "maxMm": 60.6,
+   "cellMm": {
+    "WAYANAD": 0.5,
+    "KENDRAPARA": 1.3,
+    "ASSAM": 1.0
+   },
+   "bytes": 2299
+  },
+  {
+   "step": 33,
+   "file": "/layers/ecmwf-live-inc-33.png",
+   "validMinutes": 1980,
+   "windowHours": 3,
+   "maxMm": 44.7,
+   "cellMm": {
+    "WAYANAD": 3.8,
+    "KENDRAPARA": 5.3,
+    "ASSAM": 0.4
+   },
+   "bytes": 3165
+  },
+  {
+   "step": 36,
+   "file": "/layers/ecmwf-live-inc-36.png",
+   "validMinutes": 2160,
+   "windowHours": 3,
+   "maxMm": 26.0,
+   "cellMm": {
+    "WAYANAD": 2.2,
+    "KENDRAPARA": 0.2,
+    "ASSAM": 0.4
+   },
+   "bytes": 2839
+  },
+  {
+   "step": 39,
+   "file": "/layers/ecmwf-live-inc-39.png",
+   "validMinutes": 2340,
+   "windowHours": 3,
+   "maxMm": 13.5,
+   "cellMm": {
+    "WAYANAD": 0.9,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 2.0
+   },
+   "bytes": 1867
+  },
+  {
+   "step": 42,
+   "file": "/layers/ecmwf-live-inc-42.png",
+   "validMinutes": 2520,
+   "windowHours": 3,
+   "maxMm": 17.0,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 8.9
+   },
+   "bytes": 1985
+  },
+  {
+   "step": 45,
+   "file": "/layers/ecmwf-live-inc-45.png",
+   "validMinutes": 2700,
+   "windowHours": 3,
+   "maxMm": 31.2,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 6.0
+   },
+   "bytes": 2304
+  },
+  {
+   "step": 48,
+   "file": "/layers/ecmwf-live-inc-48.png",
+   "validMinutes": 2880,
+   "windowHours": 3,
+   "maxMm": 28.2,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 8.1
+   },
+   "bytes": 2303
+  }
+ ]
+}

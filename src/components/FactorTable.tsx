@@ -1,6 +1,6 @@
 import type { Assessment } from '../data/schema';
 import { contribution } from '../data/sources';
-import { ProvLine } from './primitives';
+import { ProvChip, ProvLine } from './primitives';
 import { BAND_TEXT } from '../lib/severity';
 
 /**
@@ -31,8 +31,15 @@ export function FactorTable({ a, dense }: { a: Assessment; dense?: boolean }) {
             <tr key={f.key}>
               <td>
                 {f.label}
+                {f.provenance ? (
+                  <>
+                    {' '}
+                    <ProvChip p={f.provenance} />
+                  </>
+                ) : null}
                 {dense ? <span className="fnote">{f.raw}</span> : null}
                 {!dense && f.scale ? <span className="fnote">{f.scale}</span> : null}
+                {!dense && f.note ? <span className="fnote">{f.note}</span> : null}
               </td>
               {!dense && <td>{f.raw}</td>}
               <td className="r mononum">{f.normalised}</td>

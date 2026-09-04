@@ -21,6 +21,14 @@ import os
 from collections import Counter
 
 SP = os.environ.get('SCRATCH', '.')
+
+# Output directory follows the same TERRAIN_AOI variable as build-terrain.py, so
+# the road layers cannot end up in a different AOI's stack than the rasters they
+# describe.
+AOI_OUT = {'wayanad': 'public/terrain', 'majuli': 'public/terrain-assam',
+           'kendrapara': 'public/terrain-kendrapara'}
+OUT_DIR = AOI_OUT[os.environ.get('TERRAIN_AOI', 'wayanad')]
+
 CLASSES = {'motorway', 'trunk', 'primary', 'secondary', 'tertiary'}
 
 
@@ -111,7 +119,7 @@ def main():
             start = i
 
     out = {'nodes': node_coords, 'edges': edges}
-    dest = 'public/terrain/road-graph.json'
+    dest = f'{OUT_DIR}/road-graph.json'
     with open(dest, 'w', encoding='utf-8') as f:
         json.dump(out, f, separators=(',', ':'))
 

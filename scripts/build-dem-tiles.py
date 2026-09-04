@@ -42,12 +42,38 @@ import os
 import numpy as np
 import rasterio
 
-# Must match build-terrain.py.
-W, S, E, N = 75.55, 11.20, 76.65, 12.15
-DEM_TILES = ['N11_00_E075', 'N11_00_E076', 'N12_00_E075', 'N12_00_E076']
+# Must match build-terrain.py, and is driven by the same TERRAIN_AOI variable
+# so the two cannot be pointed at different areas by accident.
+AOIS = {
+    'wayanad': {
+        'bounds': (75.55, 11.20, 76.65, 12.15),
+        'dem': ['N11_00_E075', 'N11_00_E076', 'N12_00_E075', 'N12_00_E076'],
+        'out': 'public/dem',
+    },
+    'majuli': {
+        'bounds': (93.85, 26.60, 94.75, 27.40),
+        'dem': ['N26_00_E093', 'N26_00_E094', 'N27_00_E093', 'N27_00_E094'],
+        'out': 'public/dem-assam',
+    },
+    # Kendrapara coast. Sized to hold a 30 km operation radius around Kanhupur
+    # (86.9381, 20.6284) with margin, and matching the Overpass feasibility
+    # probe that established this AOI has usable OSM coverage.
+    'kendrapara': {
+        'bounds': (86.55, 20.25, 87.35, 21.00),
+        # N20_00_E087 is a zero-byte tile -- that square is all Bay of Bengal.
+        # Listed anyway so the skip is explicit rather than an unexplained gap.
+        'dem': ['N20_00_E086', 'N20_00_E087'],
+        'out': 'public/dem-kendrapara',
+    },
+}
+
+AOI = os.environ.get('TERRAIN_AOI', 'wayanad')
+_cfg = AOIS[AOI]
+W, S, E, N = _cfg['bounds']
+DEM_TILES = _cfg['dem']
 
 SCRATCH = os.environ.get('SCRATCH', '.')
-OUT = 'public/dem'
+OUT = _cfg['out']
 MIN_Z, MAX_Z = 8, 12
 TILE = 256
 

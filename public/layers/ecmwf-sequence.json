@@ -12,9 +12,21 @@
   119
  ],
  "stepHours": 3,
- "cell": {
-  "lon": 76.25,
-  "lat": 11.5
+ "cells": {
+  "WAYANAD": {
+   "lon": 76.15,
+   "lat": 11.45,
+   "label": "Wayanad",
+   "gridLon": 76.25,
+   "gridLat": 11.5
+  },
+  "KENDRAPARA": {
+   "lon": 86.94,
+   "lat": 20.63,
+   "label": "Kendrapara",
+   "gridLon": 87.0,
+   "gridLat": 20.75
+  }
  },
  "operatingPictureMinutes": 1230,
  "frames": [
@@ -24,8 +36,11 @@
    "validMinutes": 180,
    "windowHours": 3,
    "maxMm": 70.1,
-   "wayanadCellMm": 3.4,
-   "bytes": 2437
+   "cellMm": {
+    "WAYANAD": 3.4,
+    "KENDRAPARA": 0.2
+   },
+   "bytes": 2368
   },
   {
    "step": 6,
@@ -33,8 +48,11 @@
    "validMinutes": 360,
    "windowHours": 3,
    "maxMm": 121.7,
-   "wayanadCellMm": 5.8,
-   "bytes": 2778
+   "cellMm": {
+    "WAYANAD": 5.8,
+    "KENDRAPARA": 1.5
+   },
+   "bytes": 2710
   },
   {
    "step": 9,
@@ -42,8 +60,11 @@
    "validMinutes": 540,
    "windowHours": 3,
    "maxMm": 144.9,
-   "wayanadCellMm": 10.5,
-   "bytes": 3217
+   "cellMm": {
+    "WAYANAD": 10.5,
+    "KENDRAPARA": 2.0
+   },
+   "bytes": 3112
   },
   {
    "step": 12,
@@ -51,8 +72,11 @@
    "validMinutes": 720,
    "windowHours": 3,
    "maxMm": 106.9,
-   "wayanadCellMm": 8.1,
-   "bytes": 3102
+   "cellMm": {
+    "WAYANAD": 8.1,
+    "KENDRAPARA": 0.4
+   },
+   "bytes": 3010
   },
   {
    "step": 15,
@@ -60,8 +84,11 @@
    "validMinutes": 900,
    "windowHours": 3,
    "maxMm": 28.3,
-   "wayanadCellMm": 3.8,
-   "bytes": 2530
+   "cellMm": {
+    "WAYANAD": 3.8,
+    "KENDRAPARA": 0.1
+   },
+   "bytes": 2461
   },
   {
    "step": 18,
@@ -69,8 +96,11 @@
    "validMinutes": 1080,
    "windowHours": 3,
    "maxMm": 27.5,
-   "wayanadCellMm": 10.6,
-   "bytes": 2568
+   "cellMm": {
+    "WAYANAD": 10.6,
+    "KENDRAPARA": 0.0
+   },
+   "bytes": 2480
   },
   {
    "step": 21,
@@ -78,8 +108,11 @@
    "validMinutes": 1260,
    "windowHours": 3,
    "maxMm": 42.0,
-   "wayanadCellMm": 5.3,
-   "bytes": 2896
+   "cellMm": {
+    "WAYANAD": 5.3,
+    "KENDRAPARA": 0.0
+   },
+   "bytes": 2810
   },
   {
    "step": 24,
@@ -87,8 +120,11 @@
    "validMinutes": 1440,
    "windowHours": 3,
    "maxMm": 69.9,
-   "wayanadCellMm": 5.0,
-   "bytes": 2932
+   "cellMm": {
+    "WAYANAD": 5.0,
+    "KENDRAPARA": 0.0
+   },
+   "bytes": 2842
   },
   {
    "step": 27,
@@ -96,8 +132,11 @@
    "validMinutes": 1620,
    "windowHours": 3,
    "maxMm": 76.1,
-   "wayanadCellMm": 3.9,
-   "bytes": 2714
+   "cellMm": {
+    "WAYANAD": 3.9,
+    "KENDRAPARA": 7.6
+   },
+   "bytes": 2621
   },
   {
    "step": 30,
@@ -105,8 +144,11 @@
    "validMinutes": 1800,
    "windowHours": 3,
    "maxMm": 109.3,
-   "wayanadCellMm": 3.0,
-   "bytes": 2737
+   "cellMm": {
+    "WAYANAD": 3.0,
+    "KENDRAPARA": 1.2
+   },
+   "bytes": 2636
   },
   {
    "step": 33,
@@ -114,8 +156,11 @@
    "validMinutes": 1980,
    "windowHours": 3,
    "maxMm": 116.0,
-   "wayanadCellMm": 1.8,
-   "bytes": 3272
+   "cellMm": {
+    "WAYANAD": 1.8,
+    "KENDRAPARA": 0.2
+   },
+   "bytes": 3201
   },
   {
    "step": 36,
@@ -123,8 +168,11 @@
    "validMinutes": 2160,
    "windowHours": 3,
    "maxMm": 28.0,
-   "wayanadCellMm": 1.2,
-   "bytes": 3308
+   "cellMm": {
+    "WAYANAD": 1.2,
+    "KENDRAPARA": 0.2
+   },
+   "bytes": 3233
   },
   {
    "step": 39,
@@ -132,8 +180,11 @@
    "validMinutes": 2340,
    "windowHours": 3,
    "maxMm": 61.2,
-   "wayanadCellMm": 0.7,
-   "bytes": 2619
+   "cellMm": {
+    "WAYANAD": 0.7,
+    "KENDRAPARA": 0.0
+   },
+   "bytes": 2557
   },
   {
    "step": 42,
@@ -141,8 +192,11 @@
    "validMinutes": 2520,
    "windowHours": 3,
    "maxMm": 51.2,
-   "wayanadCellMm": 0.5,
-   "bytes": 2615
+   "cellMm": {
+    "WAYANAD": 0.5,
+    "KENDRAPARA": 0.0
+   },
+   "bytes": 2549
   },
   {
    "step": 45,
@@ -150,8 +204,11 @@
    "validMinutes": 2700,
    "windowHours": 3,
    "maxMm": 126.9,
-   "wayanadCellMm": 0.1,
-   "bytes": 2964
+   "cellMm": {
+    "WAYANAD": 0.1,
+    "KENDRAPARA": 0.3
+   },
+   "bytes": 2880
   },
   {
    "step": 48,
@@ -159,8 +216,11 @@
    "validMinutes": 2880,
    "windowHours": 3,
    "maxMm": 119.1,
-   "wayanadCellMm": 0.0,
-   "bytes": 3037
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.3
+   },
+   "bytes": 2942
   }
  ]
 }

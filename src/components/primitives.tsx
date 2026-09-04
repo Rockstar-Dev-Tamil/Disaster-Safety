@@ -8,6 +8,7 @@ import { dateOnly, ts } from '../lib/format';
 const CHIP: Record<Provenance['status'], { cls: string; label: string }> = {
   PENDING_OVERLAY: { cls: 'prov-pending', label: 'Pending overlay' },
   LIVE: { cls: 'prov-live', label: 'Live' },
+  UNATTRIBUTED: { cls: 'prov-unattributed', label: 'Source unverified' },
   STUB_M2: { cls: 'prov-stub', label: 'M2 not implemented' },
   STUB_M4: { cls: 'prov-stub', label: 'M4 not implemented' },
 };

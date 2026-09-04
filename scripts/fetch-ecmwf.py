@@ -19,6 +19,7 @@ WHAT IT SHOWS
     model said in advance, not a reconstruction after the fact.
 """
 import json
+import math
 import os
 import struct
 import time
@@ -28,8 +29,17 @@ import zlib
 
 import numpy as np
 
-RUN = '20240729'
-CYCLE = '00z'
+# Which run to pull. Defaults to the Wayanad event so the existing invocation
+# is unchanged; ECMWF_RUN / ECMWF_CYCLE select another, and ECMWF_PREFIX keeps
+# its output beside rather than on top of it.
+#
+# The open-data mirrors retain from January 2023. Anything earlier -- including
+# the 1999, 2000 and 2004 Assam flood years -- cannot be fetched here at all,
+# and no amount of retrying will change that.
+RUN = os.environ.get('ECMWF_RUN', '20240729')
+CYCLE = os.environ.get('ECMWF_CYCLE', '00z')
+# NOTE: not `PREFIX` -- that name is already the S3 object path below.
+OUT_PREFIX = os.environ.get('ECMWF_PREFIX', 'ecmwf')
 STEPS = list(range(0, 51, 3))     # 0..48 h at 3 h resolution
 # ECMWF open data is mirrored to AWS, Google and Azure. The AWS bucket
 # throttles anonymous range-request bursts hard (503 Slow Down); the Google
@@ -43,6 +53,15 @@ PREFIX = f'{RUN}/{CYCLE}/ifs/0p25/oper'
 
 # India extent, matched to the app's map bounds
 W, S, E, N = 68.0, 6.0, 97.5, 37.5
+
+# Cells read out beside the timeline, one per event case. The field itself is
+# national and identical for every case -- only which grid cell gets quoted
+# changes, so adding a case here costs nothing but a lookup.
+CELLS = {
+    'WAYANAD': {'lon': 76.15, 'lat': 11.45, 'label': 'Wayanad'},
+    'KENDRAPARA': {'lon': 86.94, 'lat': 20.63, 'label': 'Kendrapara'},
+    'ASSAM': {'lon': 94.22, 'lat': 26.95, 'label': 'Majuli'},
+}
 
 # Precipitation ramp, mm per 3 h window. Monotonic in lightness so it survives
 # colour vision deficiency and greyscale; hue sequence follows normal
@@ -130,6 +149,34 @@ def decode(raw, tmp):
     return vals[:, order], lats, lons[order], meta
 
 
+def _ist_of(run, cycle):
+    """Run initialisation restated in IST, for the timeline header."""
+    import datetime as _dt
+    t = _dt.datetime(int(run[:4]), int(run[4:6]), int(run[6:]), int(cycle[:2]),
+                     tzinfo=_dt.timezone.utc)
+    t += _dt.timedelta(hours=5, minutes=30)
+    return t.strftime('%Y-%m-%dT%H:%M:00+05:30')
+
+
+def mercator_rows(src_h, south, north):
+    """Row indices resampling a plate-carree grid onto Mercator rows.
+
+    MapLibre drapes an image source by interpolating linearly in PROJECTED
+    space. An image whose rows are equal steps of latitude therefore lands in
+    the wrong place, and over this field's 5.9 to 37.6 N span the error is not
+    subtle: the Wayanad cell drew ~51 km north of where the rain fell, and the
+    middle of the box ~101 km north. Longitude is unaffected -- Mercator x is
+    linear in longitude -- so only rows are remapped.
+    """
+    y = lambda d: math.log(math.tan(math.radians(45.0 + d / 2.0)))       # noqa: E731
+    inv = lambda v: 2.0 * (math.degrees(math.atan(math.exp(v))) - 45.0)  # noqa: E731
+    yt, yb = y(north), y(south)
+    yy = yt - (np.arange(src_h) + 0.5) / src_h * (yt - yb)
+    lat = np.array([inv(v) for v in yy])
+    rows = (north - lat) / (north - south) * src_h
+    return np.clip(rows.astype(int), 0, src_h - 1)
+
+
 def colourise(sub):
     h, w = sub.shape
     rgba = np.zeros((h, w, 4), dtype=np.uint8)
@@ -187,44 +234,59 @@ def main():
             half = 0.125
             bounds = [round(float(lo[0] - half), 4), round(float(la[-1] - half), 4),
                       round(float(lo[-1] + half), 4), round(float(la[0] + half), 4)]
-            wi = int(np.abs(la - 11.45).argmin())
-            wj = int(np.abs(lo - 76.15).argmin())
+            for key, c in CELLS.items():
+                ci = int(np.abs(la - c['lat']).argmin())
+                cj = int(np.abs(lo - c['lon']).argmin())
+                # Snapped centre, so the app quotes the cell it actually read
+                # rather than the point that was asked for.
+                c['gridLon'] = round(float(lo[cj]), 3)
+                c['gridLat'] = round(float(la[ci]), 3)
+                c['_ij'] = (ci, cj)
 
         if prev is not None:
             inc = np.maximum(sub - prev, 0.0)        # rain in this 3 h window
-            path = f'public/layers/ecmwf-inc-{step:02d}.png'
-            write_png(path, colourise(inc))
+            path = f'public/layers/{OUT_PREFIX}-inc-{step:02d}.png'
+            # Cell readouts below are taken from `inc` on the native lat/lon
+            # grid; only the drawn image is reprojected.
+            mrows = mercator_rows(inc.shape[0], bounds[1], bounds[3])
+            write_png(path, colourise(inc[mrows, :]))
             frames.append({
                 'step': step,
-                'file': f'/layers/ecmwf-inc-{step:02d}.png',
+                'file': f'/layers/{OUT_PREFIX}-inc-{step:02d}.png',
                 # valid at the END of the window, in UTC minutes from the run
                 'validMinutes': step * 60,
                 'windowHours': 3,
                 'maxMm': round(float(inc.max()), 1),
-                'wayanadCellMm': round(float(inc[wi, wj]), 1),
+                'cellMm': {k: round(float(inc[c['_ij']]), 1)
+                           for k, c in CELLS.items()},
                 'bytes': os.path.getsize(path),
             })
+            quoted = '  '.join(
+                f"{c['label']} {inc[c['_ij']]:5.1f}" for c in CELLS.values())
             print(f'  +{step:02d}h  window {step-3:02d}-{step:02d}h  '
-                  f'max {inc.max():6.1f} mm  Wayanad {inc[wi, wj]:5.1f} mm  '
+                  f'max {inc.max():6.1f} mm  {quoted}  '
                   f'({os.path.getsize(path)/1024:.0f} KB)')
         prev = sub
 
     meta = {
-        'run': '2024-07-29T00:00:00Z',
-        'runIst': '2024-07-29T05:30:00+05:30',
+        'run': f'{RUN[:4]}-{RUN[4:6]}-{RUN[6:]}T{CYCLE[:2]}:00:00Z',
+        'runIst': _ist_of(RUN, CYCLE),
         'bounds': bounds,
         'shape': list(prev.shape),
         'stepHours': 3,
-        'cell': {'lon': 76.25, 'lat': 11.5},
-        # where the app's operating picture sits on this timeline
+        'cells': {k: {kk: vv for kk, vv in c.items() if not kk.startswith('_')}
+                  for k, c in CELLS.items()},
+        # Fallback only. The app derives the playhead from the active case's
+        # own clock against `run`, so this timeline follows whichever event is
+        # selected rather than being pinned to the one it was built for.
         'operatingPictureMinutes': 20 * 60 + 30,     # 30 Jul 02:00 IST = +20.5 h
         'frames': frames,
     }
-    with open('public/layers/ecmwf-sequence.json', 'w') as f:
+    with open(f'public/layers/{OUT_PREFIX}-sequence.json', 'w') as f:
         json.dump(meta, f, indent=1)
     total = sum(f['bytes'] for f in frames)
     print(f'{len(frames)} frames, {total / 1024:.0f} KB total '
-          f'-> public/layers/ecmwf-sequence.json')
+          f'-> public/layers/{OUT_PREFIX}-sequence.json')
 
 
 if __name__ == '__main__':

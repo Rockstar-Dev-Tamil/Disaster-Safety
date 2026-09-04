@@ -58,6 +58,15 @@ export type ImdAlert = 'GREEN' | 'YELLOW' | 'ORANGE' | 'RED';
 export type ProvenanceStatus =
   | 'PENDING_OVERLAY'
   | 'LIVE'
+  /** Real, ingested data whose originating product could not be identified.
+   *
+   *  Distinct from LIVE, which asserts a named product behind the number, and
+   *  from PENDING_OVERLAY, which asserts nothing is drawn yet. This is the
+   *  state where a layer is genuinely on the map and genuinely measured, but
+   *  the chain back to a publisher is broken -- a scraped composite, an
+   *  undocumented export. It cannot enter an official record in this state,
+   *  and the chip says so rather than letting it pass as sourced. */
+  | 'UNATTRIBUTED'
   | 'STUB_M2'
   | 'STUB_M4';
 
@@ -97,6 +106,12 @@ export interface Factor {
   /** How raw was mapped to normalised. Shown on the row. */
   scale?: string;
   note?: string;
+  /** Set only when this row comes from a different source than the assessment
+   *  as a whole. A weighted overlay may mix an ingested measurement into a set
+   *  of rows that are still awaiting overlay; when it does, the row says so,
+   *  because otherwise the assessment's single source line would credit the
+   *  wrong agency for the number doing the most work. */
+  provenance?: Provenance;
 }
 
 export interface Assessment {

@@ -27,10 +27,15 @@ import {
 } from './sources';
 import type { Habitation, HazardType, ImdAlert, Provenance, TierStatus } from './schema';
 import { CHOORALMALA, PUNCHIRIMATTOM, WAYANAD_CLOCK } from './wayanad';
-// Kendrapara drill-down parked for the internal round -- re-add KANHUPUR below to restore.
-// import { KANHUPUR } from './kendrapara';
+import { KANHUPUR } from './kendrapara';
 
-export const OPERATING_CLOCK = WAYANAD_CLOCK;
+/* The timestamp the GENERATED points were authored against -- not the console's
+ * operating clock, which now belongs to the selected case (see data/cases.ts).
+ * These two coincide on the Wayanad case and diverge on any other, which is
+ * correct: synthetic density points do not acquire observations of an Odisha
+ * event just because an officer switched to it. They are marked synthetic in
+ * their provenance for exactly this reason. */
+const GENERATED_OBSERVED_AT = WAYANAD_CLOCK;
 
 /* ------------------------------------------------------------ generator  */
 
@@ -361,7 +366,7 @@ function generate(): Habitation[] {
               [`${susceptibility.score} (${susceptibility.band.replace('_', ' ')})`, clamp(susceptibility.score)],
               [`${Math.round(12 + wet * 85)} mm (threshold 60 mm)`, clamp(20 + wet * 76)],
             ]),
-            { ...SRC_IMD_NOWCAST, observedAt: OPERATING_CLOCK },
+            { ...SRC_IMD_NOWCAST, observedAt: GENERATED_OBSERVED_AT },
           )
         : derive(
             currentCoastalDrivers([
@@ -371,7 +376,7 @@ function generate(): Habitation[] {
               [`Swell ${(1.1 + wet * 1.4).toFixed(1)} m; no INCOIS high-wave alert`, clamp(18 + wet * 26)],
               [`Monsoon westerly, ${Math.round(18 + wet * 26)} km/h onshore component`, clamp(30 + wet * 30)],
             ]),
-            { ...SRC_INCOIS_SURGE, observedAt: OPERATING_CLOCK },
+            { ...SRC_INCOIS_SURGE, observedAt: GENERATED_OBSERVED_AT },
           );
 
       const households = 60 + Math.floor(rnd() * 540);
@@ -396,10 +401,10 @@ function generate(): Habitation[] {
           score: current.score,
           alert: alertFrom(current.score),
           drivers: current.factors,
-          observedAt: OPERATING_CLOCK,
+          observedAt: GENERATED_OBSERVED_AT,
           provenance: isRain
-            ? { ...SRC_IMD_NOWCAST, observedAt: OPERATING_CLOCK }
-            : { ...SRC_INCOIS_SURGE, observedAt: OPERATING_CLOCK },
+            ? { ...SRC_IMD_NOWCAST, observedAt: GENERATED_OBSERVED_AT }
+            : { ...SRC_INCOIS_SURGE, observedAt: GENERATED_OBSERVED_AT },
         },
         tiers: tiersFrom(susceptibility.score, current.score, rnd),
       });
@@ -412,7 +417,7 @@ function generate(): Habitation[] {
 export const HABITATIONS: Habitation[] = [
   CHOORALMALA,
   PUNCHIRIMATTOM,
-  // KANHUPUR,
+  KANHUPUR,
   ...generate(),
 ];
 
