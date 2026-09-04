@@ -101,6 +101,7 @@ export interface Stage {
 export const STAGES: Array<{ key: string; label: string; detail: string }> = [
   { key: 'manifest', label: 'Analysis grid', detail: 'Grid definition, settlements, facilities' },
   { key: 'slope', label: 'Terrain', detail: 'Copernicus GLO-30 derived slope, 100 m' },
+  { key: 'land', label: 'Land and border', detail: 'Indian territory mask, district boundaries' },
   { key: 'landslide', label: 'Landslide hazard', detail: 'hazard zonation, rasterised' },
   { key: 'flood', label: 'Flood layer', detail: 'flood sheet, rasterised' },
   {
@@ -147,7 +148,7 @@ async function decodePng(url: string, width: number, height: number): Promise<Ui
 
 /* `hand` is present only for AOIs where it has been computed; a layer absent
  * from the manifest is reported as such rather than treated as zeros. */
-const RASTER_KEYS = ['slope', 'landslide', 'flood', 'floodrp', 'distroad', 'disttown', 'landuse', 'protected', 'hand'] as const;
+const RASTER_KEYS = ['slope', 'land', 'landslide', 'flood', 'floodrp', 'distroad', 'disttown', 'landuse', 'protected', 'hand'] as const;
 
 /**
  * @param base Directory the stack was built into, from the active case's

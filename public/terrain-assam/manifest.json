@@ -107,6 +107,7 @@
    "scale": 80,
    "bytes": 5986,
    "source": "WRI Aqueduct Flood Hazard Maps V2, inunriver, historical",
+   "combinedOn": "smallest return period across the listed flood types",
    "measure": "smallest return period at which the cell is inundated",
    "breaksYears": {
     "high": 10,
@@ -114,6 +115,14 @@
     "low": 1000
    },
    "nativeResolution": "30 arcsec (~900 m), resampled to the 100 m grid"
+  },
+  "land": {
+   "file": "/terrain-assam/land.png",
+   "unit": "mask",
+   "scale": 255,
+   "bytes": 1878,
+   "source": "Bundled district boundaries, Government of India depiction",
+   "note": "Generalised for national-zoom display; shore accurate to roughly a kilometre, not to the 100 m grid."
   }
  },
  "towns": [

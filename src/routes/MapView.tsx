@@ -167,15 +167,25 @@ export function MapView() {
   }, [filtered, filters, overlay, activeCase]);
   const isSequence = overlay?.kind === 'IMAGE_SEQUENCE';
 
+  /* Which sequence this overlay resolves to for the active case. A rain field
+   * is only meaningful for its own event; the same entry showed the July 2024
+   * Wayanad forecast over Kendrapara in May 2019 until this existed. */
+  /* Same idea as sequenceUrl: one entry in the list, resolved per case. */
+  const vectorUrl =
+    (overlay?.geojsonByCase && overlay.geojsonByCase[activeCase.id]) ?? overlay?.url ?? null;
+
+  const sequenceUrl =
+    (overlay?.sequenceByCase && overlay.sequenceByCase[activeCase.id]) ?? overlay?.url ?? null;
+
   /* Sequence manifest is fetched lazily -- only when that overlay is chosen. */
   useEffect(() => {
-    if (!isSequence || !overlay?.url) {
+    if (!isSequence || !sequenceUrl) {
       setSequence(null);
       setBlend(null);
       return;
     }
     let cancelled = false;
-    fetch(overlay.url)
+    fetch(sequenceUrl)
       .then((r) => r.json())
       .then((m: SequenceMeta) => {
         if (!cancelled) setSequence(m);
@@ -186,7 +196,7 @@ export function MapView() {
     return () => {
       cancelled = true;
     };
-  }, [isSequence, overlay?.url]);
+  }, [isSequence, sequenceUrl]);
 
   const select = useCallback(
     (id: string) => {
@@ -308,11 +318,13 @@ export function MapView() {
             vectorOverlay={
               overlay &&
               overlay.kind === 'GEOJSON' &&
-              overlay.url &&
+              vectorUrl &&
               (overlay.classField || overlay.rampField)
                 ? {
-                    id: overlay.id,
-                    url: overlay.url,
+                    /* id carries the case so switching case reloads the source
+                       rather than keeping the previous event's polygons. */
+                    id: `${overlay.id}:${activeCase.id}`,
+                    url: vectorUrl,
                     classField: overlay.classField,
                     classColors: overlay.classColors ?? {},
                     rampField: overlay.rampField,

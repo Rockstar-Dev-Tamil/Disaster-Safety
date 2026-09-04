@@ -60,9 +60,33 @@ RAMP = {
     0: (0, 0, 0, 0),
 }
 
-# The Majuli analysis grid, from build-terrain.py's majuli entry.
-ASSAM_AOI = (93.85, 26.60, 94.75, 27.40)
-ASSAM_STACK = 'public/terrain-assam'
+# Analysis grids, matching build-terrain.py's AOIS entries exactly. The stack
+# raster must land on the same grid as slope.png and the rest or the exclusion
+# loop reads two layers describing different ground.
+STACKS = {
+    'assam': {
+        'aoi': (93.85, 26.60, 94.75, 27.40),
+        'out': 'public/terrain-assam',
+        'web': '/terrain-assam',
+        'src': 'assam',
+        'floodtype': 'inunriver',
+    },
+    'kendrapara': {
+        'aoi': (85.95, 19.70, 87.95, 21.55),
+        'out': 'public/terrain-kendrapara',
+        'web': '/terrain-kendrapara',
+        # Both mechanisms, combined on the smallest return period: a cell the
+        # sea reaches at 1-in-25 and the river reaches at 1-in-10 floods at
+        # 1-in-10. Taking only the coastal product called the inland half of
+        # this box dry, which for a cyclone that dumps rain 100 km inland is
+        # the wrong half to be wrong about.
+        'src': ['kendrapara', 'kendrapara-river'],
+        'floodtype': 'inuncoast + inunriver',
+    },
+}
+#: Fallback only. The grid is read from each stack's own manifest, because AOIs
+#: no longer share a cell size and a raster built on the wrong grid misaligns
+#: with slope.png without erroring.
 CELL_M = 100.0
 
 TILESETS = [
@@ -113,19 +137,26 @@ def write_png_gray(path, arr):
     return os.path.getsize(path)
 
 
-def build_stack_raster():
-    w, s, e, n = ASSAM_AOI
-    mid = math.radians((s + n) / 2)
-    h = int(round((n - s) * 111320.0 / CELL_M))
-    wd = int(round((e - w) * 111320.0 * math.cos(mid) / CELL_M))
+def build_stack_raster(name, cfg):
+    w, s, e, n = cfg['aoi']
+    mp0 = f'{cfg["out"]}/manifest.json'
+    m0 = json.load(open(mp0, encoding='utf-8'))
+    cell = float(m0.get('cellMetres', CELL_M))
+    h, wd = int(m0['height']), int(m0['width'])
     lats = np.linspace(n, s, h)
     lons = np.linspace(w, e, wd)
 
-    a, tr, _ = read_minrp('assam')
-    minrp = sample_to_grid(a, tr, lats, lons)
+    # Several sources combine on the SMALLEST return period, because a cell
+    # inundated by either mechanism is inundated.
+    srcs = cfg['src'] if isinstance(cfg['src'], list) else [cfg['src']]
+    minrp = None
+    for src_name in srcs:
+        a, tr, _ = read_minrp(src_name)
+        g = sample_to_grid(a, tr, lats, lons)
+        minrp = g if minrp is None else np.minimum(minrp, g)
     cls = classify(minrp)
 
-    print(f'\nAssam stack raster  {wd} x {h} at {CELL_M:.0f} m')
+    print(f'\n{name} stack raster  {wd} x {h} at {cell:.0f} m  ({cfg["floodtype"]})')
     print(f'  {"class":<12}{"cells":>10}{"share":>9}   first inundated at')
     for k in (3, 2, 1, 0):
         cnt = int((cls == k).sum())
@@ -133,21 +164,22 @@ def build_stack_raster():
                1: 'RP 101-1000 yr', 0: 'dry at every RP'}[k]
         print(f'  {CLASS_LABEL[k]:<12}{cnt:>10,}{cnt / cls.size * 100:>8.1f}%   {rng}')
 
-    b = write_png_gray(f'{ASSAM_STACK}/floodrp.png', cls * SCALE)
-    mp = f'{ASSAM_STACK}/manifest.json'
+    b = write_png_gray(f'{cfg["out"]}/floodrp.png', cls * SCALE)
+    mp = f'{cfg["out"]}/manifest.json'
     m = json.load(open(mp, encoding='utf-8'))
     m['layers']['floodrp'] = {
-        'file': '/terrain-assam/floodrp.png',
+        'file': f'{cfg["web"]}/floodrp.png',
         'classes': {v: k for k, v in CLASS_LABEL.items()},
         'scale': SCALE,
         'bytes': b,
-        'source': 'WRI Aqueduct Flood Hazard Maps V2, inunriver, historical',
+        'source': f'WRI Aqueduct Flood Hazard Maps V2, {cfg["floodtype"]}, historical',
+        'combinedOn': 'smallest return period across the listed flood types',
         'measure': 'smallest return period at which the cell is inundated',
         'breaksYears': {'high': 10, 'moderate': 100, 'low': 1000},
         'nativeResolution': '30 arcsec (~900 m), resampled to the 100 m grid',
     }
     json.dump(m, open(mp, 'w', encoding='utf-8'), indent=1)
-    print(f'  -> {ASSAM_STACK}/floodrp.png ({b / 1024:.0f} kB), manifest updated')
+    print(f'  -> {cfg["out"]}/floodrp.png ({b / 1024:.0f} kB), manifest updated')
 
 
 def write_png_rgba(path, rgba):
@@ -207,7 +239,11 @@ def build_tiles(name, out, box, min_z, max_z):
 
 
 def main():
-    build_stack_raster()
+    for name, cfg in STACKS.items():
+        if not os.path.exists(f'{cfg["out"]}/manifest.json'):
+            print(f'\n{name}: no terrain stack at {cfg["out"]}, skipping')
+            continue
+        build_stack_raster(name, cfg)
     for args in TILESETS:
         build_tiles(*args)
     return 0

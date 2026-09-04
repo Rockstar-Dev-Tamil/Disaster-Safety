@@ -12,6 +12,12 @@ export interface SequenceFrame {
 }
 
 export interface SequenceMeta {
+  /** 'forecast' (default) or 'reanalysis'. These are not the same object: a
+   *  forecast says what the model expected before the event, a reanalysis says
+   *  what the atmosphere did, assimilated afterwards. The footnote must not
+   *  call one the other. */
+  kind?: 'forecast' | 'reanalysis';
+  event?: string;
   run: string;
   runIst: string;
   bounds: [number, number, number, number];
@@ -148,7 +154,14 @@ export function ForecastTimeline({
   return (
     <div className="fctl">
       <div className="fctl-head">
-        <span>ECMWF HRES forecast · run {ts(meta.runIst)}</span>
+        {/* "Run" is forecast vocabulary. A reanalysis has no run; it has a
+            window, and calling it a run in the header while the footnote calls
+            it reanalysis would contradict itself on one screen. */}
+        <span>
+          {meta.kind === 'reanalysis'
+            ? `ERA5 reanalysis · from ${ts(meta.runIst)}`
+            : `ECMWF HRES forecast · run ${ts(meta.runIst)}`}
+        </span>
         <span className="mono">+{(minutes / 60).toFixed(1)} h</span>
       </div>
 
@@ -220,8 +233,10 @@ export function ForecastTimeline({
       </div>
 
       <div className="fctl-note">
-        Forecast, not observation — issued {ts(meta.runIst)}
-        {focus?.live ? '' : ', before the event'}. 0.25° (~28 km);
+        {meta.kind === 'reanalysis'
+          ? `Reanalysis, not forecast — ERA5 describes what the atmosphere did, assimilated after the event, and was not available to anyone beforehand. Window opens ${ts(meta.runIst)}.`
+          : `Forecast, not observation — issued ${ts(meta.runIst)}${focus?.live ? '' : ', before the event'}.`}{' '}
+        0.25° (~28 km);
         {opOutside
           ? ' this case’s clock falls outside the forecast window, so the marker is clamped to the nearest end and is not the operating picture.'
           : focus?.live

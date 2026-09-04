@@ -35,8 +35,14 @@ export type CaseId = 'WAYANAD' | 'KENDRAPARA' | 'ASSAM';
 export interface TerrainStackRef {
   /** Directory under public/ holding manifest.json and the raster set. */
   base: string;
-  /** Tile template for the relief view's raster-dem source. */
-  demTiles: string;
+  /** Tile template for the relief view's raster-dem source.
+   *
+   *  Null where no DEM was built. That is a real case, not an oversight: on the
+   *  Odisha delta elevation runs -3 to 27 m across the whole area of interest
+   *  and mean slope is 0.2 degrees, so a DEM costs hundreds of megabytes to
+   *  render a view that is flat by construction and to feed a gradient limit
+   *  that excludes nothing. The relief toggle is hidden where this is null. */
+  demTiles: string | null;
   /** [W, S, E, N] -- must match the manifest, and bounds the DEM requests. */
   bounds: [number, number, number, number];
   /** Attribution for whatever produced the elevation. */
@@ -74,6 +80,10 @@ export interface CaseDef {
   unavailable?: string;
   /** True when the case has no fixed event date and wants live feeds. */
   live?: boolean;
+  /** Forecast cones of uncertainty for this case's storm, one per issue time.
+   *  Absent where the hazard is not a moving system: a debris flow and a
+   *  shoreline do not have a cone. */
+  coneUrl?: string;
 }
 
 /* --------------------------------------------------------------- registry */
@@ -103,13 +113,37 @@ export const CASES: CaseDef[] = [
     region: 'Kendrapara, Odisha',
     hazard: 'COASTAL_EROSION',
     clock: KENDRAPARA_CLOCK,
-    event: 'Chronic shoreline retreat, Satabhaya–Kanhupur, 2024 season',
+    event:
+      'Cyclone Fani, landfall near Puri 03 May 2019 — on chronic shoreline retreat',
+    coneUrl: '/layers/cone-fani-exclusion.geojson',
     focusId: 'KDP-KANHUPUR',
-    stack: null,
-    unavailable:
-      'No terrain stack has been built for this area of interest. The '
-      + 'evacuation workspace reads a fixed 100 m grid, and the one that ships '
-      + 'covers 75.55–76.65 E — roughly 1,100 km west of here.',
+    stack: {
+      base: '/terrain-kendrapara',
+      demTiles: null,
+      /* Sized for a cyclone: holds the full 100 km operation radius around
+       * Kanhupur (86.9381, 20.6284), which is the top of the slider. A cyclone
+       * moves people out of a region rather than out of a valley, and the
+       * earlier box ran out of ground at about 50 km.
+       *
+       * 150 m cells here rather than 100. On this delta gradient discriminates
+       * nothing — mean slope 0.2 degrees — so the constraints that bind are
+       * inundation return period and distance from the storm, neither of which
+       * is resolved anywhere near 100 m. */
+      bounds: [85.95, 19.7, 87.95, 21.55],
+      demAttribution: 'No elevation model — see demTiles',
+      hazardAttribution: 'Hazard: WRI Aqueduct surge and riverine return periods',
+      hazardTiles: '/floodrp-kendrapara/{z}/{x}/{y}.png',
+      hazardTilesMaxZoom: 11,
+      hazardNote:
+        'Flood layer combines WRI Aqueduct coastal surge AND riverine flood on '
+        + 'the smallest return period — a cyclone brings both, and taking only '
+        + 'the coastal product called the inland half of this area dry. The '
+        + 'permanent tier excludes ground inside the 1-in-100. Native ~900 m, '
+        + 'so it cannot see which side of an embankment a hamlet sits on, and '
+        + 'it does not model bund breaches. No landslide sheet and no elevation '
+        + 'model exist here: this is a delta at 0.2° mean slope, where gradient '
+        + 'discriminates nothing and inundation return period is what binds.',
+    },
   },
   {
     id: 'ASSAM',

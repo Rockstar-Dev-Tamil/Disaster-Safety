@@ -63,8 +63,11 @@ AOIS = {
         'scale': 900,
         'extra': {},
     },
+    # A cyclone brings both mechanisms: surge from the sea and riverine flood
+    # from the rain it dumps inland. Fetched separately and combined on the
+    # smallest return period, because a cell inundated by either is inundated.
     'kendrapara': {
-        'box': [86.55, 20.25, 87.35, 21.00],
+        'box': [85.95, 19.70, 87.95, 21.55],
         'floodtype': 'inuncoast',
         'scale': 300,
         # Coastal historical carries four years and two subsidence treatments.
@@ -72,6 +75,12 @@ AOIS = {
         # land subsidence, which is real on this delta but is a projection, not
         # history, and would quietly turn a baseline into a forecast.
         'extra': {'year': 2010, 'subsidence': 'nosub'},
+    },
+    'kendrapara-river': {
+        'box': [85.95, 19.70, 87.95, 21.55],
+        'floodtype': 'inunriver',
+        'scale': 300,
+        'extra': {},
     },
 }
 

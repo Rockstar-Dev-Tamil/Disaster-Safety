@@ -59,10 +59,10 @@ AOIS = {
     # (86.9381, 20.6284) with margin, and matching the Overpass feasibility
     # probe that established this AOI has usable OSM coverage.
     'kendrapara': {
-        'bounds': (86.55, 20.25, 87.35, 21.00),
+        'bounds': (85.95, 19.70, 87.95, 21.55),
         # N20_00_E087 is a zero-byte tile -- that square is all Bay of Bengal.
         # Listed anyway so the skip is explicit rather than an unexplained gap.
-        'dem': ['N20_00_E086', 'N20_00_E087'],
+        'dem': None,          # no DEM for this AOI; see build-terrain.py
         'out': 'public/dem-kendrapara',
     },
 }
@@ -70,7 +70,7 @@ AOIS = {
 AOI = os.environ.get('TERRAIN_AOI', 'wayanad')
 _cfg = AOIS[AOI]
 W, S, E, N = _cfg['bounds']
-DEM_TILES = _cfg['dem']
+DEM_TILES = _cfg['dem'] or []
 
 SCRATCH = os.environ.get('SCRATCH', '.')
 OUT = _cfg['out']
@@ -178,6 +178,10 @@ def terrarium(elev):
 
 
 def main():
+    if not DEM_TILES:
+        print(f'{AOI}: no DEM for this area of interest, nothing to tile.')
+        return 0
+
     try:
         from PIL import Image
     except ImportError:

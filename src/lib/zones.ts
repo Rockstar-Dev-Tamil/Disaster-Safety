@@ -22,6 +22,7 @@ import { haversineKm } from './terrain';
 export const EXCLUSION = {
   NONE: 0,
   OUTSIDE_RADIUS: 1,
+  OUTSIDE_LAND: 16,
   LANDSLIDE: 2,
   FLOOD: 3,
   SLOPE: 4,
@@ -34,6 +35,7 @@ export const EXCLUSION = {
   FOREST: 11,
   PROTECTED: 12,
   FLOOD_RP: 15,
+  CYCLONE_CONE: 17,
   HAND: 13,
   HAND_UNRESOLVED: 14,
 } as const;
@@ -43,6 +45,7 @@ export type ExclusionCode = (typeof EXCLUSION)[keyof typeof EXCLUSION];
 export const EXCLUSION_LABEL: Record<number, string> = {
   [EXCLUSION.NONE]: 'Eligible',
   [EXCLUSION.OUTSIDE_RADIUS]: 'Outside operation radius',
+  [EXCLUSION.OUTSIDE_LAND]: 'Sea, or outside Indian territory',
   [EXCLUSION.LANDSLIDE]: 'Landslide hazard, Medium or High',
   [EXCLUSION.FLOOD]: 'Flood plain or waterbody',
   [EXCLUSION.SLOPE]: 'Slope exceeds camp gradient limit',
@@ -54,6 +57,7 @@ export const EXCLUSION_LABEL: Record<number, string> = {
   [EXCLUSION.PADDY]: 'Paddy — seasonally waterlogged',
   [EXCLUSION.FOREST]: 'Forest — diversion under Forest (Conservation) Act 1980',
   [EXCLUSION.FLOOD_RP]: 'Inside the design flood (Aqueduct return period)',
+  [EXCLUSION.CYCLONE_CONE]: 'Inside the cyclone forecast cone',
   [EXCLUSION.HAND]: 'Flood susceptibility above the tier limit (HAND)',
   [EXCLUSION.HAND_UNRESOLVED]: 'Flood susceptibility not resolved — withheld, not cleared',
 };
@@ -115,6 +119,18 @@ export interface Rules {
   excludeForest: boolean;
   /** Wildlife Protection Act 1972 and notified eco-sensitive zones. */
   excludeProtected: boolean;
+  /** Cyclone cases only. Exclude ground inside the forecast cone of
+   *  uncertainty for the moment being planned.
+   *
+   *  Short-term evacuation moves people within hours, so it cannot move them
+   *  into ground the storm may still cross. The cone is that ground: not the
+   *  track, which nobody knows yet, but every place the storm might go. The
+   *  permanent tier leaves this off -- a township is built long after the storm
+   *  has passed, and what binds there is inundation and erosion.
+   *
+   *  The cone SHRINKS as the storm commits to a path, so this exclusion is a
+   *  function of when you ask, not a property of the ground. */
+  excludeCycloneCone?: boolean;
   /** Flood AOIs only. Exclude cells whose Aqueduct return-period class is at
    *  or above this. Classes are 3 (inundated at a return period of 10 years or
    *  less), 2 (11-100 years), 1 (101-1000), 0 (dry at every modelled return
@@ -160,6 +176,8 @@ export const DEFAULT_RULES: Rules = {
   excludePaddy: true,
   excludeForest: false,
   excludeProtected: false,
+  /* Short-term evacuation happens while the storm is still coming. */
+  excludeCycloneCone: true,
   /* Camp tier: exclude ground that floods at least once a decade. A
    * transitional camp stands for one season and is sited under time pressure;
    * holding it to the 1-in-100 standard would remove 39% of the Majuli search
@@ -189,6 +207,9 @@ export const PERMANENT_RULES: Rules = {
   excludePaddy: true,
   excludeForest: true,
   excludeProtected: true,
+  /* Off, deliberately. A township is occupied for fifty years; the position of
+   * one cyclone on one afternoon says nothing about where it should stand. */
+  excludeCycloneCone: false,
   /* Permanent tier: outside the design flood. A township built to a fifty-year
    * life must not sit inside the 1-in-100, which is the return period every
    * Indian planning standard is written against. */
@@ -467,12 +488,51 @@ export interface ZoneResult {
 
 const SPHERE_M2_PER_PERSON = 45;
 
+/** Scanline-fill a lon/lat ring onto the crop grid.
+ *
+ * Per row rather than per cell: a crop can hold two million cells and the cone
+ * changes every time the officer steps the clock, so testing each cell against
+ * every edge would stall the interface. Row against edges is ~1,400 x 60
+ * operations instead, and runs in under a millisecond.
+ */
+function rasteriseRing(ring: number[][], crop: Crop): Uint8Array {
+  const { w, h } = crop;
+  const mask = new Uint8Array(w * h);
+  const [bw, , be] = crop.bounds;
+  const xOf = (lon: number) => Math.round(((lon - bw) / (be - bw)) * (w - 1));
+
+  for (let y = 0; y < h; y++) {
+    const lat = crop.latAt(y);
+    const xs: number[] = [];
+    for (let i = 0; i < ring.length - 1; i++) {
+      const [x1, y1] = ring[i];
+      const [x2, y2] = ring[i + 1];
+      /* Half-open crossing test, so a vertex exactly on the row is counted
+       * once rather than opening and closing the same span. */
+      if ((y1 <= lat && y2 > lat) || (y2 <= lat && y1 > lat)) {
+        xs.push(x1 + ((lat - y1) / (y2 - y1)) * (x2 - x1));
+      }
+    }
+    if (xs.length < 2) continue;
+    xs.sort((a, b) => a - b);
+    for (let k = 0; k + 1 < xs.length; k += 2) {
+      const a = Math.max(0, xOf(xs[k]));
+      const b = Math.min(w - 1, xOf(xs[k + 1]));
+      for (let x = a; x <= b; x++) mask[y * w + x] = 1;
+    }
+  }
+  return mask;
+}
+
 export function analyse(
   stack: TerrainStack,
   origin: [number, number],
   rules: Rules,
   weights: Weights,
   requiredPersons: number,
+  /** Outer ring of the cyclone cone in force at the moment being planned, or
+   *  null when there is no cyclone. Only consulted when the rule set asks. */
+  coneRing?: number[][] | null,
 ): ZoneResult {
   const { manifest, grids } = stack;
   const crop = cropFor(manifest, origin, rules.radiusKm);
@@ -481,8 +541,20 @@ export function analyse(
   const cellM = manifest.cellMetres;
   const cellHa = (cellM * cellM) / 10000;
 
+  /* Zero when a layer is absent from this stack, rather than throwing.
+   *
+   * Not every area of interest carries every layer: the Odisha box has no DEM
+   * because it is a delta -- elevation runs -3 to 27 m across the whole box and
+   * mean slope is 0.2 degrees, so a gradient limit of 5 or 15 degrees excludes
+   * nothing and a slope score discriminates nothing. Zero is the right default
+   * for the hazard layers too: absent means "no hazard recorded here", which is
+   * what the manifest's missing entry says.
+   *
+   * The layers where zero would be WRONG are guarded at their call site --
+   * `land` defaults to 255 (assume land, do not exclude the world) and the
+   * class layers to -1 (absent, so their rule does not run). */
   const g = (key: string, x: number, y: number) =>
-    grids[key][(y + crop.y0) * manifest.width + (x + crop.x0)];
+    grids[key] ? grids[key][(y + crop.y0) * manifest.width + (x + crop.x0)] : 0;
 
   /* elevation is stored /10; drainage margin wants metres */
   const elevRaw = new Uint8Array(n);
@@ -492,6 +564,13 @@ export function analyse(
         ? grids['elevation'][(y + crop.y0) * manifest.width + (x + crop.x0)]
         : 0;
   const margin = drainageMargin(elevRaw, w, h, 5, 10);
+
+  /* Rasterised once per derivation, not per cell. Null when the rule set does
+   * not use it, so a stepper on a non-cyclone case costs nothing. */
+  const coneMask =
+    rules.excludeCycloneCone && coneRing && coneRing.length > 2
+      ? rasteriseRing(coneRing, crop)
+      : null;
 
   const reason = new Uint8Array(n);
   const score = new Uint8Array(n);
@@ -519,6 +598,13 @@ export function analyse(
       }
       cellsInRadius++;
 
+      /* Answered before any question about suitability, because it is the
+       * question underneath them. Absent the mask this defaults to land, so a
+       * stack built before the mask existed behaves as it did before rather
+       * than excluding everything. */
+      const land = grids['land'] ? g('land', x, y) : 255;
+      const inCone = coneMask ? coneMask[i] === 1 : false;
+
       const slope = g('slope', x, y);
       const ls = Math.round(g('landslide', x, y) / 80);
       const fl = Math.round(g('flood', x, y) / 80);
@@ -534,7 +620,15 @@ export function analyse(
       const frp = grids['floodrp'] ? Math.round(g('floodrp', x, y) / 80) : -1;
 
       let code: number = EXCLUSION.NONE;
-      if (rules.excludeProtected && prot > 127) code = EXCLUSION.PROTECTED;
+      /* First. The Kendrapara search returned 98.6% of its area eligible
+       * because most of that area is the Bay of Bengal, and open sea passes
+       * every other test: the DEM has values there, slope is zero, there is no
+       * land use, and the flood layer classes it dry at every return period. */
+      if (land < 128) code = EXCLUSION.OUTSIDE_LAND;
+      /* Second only to "is this ground". Everything else asks whether a site is
+       * suitable; this asks whether it is survivable this week. */
+      else if (inCone) code = EXCLUSION.CYCLONE_CONE;
+      else if (rules.excludeProtected && prot > 127) code = EXCLUSION.PROTECTED;
       else if (rules.excludeBuiltUp && lu === LANDUSE.BUILT_UP) code = EXCLUSION.BUILT_UP;
       else if (rules.excludeForest && lu === LANDUSE.FOREST) code = EXCLUSION.FOREST;
       else if (lu === LANDUSE.RESTRICTED) code = EXCLUSION.RESTRICTED;

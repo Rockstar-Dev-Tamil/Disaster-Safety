@@ -1,12 +1,16 @@
 /* ============================================================================
  * SCENARIO: KENDRAPARA, ODISHA -- coastal erosion
  *
- * Same operating picture clock as the Wayanad scenario (29 Jul 2024, 23:30
- * IST): one moment, one national picture. At that moment there is no system
- * in the Bay of Bengal, so this habitation sits at HIGH standing
- * susceptibility and a YELLOW current state simultaneously. That divergence
- * is the reason the header carries two scores instead of one -- a single
- * "risk" number would have to lie in one direction or the other.
+ * EVENT: Cyclone Fani, 02-03 May 2019. The clock sits at 02 May 18:30 IST --
+ * the hour ERA5 significant wave height first crosses the 3.0 m INCOIS alert
+ * this habitation's feed is written against, with landfall near Puri about
+ * fourteen hours away. That is deliberately not landfall: a decision console
+ * belongs at the moment the decision was live, not at the moment it was moot.
+ *
+ * The two scores diverge in the opposite direction from the quiet-day picture
+ * this file used to carry. Standing susceptibility is HIGH and slow-moving;
+ * the current state is ORANGE and climbing by the hour. Neither number can
+ * stand in for the other, which is why the header carries both.
  *
  * The standing band is HIGH rather than VERY HIGH because the shoreline
  * retreat factor now runs on measured transects rather than an authored rate.
@@ -24,10 +28,17 @@
 import { capacityFrom, coastalFactors, currentCoastalDrivers, livabilityFactors, siteFactors } from './factory';
 import { SHORELINE, retreatNormalised, retreatSummary } from './shoreline-kendrapara';
 import {
-  KDP_RAINFALL_CELL,
-  KDP_RAINFALL_PROVENANCE,
-  KDP_RAIN_FRAMES,
-} from './rainfall-kendrapara';
+  FANI_AT_CLOCK,
+  FANI_CLOCK,
+  FANI_FRAMES,
+  FANI_PEAK,
+  FANI_RAIN_PROVENANCE,
+  FANI_SEA_PROVENANCE,
+} from './fani-kendrapara';
+/* The July 2024 IMERG pull is kept for the cell definition only -- the feed's
+ * station identity is that cell, and it does not change with the event. Its
+ * frames and provenance now come from the Fani module. */
+import { KDP_RAINFALL_CELL } from './rainfall-kendrapara';
 import {
   SRC_CENSUS,
   SRC_DELTARES_SHORELINE,
@@ -41,7 +52,10 @@ import {
 } from './sources';
 import type { CandidateSite, Habitation, NowcastSeries } from './schema';
 
-export const KENDRAPARA_CLOCK = '2024-07-29T23:30:00+05:30';
+/* The case clock is the event clock. 02 May 2019 18:30 IST is the hour ERA5
+ * significant wave height first crosses the 3.0 m INCOIS alert this feed is
+ * written against, with landfall near Puri ~14 hours out. */
+export const KENDRAPARA_CLOCK = FANI_CLOCK;
 
 /* ------------------------------------------------------------- scoring   */
 
@@ -99,7 +113,12 @@ const kanhupurSusceptibility = derive(
 
 const kanhupurCurrent = derive(
   currentCoastalDrivers([
-    ['None in Bay of Bengal within 72 h', 8, 'IMD cyclone warning stage, 0-4 mapped to 0-100'],
+    [
+      'ESCS Fani, landfall near Puri expected 03 May ~08:00 IST',
+      96,
+      'IMD cyclone warning stage, 0-4 mapped to 0-100',
+      'Extremely Severe Cyclonic Storm. Stage 4, the top of the scale.',
+    ],
     /* Derived, not restated. This row previously hardcoded both the band label
      * and the class score; when the retreat factor moved onto measured data
      * the standing assessment changed band, and a hardcoded copy would have
@@ -109,11 +128,24 @@ const kanhupurCurrent = derive(
       Math.round(kanhupurSusceptibility.score),
       'Carried from standing assessment',
     ],
-    ['Neap tide; next spring tide 04 Aug', 34, 'Phase position within the spring-neap cycle'],
-    ['Swell 1.6 m; no INCOIS high-wave alert', 26, 'Significant wave height against alert threshold'],
-    ['Monsoon westerly, 28 km/h onshore component', 44, 'Onshore component against 45 km/h threshold'],
+    ['Spring tide within 48 h of new moon (04 May)', 78, 'Phase position within the spring-neap cycle'],
+    [
+      `Hs ${FANI_AT_CLOCK.waveM} m, rising; INCOIS high-wave alert crossed`,
+      Math.min(100, Math.round((FANI_AT_CLOCK.waveM / 3.0) * 60)),
+      'Significant wave height against the 3.0 m alert threshold',
+      `Peaks at ${FANI_PEAK.waveM} m during landfall.`,
+      FANI_SEA_PROVENANCE,
+    ],
+    [
+      `${FANI_AT_CLOCK.windKmh} km/h sustained, gusting ${FANI_AT_CLOCK.gustKmh}, `
+        + `from ${FANI_AT_CLOCK.dirDeg}\u00b0 (onshore)`,
+      Math.min(100, Math.round((FANI_AT_CLOCK.gustKmh / 45) * 55)),
+      'Onshore component against 45 km/h threshold',
+      `Gusts reach ${FANI_PEAK.gustKmh} km/h by 03 May afternoon.`,
+      FANI_SEA_PROVENANCE,
+    ],
   ]),
-  { ...SRC_INCOIS_SURGE, observedAt: KENDRAPARA_CLOCK },
+  { ...FANI_SEA_PROVENANCE, observedAt: KENDRAPARA_CLOCK },
 );
 
 /* --------------------------------------------------------------- feeds   */
@@ -134,7 +166,7 @@ const kanhupurRainFeed: NowcastSeries = {
     + `${KDP_RAINFALL_CELL.lon.toFixed(2)} E`,
   lngLat: [KDP_RAINFALL_CELL.lon, KDP_RAINFALL_CELL.lat],
   distanceKm: 2.7,
-  provenance: KDP_RAINFALL_PROVENANCE,
+  provenance: FANI_RAIN_PROVENANCE,
   thresholds: [
     {
       key: 'surge',
@@ -151,13 +183,24 @@ const kanhupurRainFeed: NowcastSeries = {
       basis: 'INCOIS high-wave alert threshold',
     },
   ],
-  /* Alerts stay authored and are NOT derived from the rainfall beside them.
-   * They are coastal alert states set by surge and tide; letting a rain figure
-   * drive them would quietly convert this into a pluvial case. */
-  frames: KDP_RAIN_FRAMES.map((f, i) => ({
-    ...f,
-    alert: (['GREEN', 'GREEN', 'YELLOW', 'YELLOW', 'YELLOW', 'YELLOW', 'YELLOW'] as const)[i]
-      ?? 'YELLOW',
+  /* Alert is DERIVED from the observed sea state, not authored, and the rule is
+   * stated so it can be argued with: the 3.0 m INCOIS high-wave alert takes it
+   * to ORANGE, and 5 m or a 90 km/h gust to RED. Rainfall does not enter it --
+   * this is a cyclone, and letting 95 mm of rain set the colour would describe
+   * the wrong hazard. */
+  frames: FANI_FRAMES.map((f) => ({
+    t: f.t,
+    rain3h: f.rain3h,
+    rain24h: f.rain24h,
+    rainCumulative: f.rainCumulative,
+    alert:
+      f.waveM >= 5 || f.gustKmh >= 90
+        ? ('RED' as const)
+        : f.waveM >= 3
+          ? ('ORANGE' as const)
+          : f.gustKmh >= 45
+            ? ('YELLOW' as const)
+            : ('GREEN' as const),
   })),
 };
 
@@ -460,46 +503,68 @@ export const KANHUPUR: Habitation = {
   susceptibility: kanhupurSusceptibility,
   current: {
     score: kanhupurCurrent.score,
-    alert: 'YELLOW',
+    /* ORANGE, not RED, and not by choice: the same rule that colours the feed
+     * frames is applied here. At the clock Hs is 3.05 m -- past the 3.0 m
+     * alert, short of the 5 m that takes it to RED. It reaches RED by 03 May
+     * morning. Setting RED now would describe a state fourteen hours away. */
+    alert: 'ORANGE',
     drivers: kanhupurCurrent.factors,
     observedAt: KENDRAPARA_CLOCK,
-    provenance: { ...SRC_INCOIS_SURGE, observedAt: KENDRAPARA_CLOCK },
+    provenance: { ...FANI_SEA_PROVENANCE, observedAt: KENDRAPARA_CLOCK },
   },
-  tiers: { IMMEDIATE: 'NOT_FLAGGED', SHORT_TERM: 'FLAGGED', LONG_TERM: 'FLAGGED' },
+  tiers: { IMMEDIATE: 'FLAGGED', SHORT_TERM: 'FLAGGED', LONG_TERM: 'FLAGGED' },
   detail: {
     immediate: {
       flag: {
-        status: 'NOT_FLAGGED',
+        status: 'FLAGGED',
         rationale:
-          'No cyclonic system in the Bay of Bengal within 72 h and no surge or breach trigger crossed. Assessed and clear as of 23:30 IST.',
+          'Extremely Severe Cyclonic Storm Fani, landfall near Puri expected '
+          + `03 May ~08:00 IST. Significant wave height ${FANI_AT_CLOCK.waveM} m has `
+          + 'crossed the 3.0 m INCOIS alert and is rising; the whole habitation '
+          + 'sits inside the 1-in-100 surge envelope at 1.4 m above MSL. '
+          + `Gusts reach ${FANI_PEAK.gustKmh} km/h before this passes.`,
+        since: '2019-05-02T18:30:00+05:30',
       },
-      redZoneStatus: 'NOT DECLARED - standing watch only, 2 weak embankment reaches monitored',
+      redZoneStatus:
+        'DECLARED - evacuation ordered ahead of landfall; 2 weak embankment '
+        + 'reaches under watch',
       routingScenarioId: 'KDP-KANHUPUR',
       nowcast: kanhupurRainFeed,
       triggers: [
         {
           key: 'system',
           label: 'Cyclone warning stage',
-          observed: 'NIL - no system in the Bay of Bengal',
+          observed:
+            'Stage 4 - ESCS Fani, landfall near Puri expected 03 May ~08:00 IST',
           threshold: 'Stage 3 (cyclone alert) or above',
-          crossed: false,
-          provenance: { ...SRC_INCOIS_SURGE, observedAt: KENDRAPARA_CLOCK },
+          crossed: true,
+          crossedAt: '2019-05-01T08:30:00+05:30',
+          provenance: { ...SRC_SDMA_ADVISORY, observedAt: KENDRAPARA_CLOCK },
         },
         {
           key: 'surge',
           label: 'Surge above highest astronomical tide',
-          observed: '0.4 m',
+          /* Deliberately not filled in. ERA5 carries wave height, not storm
+           * surge, and the INCOIS surge product is not ingested. Substituting
+           * Hs here would report a different quantity under this label. */
+          observed: 'Not observed - no ingested surge product for this coast',
           threshold: '1.5 m',
           crossed: false,
-          provenance: { ...SRC_INCOIS_SURGE, observedAt: KENDRAPARA_CLOCK },
+          provenance: SRC_INCOIS_SURGE,
         },
         {
           key: 'tidewind',
           label: 'Spring tide with onshore wind',
-          observed: 'Neap tide; onshore component 28 km/h',
+          observed:
+            `Spring tide approaching; onshore ${FANI_AT_CLOCK.windKmh} km/h `
+            + `sustained, gusting ${FANI_AT_CLOCK.gustKmh} km/h from `
+            + `${FANI_AT_CLOCK.dirDeg}\u00b0`,
           threshold: 'Spring tide coincident with onshore wind above 45 km/h',
+          /* Sustained wind is short of 45 km/h at the clock; the gust is at it.
+           * Crossing on gust alone would overstate a threshold written for
+           * sustained wind, so this reads not-crossed and says why. */
           crossed: false,
-          provenance: { ...SRC_INCOIS_SURGE, observedAt: KENDRAPARA_CLOCK },
+          provenance: { ...FANI_SEA_PROVENANCE, observedAt: KENDRAPARA_CLOCK },
         },
         {
           key: 'breach',
@@ -507,15 +572,15 @@ export const KANHUPUR: Habitation = {
           observed: 'No breach reported; 2 reaches under watch',
           threshold: 'Any confirmed breach in the Gahirmatha reach',
           crossed: false,
-          provenance: { ...SRC_SDMA_ADVISORY, observedAt: '2024-07-29T18:00:00+05:30' },
+          provenance: { ...SRC_SDMA_ADVISORY, observedAt: '2019-05-02T18:00:00+05:30' },
         },
         {
           key: 'retreat',
           label: 'Episodic shoreline retreat',
-          observed: '3.1 m since 01 Jun',
-          threshold: '12 m within a single monsoon triggers immediate review',
+          observed: '2.4 m since 01 Jan',
+          threshold: '12 m within a single season triggers immediate review',
           crossed: false,
-          provenance: { ...SRC_NCSCM_SHORELINE, observedAt: '2024-07-28T00:00:00+05:30' },
+          provenance: { ...SRC_NCSCM_SHORELINE, observedAt: '2019-05-01T00:00:00+05:30' },
         },
       ],
       camps: [

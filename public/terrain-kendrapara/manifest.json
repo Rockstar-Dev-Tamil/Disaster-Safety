@@ -1,0 +1,3349 @@
+{
+ "bounds": [
+  85.95,
+  19.7,
+  87.95,
+  21.55
+ ],
+ "width": 1389,
+ "height": 1373,
+ "cellMetres": 150.0,
+ "layers": {
+  "landslide": {
+   "file": "/terrain-kendrapara/landslide.png",
+   "classes": {
+    "High Hazard Zone": 3,
+    "Medium Hazard Zone": 2,
+    "Low Hazard Zone": 1
+   },
+   "scale": 80,
+   "bytes": 1929
+  },
+  "flood": {
+   "file": "/terrain-kendrapara/flood.png",
+   "classes": {
+    "Flood plain": 1,
+    "Waterbody": 2
+   },
+   "scale": 80,
+   "bytes": 1929
+  },
+  "distroad": {
+   "file": "/terrain-kendrapara/distroad.png",
+   "unit": "metres",
+   "scale": 50,
+   "bytes": 248671
+  },
+  "disttown": {
+   "file": "/terrain-kendrapara/disttown.png",
+   "unit": "metres",
+   "scale": 200,
+   "bytes": 83279
+  },
+  "landuse": {
+   "file": "/terrain-kendrapara/landuse.png",
+   "classes": {
+    "0": "Unmapped",
+    "2": "Paddy",
+    "3": "Open cultivated or plantation",
+    "4": "Forest or scrub",
+    "5": "Restricted use",
+    "6": "Built-up"
+   },
+   "scale": 40,
+   "bytes": 7187
+  },
+  "floodrp": {
+   "file": "/terrain-kendrapara/floodrp.png",
+   "classes": {
+    "High": 3,
+    "Moderate": 2,
+    "Low": 1,
+    "Negligible": 0
+   },
+   "scale": 80,
+   "bytes": 11071,
+   "source": "WRI Aqueduct Flood Hazard Maps V2, inuncoast + inunriver, historical",
+   "combinedOn": "smallest return period across the listed flood types",
+   "measure": "smallest return period at which the cell is inundated",
+   "breaksYears": {
+    "high": 10,
+    "moderate": 100,
+    "low": 1000
+   },
+   "nativeResolution": "30 arcsec (~900 m), resampled to the 100 m grid"
+  },
+  "land": {
+   "file": "/terrain-kendrapara/land.png",
+   "unit": "mask",
+   "scale": 255,
+   "bytes": 5233,
+   "source": "Bundled district boundaries, Government of India depiction",
+   "note": "Generalised for national-zoom display; shore accurate to roughly a kilometre, not to the 100 m grid."
+  }
+ },
+ "towns": [
+  {
+   "name": "Salepur",
+   "lat": 20.4786719,
+   "lon": 86.1044876,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Jamboo",
+   "lat": 20.4251945,
+   "lon": 86.7194166,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kendrapara",
+   "lat": 20.5042089,
+   "lon": 86.4159937,
+   "place": "town",
+   "population": null
+  },
+  {
+   "name": "Rajnagar",
+   "lat": 20.5721998,
+   "lon": 86.7145656,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Nimapada",
+   "lat": 20.0598595,
+   "lon": 86.0103497,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Konark",
+   "lat": 19.8899428,
+   "lon": 86.0923104,
+   "place": "town",
+   "population": 16779
+  },
+  {
+   "name": "Marshaghal",
+   "lat": 20.4240167,
+   "lon": 86.4783853,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Nimapur",
+   "lat": 20.5680986,
+   "lon": 86.6114473,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Sansaraphala",
+   "lat": 20.5659613,
+   "lon": 86.6703442,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Gokulpur",
+   "lat": 20.5753381,
+   "lon": 86.0535453,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Chhatia",
+   "lat": 20.6099694,
+   "lon": 86.0625962,
+   "place": "village",
+   "population": 2454
+  },
+  {
+   "name": "Tangi",
+   "lat": 20.5622014,
+   "lon": 85.9899019,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Balachandrapur",
+   "lat": 20.6123795,
+   "lon": 86.2375191,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Keutkandia",
+   "lat": 20.5849021,
+   "lon": 86.3001755,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Jadupur",
+   "lat": 20.380151,
+   "lon": 86.5291752,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Paradip",
+   "lat": 20.315733,
+   "lon": 86.6094269,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Paradip",
+   "lat": 20.267429,
+   "lon": 86.6597351,
+   "place": "town",
+   "population": null
+  },
+  {
+   "name": "Pattamundai",
+   "lat": 20.5815177,
+   "lon": 86.560468,
+   "place": "town",
+   "population": null
+  },
+  {
+   "name": "Kujang",
+   "lat": 20.3208755,
+   "lon": 86.5239369,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Jagatsinghpur",
+   "lat": 20.2593872,
+   "lon": 86.1660878,
+   "place": "town",
+   "population": 50000
+  },
+  {
+   "name": "Kandarpur",
+   "lat": 20.4065975,
+   "lon": 86.014559,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Machgaon",
+   "lat": 20.0721879,
+   "lon": 86.275888,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Gop",
+   "lat": 19.9849126,
+   "lon": 86.0170665,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Niali",
+   "lat": 20.1364761,
+   "lon": 86.058181,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Nirgundi",
+   "lat": 20.5354785,
+   "lon": 85.9551833,
+   "place": "village",
+   "population": 228
+  },
+  {
+   "name": "Nuahata",
+   "lat": 20.0301532,
+   "lon": 86.1390712,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Patkura",
+   "lat": 20.3895866,
+   "lon": 86.4056253,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Mahakalapada",
+   "lat": 20.4241373,
+   "lon": 86.5776729,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Abhyachandpur",
+   "lat": 20.2421063,
+   "lon": 86.5849256,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Ersama",
+   "lat": 20.2024001,
+   "lon": 86.4056253,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Balikuda",
+   "lat": 20.1401626,
+   "lon": 86.2697982,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Astaranga",
+   "lat": 19.9784308,
+   "lon": 86.2683821,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Naugaon",
+   "lat": 20.1039366,
+   "lon": 86.1856412,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kakatpur",
+   "lat": 20.0025077,
+   "lon": 86.1982154,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Balipatna",
+   "lat": 20.2048569,
+   "lon": 85.9631251,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Gobindpur",
+   "lat": 20.3297582,
+   "lon": 86.0223055,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Biridi",
+   "lat": 20.3356134,
+   "lon": 86.0556936,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kishannagar",
+   "lat": 20.4264096,
+   "lon": 86.0823011,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Nemalo",
+   "lat": 20.4312758,
+   "lon": 86.1749553,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Nischintakoili",
+   "lat": 20.4795671,
+   "lon": 86.1854267,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Mahanga",
+   "lat": 20.560394,
+   "lon": 86.1716938,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Derabish",
+   "lat": 20.5386139,
+   "lon": 86.3047742,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Nikirai",
+   "lat": 20.5850234,
+   "lon": 86.3907766,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Tirtol",
+   "lat": 20.306396,
+   "lon": 86.3449859,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Olatapur",
+   "lat": 20.2399118,
+   "lon": 85.9903121,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Baharana",
+   "lat": 20.1461482,
+   "lon": 86.0911551,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kolar",
+   "lat": 20.0130964,
+   "lon": 86.1189144,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Jogeswarpur",
+   "lat": 20.0353987,
+   "lon": 86.1272228,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Itapada",
+   "lat": 20.0080724,
+   "lon": 86.1166037,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Somanathapur",
+   "lat": 20.0138417,
+   "lon": 86.1615053,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Gopikantapur",
+   "lat": 20.0150076,
+   "lon": 86.1540057,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Gopikantapur",
+   "lat": 20.0133793,
+   "lon": 86.1583635,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Suhanpur (Behera Sahi)",
+   "lat": 20.011383,
+   "lon": 86.1597383,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "\u0b1f\u0b2d\u0b3e\u0b17\u0b4b\u0b32\u0b30\u0b3e\u0b17\u0b21\u0b3c",
+   "lat": 20.0224437,
+   "lon": 86.1670162,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Jajpur",
+   "lat": 20.8522696,
+   "lon": 86.3385714,
+   "place": "town",
+   "population": null
+  },
+  {
+   "name": "Duburi",
+   "lat": 20.9885855,
+   "lon": 85.9889574,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Soro",
+   "lat": 21.2817192,
+   "lon": 86.6876979,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Ahiyas",
+   "lat": 20.8504652,
+   "lon": 86.5062412,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Dhamra",
+   "lat": 20.7955666,
+   "lon": 86.9010186,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Baleshwar",
+   "lat": 21.5017098,
+   "lon": 86.9216712,
+   "place": "town",
+   "population": null
+  },
+  {
+   "name": "Jakhapura",
+   "lat": 20.9298964,
+   "lon": 86.0641799,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Badachana",
+   "lat": 20.6603708,
+   "lon": 86.1098932,
+   "place": "village",
+   "population": 1647
+  },
+  {
+   "name": "Badamangalpur",
+   "lat": 20.7726458,
+   "lon": 86.1666144,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Benapur",
+   "lat": 20.6734227,
+   "lon": 86.1697171,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Gargali",
+   "lat": 20.6548714,
+   "lon": 86.1797164,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Markona",
+   "lat": 21.2066557,
+   "lon": 86.6147453,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Barabati",
+   "lat": 20.8028151,
+   "lon": 86.1480882,
+   "place": "village",
+   "population": 1538
+  },
+  {
+   "name": "Jamujhadi",
+   "lat": 21.2071778,
+   "lon": 86.6421296,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kuakhia",
+   "lat": 20.821581,
+   "lon": 86.1971748,
+   "place": "village",
+   "population": 88
+  },
+  {
+   "name": "Akhuapada",
+   "lat": 20.9268194,
+   "lon": 86.287011,
+   "place": "village",
+   "population": 1217
+  },
+  {
+   "name": "Barikpur",
+   "lat": 20.9903422,
+   "lon": 86.4187198,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Chatabar",
+   "lat": 20.956299,
+   "lon": 86.3375938,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Rambhila",
+   "lat": 21.1316246,
+   "lon": 86.5323488,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Khantapada",
+   "lat": 21.38727,
+   "lon": 86.8231496,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Khannagar",
+   "lat": 21.4555448,
+   "lon": 86.8793687,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Panikoili",
+   "lat": 20.9139363,
+   "lon": 86.2301865,
+   "place": "village",
+   "population": 2579
+  },
+  {
+   "name": "Chandikhol",
+   "lat": 20.7011976,
+   "lon": 86.1345712,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Anandpur",
+   "lat": 21.2143478,
+   "lon": 86.1231856,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kaptipada",
+   "lat": 21.5152001,
+   "lon": 86.528876,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Nilagiri",
+   "lat": 21.4615742,
+   "lon": 86.7670124,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bhadrak",
+   "lat": 21.0633288,
+   "lon": 86.5053731,
+   "place": "city",
+   "population": 107500
+  },
+  {
+   "name": "Chandbali",
+   "lat": 20.773228,
+   "lon": 86.7376058,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Aradi",
+   "lat": 20.8121138,
+   "lon": 86.6550532,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Raj Kanika",
+   "lat": 20.7338758,
+   "lon": 86.6963407,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kayangola",
+   "lat": 20.7988542,
+   "lon": 86.6052709,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Mangalpuri",
+   "lat": 20.8112359,
+   "lon": 86.5163805,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Byasanagar",
+   "lat": 20.9587602,
+   "lon": 86.1226688,
+   "place": "town",
+   "population": null
+  },
+  {
+   "name": "Charagotha",
+   "lat": 20.8367136,
+   "lon": 86.0622244,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Sahanidiha",
+   "lat": 20.834287,
+   "lon": 86.0636406,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Ichhapur",
+   "lat": 20.811898,
+   "lon": 86.0587936,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bharatpur",
+   "lat": 20.8168629,
+   "lon": 86.081733,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bahadalpur",
+   "lat": 20.9760297,
+   "lon": 86.3910827,
+   "place": "village",
+   "population": 682
+  },
+  {
+   "name": "Deuli",
+   "lat": 20.7806378,
+   "lon": 86.1495669,
+   "place": "village",
+   "population": 447
+  },
+  {
+   "name": "Goleipur",
+   "lat": 20.8850923,
+   "lon": 86.2011448,
+   "place": "village",
+   "population": 1420
+  },
+  {
+   "name": "Jaraka",
+   "lat": 20.7686083,
+   "lon": 86.1521939,
+   "place": "village",
+   "population": 890
+  },
+  {
+   "name": "Karada",
+   "lat": 20.9362748,
+   "lon": 86.2535397,
+   "place": "village",
+   "population": 1336
+  },
+  {
+   "name": "Kumari",
+   "lat": 20.7734073,
+   "lon": 86.1509585,
+   "place": "village",
+   "population": 1947
+  },
+  {
+   "name": "Manipur",
+   "lat": 20.9030639,
+   "lon": 86.2210976,
+   "place": "village",
+   "population": 499
+  },
+  {
+   "name": "Ramachandrapur",
+   "lat": 20.9475036,
+   "lon": 86.3384573,
+   "place": "village",
+   "population": 485
+  },
+  {
+   "name": "Odanga",
+   "lat": 20.7922066,
+   "lon": 86.1430423,
+   "place": "village",
+   "population": 951
+  },
+  {
+   "name": "Sana Biruan",
+   "lat": 20.8775523,
+   "lon": 86.2013063,
+   "place": "village",
+   "population": 833
+  },
+  {
+   "name": "Sarei",
+   "lat": 20.7291111,
+   "lon": 86.1358003,
+   "place": "village",
+   "population": 890
+  },
+  {
+   "name": "Suansahi",
+   "lat": 20.8379513,
+   "lon": 86.1944392,
+   "place": "village",
+   "population": 1666
+  },
+  {
+   "name": "Nalanga",
+   "lat": 21.0282053,
+   "lon": 86.4562149,
+   "place": "village",
+   "population": 1473
+  },
+  {
+   "name": "Alatiri",
+   "lat": 20.9067611,
+   "lon": 86.230969,
+   "place": "village",
+   "population": 2794
+  },
+  {
+   "name": "Bhalukhai",
+   "lat": 20.7833099,
+   "lon": 86.1527171,
+   "place": "village",
+   "population": 398
+  },
+  {
+   "name": "Brajanagar",
+   "lat": 20.9357626,
+   "lon": 86.2735116,
+   "place": "village",
+   "population": 690
+  },
+  {
+   "name": "Chandrabhanupur",
+   "lat": 20.9574571,
+   "lon": 86.3673851,
+   "place": "village",
+   "population": 1124
+  },
+  {
+   "name": "Dahala",
+   "lat": 20.9372041,
+   "lon": 86.3137365,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Dhamanagar",
+   "lat": 20.9135124,
+   "lon": 86.4433817,
+   "place": "village",
+   "population": 22920
+  },
+  {
+   "name": "Durgapur",
+   "lat": 20.8002934,
+   "lon": 86.1587389,
+   "place": "village",
+   "population": 555
+  },
+  {
+   "name": "Gopalpur",
+   "lat": 20.801681,
+   "lon": 86.1737828,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Keutanaguan",
+   "lat": 20.8540687,
+   "lon": 86.2061624,
+   "place": "village",
+   "population": 627
+  },
+  {
+   "name": "Mirzapur",
+   "lat": 20.8859118,
+   "lon": 86.2027266,
+   "place": "village",
+   "population": 1578
+  },
+  {
+   "name": "Neulpur",
+   "lat": 20.7205544,
+   "lon": 86.1408634,
+   "place": "village",
+   "population": 5756
+  },
+  {
+   "name": "Orali",
+   "lat": 20.8230878,
+   "lon": 86.2039646,
+   "place": "village",
+   "population": 1499
+  },
+  {
+   "name": "Pathara Pada",
+   "lat": 20.9193055,
+   "lon": 86.2410679,
+   "place": "village",
+   "population": 2087
+  },
+  {
+   "name": "Puripada",
+   "lat": 20.9389209,
+   "lon": 86.3183094,
+   "place": "village",
+   "population": 613
+  },
+  {
+   "name": "Sadamba",
+   "lat": 20.8006872,
+   "lon": 86.1682993,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Sankaridiha",
+   "lat": 20.754159,
+   "lon": 86.155174,
+   "place": "village",
+   "population": 820
+  },
+  {
+   "name": "Sarasada",
+   "lat": 20.9425264,
+   "lon": 86.3745651,
+   "place": "village",
+   "population": 2382
+  },
+  {
+   "name": "Sathipur",
+   "lat": 20.9344126,
+   "lon": 86.2594616,
+   "place": "village",
+   "population": 1765
+  },
+  {
+   "name": "Lethaka",
+   "lat": 20.7426695,
+   "lon": 86.0088778,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "mangaraj pur",
+   "lat": 20.7399027,
+   "lon": 86.043867,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bribati",
+   "lat": 20.7657629,
+   "lon": 86.0857955,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kamagarh",
+   "lat": 20.8238351,
+   "lon": 86.0839852,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Purunaboualmal",
+   "lat": 20.807967,
+   "lon": 86.0556173,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "KC Pur",
+   "lat": 20.8220886,
+   "lon": 86.050978,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kushi",
+   "lat": 20.8851736,
+   "lon": 86.3054535,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bahanaga",
+   "lat": 21.3409908,
+   "lon": 86.765253,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": null,
+   "lat": 20.7125668,
+   "lon": 86.1632456,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Hatibari",
+   "lat": 20.8841145,
+   "lon": 85.9536838,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Thakurmunda",
+   "lat": 21.5253059,
+   "lon": 86.1497211,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Dhusuri",
+   "lat": 20.8974658,
+   "lon": 86.5438556,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Jenapur",
+   "lat": 20.8620601,
+   "lon": 86.0701131,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Ghasipura",
+   "lat": 21.2146802,
+   "lon": 86.1114621,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Sainkul",
+   "lat": 21.1185721,
+   "lon": 86.1375331,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Tomka",
+   "lat": 21.0875633,
+   "lon": 85.9551215,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Nihalprasad",
+   "lat": 20.7978835,
+   "lon": 85.9928226,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kuakhia",
+   "lat": 20.8199072,
+   "lon": 86.2013912,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Dharmasala",
+   "lat": 20.7809122,
+   "lon": 86.1625528,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bari",
+   "lat": 20.6901659,
+   "lon": 86.3459301,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Binjharpur",
+   "lat": 20.7272177,
+   "lon": 86.3980292,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": null,
+   "lat": 20.6808112,
+   "lon": 86.6459727,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bhandari Pokhari",
+   "lat": 20.9614797,
+   "lon": 86.3731384,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Korai",
+   "lat": 20.9649262,
+   "lon": 86.1782169,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Basudebpur",
+   "lat": 21.1245769,
+   "lon": 86.7389917,
+   "place": "town",
+   "population": null
+  },
+  {
+   "name": "Similia",
+   "lat": 21.1686149,
+   "lon": 86.5770399,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Agarpada",
+   "lat": 21.2081189,
+   "lon": 86.3825798,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bant",
+   "lat": 21.1178115,
+   "lon": 86.3217258,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Nandipada",
+   "lat": 21.1453519,
+   "lon": 86.2615584,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Khaira",
+   "lat": 21.2819566,
+   "lon": 86.4638185,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Soso",
+   "lat": 21.219541,
+   "lon": 86.3311243,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bansada",
+   "lat": 20.8623409,
+   "lon": 86.85997,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Naikanidihi",
+   "lat": 20.9791719,
+   "lon": 86.8104243,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Tihidi",
+   "lat": 20.9927351,
+   "lon": 86.6371107,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Oupada",
+   "lat": 21.3268372,
+   "lon": 86.5060472,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Berhampur",
+   "lat": 21.5340187,
+   "lon": 86.6538825,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Mahuldiha",
+   "lat": 21.4221103,
+   "lon": 86.165235,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Sharata",
+   "lat": 21.4399072,
+   "lon": 86.3430333,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": null,
+   "lat": 20.9978235,
+   "lon": 86.2047923,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": null,
+   "lat": 21.0115328,
+   "lon": 86.1903378,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Kupari",
+   "lat": 21.2713193,
+   "lon": 86.4177489,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Benapur",
+   "lat": 20.9356299,
+   "lon": 86.1671561,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Raj Berhampur",
+   "lat": 21.5355755,
+   "lon": 86.6537619,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Bhaudia",
+   "lat": 21.5464981,
+   "lon": 86.6611674,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Punasia",
+   "lat": 21.5460341,
+   "lon": 86.6392779,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Dharampur",
+   "lat": 21.536324,
+   "lon": 86.6540086,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Phulagadia",
+   "lat": 21.499414,
+   "lon": 86.7021918,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Naranpur",
+   "lat": 21.5382003,
+   "lon": 86.6962909,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Phulagadia",
+   "lat": 21.5136881,
+   "lon": 86.700089,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Analapal",
+   "lat": 21.5331305,
+   "lon": 86.6689539,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Chandinipur",
+   "lat": 21.5294578,
+   "lon": 86.6657996,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Panchulingeswar",
+   "lat": 21.4278631,
+   "lon": 86.7289066,
+   "place": "village",
+   "population": null
+  },
+  {
+   "name": "Chandipur",
+   "lat": 21.4699365,
+   "lon": 87.0518592,
+   "place": "town",
+   "population": null
+  },
+  {
+   "name": "Chandipur",
+   "lat": 21.4413252,
+   "lon": 87.0254195,
+   "place": "village",
+   "population": null
+  }
+ ],
+ "facilities": [
+  {
+   "name": "SKC High School, Patrapur",
+   "lat": 20.6137096,
+   "lon": 86.5970849,
+   "amenity": "school"
+  },
+  {
+   "name": "Patrapur ME School",
+   "lat": 20.608673,
+   "lon": 86.5857467,
+   "amenity": "school"
+  },
+  {
+   "name": null,
+   "lat": 19.8905744,
+   "lon": 86.0976297,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Konark Police Station",
+   "lat": 19.8888365,
+   "lon": 86.0921955,
+   "amenity": "police"
+  },
+  {
+   "name": null,
+   "lat": 20.6142864,
+   "lon": 86.2935728,
+   "amenity": "school"
+  },
+  {
+   "name": "GOBANDIA SCHOOL",
+   "lat": 20.6111086,
+   "lon": 86.2814164,
+   "amenity": "school"
+  },
+  {
+   "name": "Kendriya Vidyalaya",
+   "lat": 20.268959,
+   "lon": 86.653946,
+   "amenity": "school"
+  },
+  {
+   "name": "IOCL School",
+   "lat": 20.2963465,
+   "lon": 86.6154475,
+   "amenity": "school"
+  },
+  {
+   "name": "IOCL Hospital",
+   "lat": 20.3004645,
+   "lon": 86.6143135,
+   "amenity": "hospital"
+  },
+  {
+   "name": "PPL Hospital",
+   "lat": 20.2766766,
+   "lon": 86.6183621,
+   "amenity": "hospital"
+  },
+  {
+   "name": "DAV School",
+   "lat": 20.2749237,
+   "lon": 86.6201388,
+   "amenity": "school"
+  },
+  {
+   "name": "DAV Public School",
+   "lat": 20.2670895,
+   "lon": 86.6617631,
+   "amenity": "school"
+  },
+  {
+   "name": "Port Trust Hospital",
+   "lat": 20.2662831,
+   "lon": 86.6609836,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Saraswati Shishu Mandir",
+   "lat": 20.2656231,
+   "lon": 86.6604549,
+   "amenity": "school"
+  },
+  {
+   "name": "Madhuban ME School",
+   "lat": 20.2702666,
+   "lon": 86.6522081,
+   "amenity": "school"
+  },
+  {
+   "name": "Bethany Convent School",
+   "lat": 20.2623974,
+   "lon": 86.6513551,
+   "amenity": "school"
+  },
+  {
+   "name": "Port Trust High School",
+   "lat": 20.2609522,
+   "lon": 86.65215,
+   "amenity": "school"
+  },
+  {
+   "name": "Saraswati Vidhya Mandir",
+   "lat": 20.2604378,
+   "lon": 86.6530989,
+   "amenity": "school"
+  },
+  {
+   "name": "Loyal healthcare pathology \u00a9veoIII",
+   "lat": 20.2661179,
+   "lon": 86.6495141,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Loyal healthcare pathology \u00a9VEOIII",
+   "lat": 20.2649331,
+   "lon": 86.6555567,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Swastik Clinic And Nursing Home",
+   "lat": 20.2520275,
+   "lon": 86.1810024,
+   "amenity": "clinic"
+  },
+  {
+   "name": "District Head Quarter Hospital, Jagatsinghpur",
+   "lat": 20.2516977,
+   "lon": 86.1798481,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sri Krishna Health Care and Reproductive Research Centre",
+   "lat": 20.4961016,
+   "lon": 86.6202067,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Indupur Hospital",
+   "lat": 20.6108743,
+   "lon": 86.4005053,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Maa Mangala Clinic",
+   "lat": 20.0010502,
+   "lon": 86.1982286,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Chittaranjan Seva Sadan",
+   "lat": 20.1305011,
+   "lon": 86.0676593,
+   "amenity": "hospital"
+  },
+  {
+   "name": "D G Nursing Home",
+   "lat": 20.4790256,
+   "lon": 86.1009076,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Agadhu Kamala Hospital",
+   "lat": 19.9958876,
+   "lon": 86.2022254,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Bhagabati Hospital and Research Centre",
+   "lat": 20.4994323,
+   "lon": 86.426218,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Bhagatpur Medical",
+   "lat": 20.5814896,
+   "lon": 85.9746406,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Cure Well Clinic And Nursing Home",
+   "lat": 20.2552246,
+   "lon": 86.1897182,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Durga Nursing Home",
+   "lat": 20.4997104,
+   "lon": 86.4255373,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Seva Nursing Home, Puri",
+   "lat": 19.9885317,
+   "lon": 86.012633,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Government Hospital, Bhatimunda",
+   "lat": 20.5381618,
+   "lon": 86.0190211,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital Brahmanadehi",
+   "lat": 20.0691559,
+   "lon": 86.3545105,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Oskana",
+   "lat": 20.0661943,
+   "lon": 86.3117769,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Madhusashan(N)",
+   "lat": 20.4078955,
+   "lon": 86.279355,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Ayeba",
+   "lat": 20.5118115,
+   "lon": 86.5202335,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Tulasidiha",
+   "lat": 20.6135501,
+   "lon": 86.460162,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Kaduapada",
+   "lat": 20.2151227,
+   "lon": 86.2188403,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Govt Hospital, Kakatpur",
+   "lat": 20.0015257,
+   "lon": 86.1979512,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Salajanga",
+   "lat": 20.1812076,
+   "lon": 86.1913691,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Kurtunga",
+   "lat": 20.4629944,
+   "lon": 86.4871705,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Korua(N)",
+   "lat": 20.3948474,
+   "lon": 86.3217795,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government hospital, Nanakar",
+   "lat": 20.4620502,
+   "lon": 86.3517183,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Rama Devi Govt. Hospital",
+   "lat": 20.5801997,
+   "lon": 86.55415,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. B.N Panda Clinic",
+   "lat": 20.5032108,
+   "lon": 86.4257406,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Singh Hospital",
+   "lat": 20.3919581,
+   "lon": 86.4391674,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sai Hospital",
+   "lat": 20.5808202,
+   "lon": 86.5628459,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Hamdard Unani Clinic",
+   "lat": 20.5107421,
+   "lon": 86.4240075,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Chagali Hospital",
+   "lat": 20.4785114,
+   "lon": 86.2942354,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Health Care Hospital",
+   "lat": 20.501385,
+   "lon": 86.423337,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Homeopathic Hospital",
+   "lat": 20.5842457,
+   "lon": 86.3912184,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Karuna Hospital",
+   "lat": 20.5008815,
+   "lon": 86.4267435,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Bhumika Hospital",
+   "lat": 20.5087113,
+   "lon": 86.4100859,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sai Arogyam",
+   "lat": 20.5031458,
+   "lon": 86.4253059,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital",
+   "lat": 20.5028725,
+   "lon": 86.424114,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Baba Kshetramohan Health Care",
+   "lat": 20.3987104,
+   "lon": 86.4869371,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Mahakalpara Hospital",
+   "lat": 20.4224275,
+   "lon": 86.5790084,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Surya Nursing Home",
+   "lat": 20.5030415,
+   "lon": 86.4265985,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sai Nursing Home",
+   "lat": 20.5016942,
+   "lon": 86.4236168,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Barsa Nursing Home",
+   "lat": 20.5799749,
+   "lon": 86.5544621,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Kar Danta Chikitsalaya & Sairam Medicine Store",
+   "lat": 20.5796374,
+   "lon": 86.55949,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sai Shanti Eye Hospital",
+   "lat": 20.6135704,
+   "lon": 86.2262765,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Bharati Physiotheraphy Clinic",
+   "lat": 20.3138005,
+   "lon": 86.6214624,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Kanakpur Hospital",
+   "lat": 20.2550387,
+   "lon": 86.1706322,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Ashra Hospital",
+   "lat": 20.1203234,
+   "lon": 86.1945828,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Mamata Clinic",
+   "lat": 20.2548169,
+   "lon": 86.1869069,
+   "amenity": "clinic"
+  },
+  {
+   "name": "IFFCO Hospital",
+   "lat": 20.31604,
+   "lon": 86.652622,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sri Jagannath Nursing Home",
+   "lat": 20.3238611,
+   "lon": 86.5359743,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Eye Hospital",
+   "lat": 20.2956615,
+   "lon": 86.0749212,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Biju Patnaik Memorial Hospital",
+   "lat": 20.2907724,
+   "lon": 86.6493852,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Khan Nursing Home",
+   "lat": 20.2533052,
+   "lon": 86.1751477,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sure Cure Ayurveda",
+   "lat": 20.1206106,
+   "lon": 86.1937332,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sriguru Health Centre",
+   "lat": 20.2065008,
+   "lon": 86.1704057,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. Tarapada Nayak Homeopathic Clinic",
+   "lat": 20.2540886,
+   "lon": 86.1879201,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Jagatsinghpur Hospital",
+   "lat": 20.2327324,
+   "lon": 86.1624628,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital",
+   "lat": 20.359944,
+   "lon": 86.156996,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Nanda Homeopathic Clinic",
+   "lat": 20.3124294,
+   "lon": 86.5330561,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Mundalo Hospital",
+   "lat": 20.163531,
+   "lon": 86.1952606,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. S.K Sarangi Homeopathic Clinic",
+   "lat": 20.2595334,
+   "lon": 86.1991994,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Surakhya Eye Care",
+   "lat": 20.2479174,
+   "lon": 86.1904395,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sun Hospital",
+   "lat": 20.2527074,
+   "lon": 86.1795238,
+   "amenity": "hospital"
+  },
+  {
+   "name": "JJS Physiotherapy Clinic",
+   "lat": 20.0564483,
+   "lon": 86.002713,
+   "amenity": "clinic"
+  },
+  {
+   "name": "New Life Physiotherapy Clinic",
+   "lat": 20.189894,
+   "lon": 85.961243,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Agadhu Kamala Hospital",
+   "lat": 20.0013158,
+   "lon": 86.2051932,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sanjeevini Homeopathy Clinic",
+   "lat": 20.0634345,
+   "lon": 85.9997049,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Dr. Manoranjan Maharana Clinic",
+   "lat": 19.9278299,
+   "lon": 86.1071828,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Maa Managala Clinic",
+   "lat": 19.9506189,
+   "lon": 86.1851444,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Anand Nursing Home",
+   "lat": 20.0612904,
+   "lon": 86.0008478,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Ratnapur Hospital",
+   "lat": 19.9398528,
+   "lon": 86.2248943,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. B.C Panda Clinic",
+   "lat": 19.9135656,
+   "lon": 86.153337,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Healthcare Centre",
+   "lat": 19.8587345,
+   "lon": 85.9558946,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Homeo Clinic",
+   "lat": 20.0581321,
+   "lon": 86.0098897,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Ayurvedic Clinic",
+   "lat": 20.0558124,
+   "lon": 86.0039806,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Kanakalata Seva Sadan Ayush Clinic",
+   "lat": 19.9615858,
+   "lon": 86.0351581,
+   "amenity": "clinic"
+  },
+  {
+   "name": "BBS Health Care Hospital",
+   "lat": 20.2476984,
+   "lon": 85.9870827,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Pallisahi Homeopathic Hospital",
+   "lat": 20.5386655,
+   "lon": 86.1890498,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Divya Drishti Eye Care",
+   "lat": 20.3933879,
+   "lon": 86.2589864,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Chidanandam Memorial Hospital",
+   "lat": 20.6096723,
+   "lon": 86.1781238,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Olatpur Hospital",
+   "lat": 20.241071,
+   "lon": 85.987985,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Shanthi Homeo Clinic",
+   "lat": 20.2510402,
+   "lon": 85.984903,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sai Arogyam Nursing Home",
+   "lat": 20.486307,
+   "lon": 86.009346,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sanjibanee Hospital",
+   "lat": 20.4781688,
+   "lon": 86.1755343,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital",
+   "lat": 20.1371102,
+   "lon": 86.0633818,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Arogyam Hospital",
+   "lat": 20.5478323,
+   "lon": 86.2606441,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Basudevpur Hospital",
+   "lat": 20.6249432,
+   "lon": 86.1513475,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr Bhakti's Homeopathic Fertility Care",
+   "lat": 20.4002296,
+   "lon": 86.0176544,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Erakana Hospital",
+   "lat": 20.560126,
+   "lon": 86.2392762,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sakti Sai Hospital",
+   "lat": 20.520677,
+   "lon": 86.1490046,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sova Nursing Home",
+   "lat": 20.4860359,
+   "lon": 86.0088767,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Kolar Primary School",
+   "lat": 20.0131398,
+   "lon": 86.1175375,
+   "amenity": "school"
+  },
+  {
+   "name": null,
+   "lat": 20.2598017,
+   "lon": 86.5872551,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Charichhaka CHC",
+   "lat": 20.0589232,
+   "lon": 86.0847902,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Charichhaka Police Station",
+   "lat": 20.058762,
+   "lon": 86.0857064,
+   "amenity": "police"
+  },
+  {
+   "name": "Nayahat High School",
+   "lat": 20.029246,
+   "lon": 86.1425566,
+   "amenity": "school"
+  },
+  {
+   "name": "Singhapania Primary School",
+   "lat": 20.0318696,
+   "lon": 86.1368944,
+   "amenity": "school"
+  },
+  {
+   "name": "Nayahat Police Outpost",
+   "lat": 20.0309383,
+   "lon": 86.1393598,
+   "amenity": "police"
+  },
+  {
+   "name": "Venkateswar Public School",
+   "lat": 20.0549314,
+   "lon": 86.1040485,
+   "amenity": "school"
+  },
+  {
+   "name": "Nayahat CHC",
+   "lat": 20.0277765,
+   "lon": 86.1448704,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Amareswar High School",
+   "lat": 20.0508677,
+   "lon": 86.1132957,
+   "amenity": "school"
+  },
+  {
+   "name": "Police Station Nimapada",
+   "lat": 20.0554398,
+   "lon": 86.0037929,
+   "amenity": "police"
+  },
+  {
+   "name": "Prachi Girls High School",
+   "lat": 20.0581959,
+   "lon": 86.0956538,
+   "amenity": "school"
+  },
+  {
+   "name": "AB'S Oxford International School",
+   "lat": 20.0573626,
+   "lon": 86.0813473,
+   "amenity": "school"
+  },
+  {
+   "name": "Tulasipur High School",
+   "lat": 20.0585507,
+   "lon": 86.0934712,
+   "amenity": "school"
+  },
+  {
+   "name": "Gada Amaraprashad Primary School",
+   "lat": 20.0445786,
+   "lon": 86.1166359,
+   "amenity": "school"
+  },
+  {
+   "name": "Government Primary School Tulsipur",
+   "lat": 20.0571412,
+   "lon": 86.0986895,
+   "amenity": "school"
+  },
+  {
+   "name": "Young Phoenix Public School",
+   "lat": 20.037115,
+   "lon": 86.1273769,
+   "amenity": "school"
+  },
+  {
+   "name": "Jogeswarpur Primary School",
+   "lat": 20.0350731,
+   "lon": 86.127992,
+   "amenity": "school"
+  },
+  {
+   "name": "Saraswati Sisu Vidya Mandira",
+   "lat": 20.0331447,
+   "lon": 86.1298912,
+   "amenity": "school"
+  },
+  {
+   "name": "Kakatpur Police Station",
+   "lat": 20.0033108,
+   "lon": 86.1937625,
+   "amenity": "police"
+  },
+  {
+   "name": "Govt Nodal High School Kakatpur",
+   "lat": 20.0029564,
+   "lon": 86.1942973,
+   "amenity": "school"
+  },
+  {
+   "name": "Shree Sai Hospital",
+   "lat": 20.0015273,
+   "lon": 86.1961902,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dahikhia Primary School",
+   "lat": 19.9970321,
+   "lon": 86.2180135,
+   "amenity": "school"
+  },
+  {
+   "name": "Kuhudi Govt U.G.U.P School",
+   "lat": 19.9815062,
+   "lon": 86.2543095,
+   "amenity": "school"
+  },
+  {
+   "name": "Astaranga Police Station",
+   "lat": 19.9763049,
+   "lon": 86.2666683,
+   "amenity": "police"
+  },
+  {
+   "name": "Astaranga Govt High School",
+   "lat": 19.9769743,
+   "lon": 86.2662961,
+   "amenity": "school"
+  },
+  {
+   "name": "Aadarsh Urnata Higher Secondary School Othaka",
+   "lat": 20.0075686,
+   "lon": 86.175015,
+   "amenity": "school"
+  },
+  {
+   "name": "Bateswar High School Balidokan",
+   "lat": 19.9124713,
+   "lon": 86.1523342,
+   "amenity": "school"
+  },
+  {
+   "name": "Saraswati Sishu Mandir Balidokan",
+   "lat": 19.9103717,
+   "lon": 86.1508082,
+   "amenity": "school"
+  },
+  {
+   "name": "Odisha Adarsha Vidhyalaya",
+   "lat": 19.8958258,
+   "lon": 86.1236518,
+   "amenity": "school"
+  },
+  {
+   "name": "Kunja Primary School",
+   "lat": 19.8979684,
+   "lon": 86.1162689,
+   "amenity": "school"
+  },
+  {
+   "name": "Govt High School Konark",
+   "lat": 19.8925971,
+   "lon": 86.1035051,
+   "amenity": "school"
+  },
+  {
+   "name": "Jiban Jyoti Hospital",
+   "lat": 20.3908767,
+   "lon": 86.0587563,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Nigamananda Govt High School",
+   "lat": 19.9828494,
+   "lon": 86.0185446,
+   "amenity": "school"
+  },
+  {
+   "name": "Govt Girls High School",
+   "lat": 19.983277,
+   "lon": 86.0192313,
+   "amenity": "school"
+  },
+  {
+   "name": "Gop Police Station",
+   "lat": 19.9822162,
+   "lon": 86.018491,
+   "amenity": "police"
+  },
+  {
+   "name": "Janata High School",
+   "lat": 19.9389037,
+   "lon": 86.2297881,
+   "amenity": "school"
+  },
+  {
+   "name": "brahmanidevi high school kamagarh",
+   "lat": 20.8231642,
+   "lon": 86.0866045,
+   "amenity": "school"
+  },
+  {
+   "name": "our school",
+   "lat": 20.8242841,
+   "lon": 86.0809367,
+   "amenity": "school"
+  },
+  {
+   "name": null,
+   "lat": 20.8142142,
+   "lon": 86.0620866,
+   "amenity": "school"
+  },
+  {
+   "name": null,
+   "lat": 20.8238334,
+   "lon": 86.050185,
+   "amenity": "school"
+  },
+  {
+   "name": "Mission School",
+   "lat": 21.5029747,
+   "lon": 86.9282289,
+   "amenity": "school"
+  },
+  {
+   "name": "District Headquarters Hospital, Jajpur",
+   "lat": 20.8494632,
+   "lon": 86.329016,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sharmistha Memorial Hospital and Research Center",
+   "lat": 20.9596037,
+   "lon": 86.1235321,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sree Maa Nursing Home",
+   "lat": 20.8501575,
+   "lon": 86.33777,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sai Hospital, Bhadrak",
+   "lat": 21.0529746,
+   "lon": 86.4931695,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Salandi Hopsital - Bhadrak",
+   "lat": 21.0705952,
+   "lon": 86.4964261,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Jyothi Hospital, Baleswar",
+   "lat": 21.4717211,
+   "lon": 86.8909571,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Remuna Hospital",
+   "lat": 21.5234054,
+   "lon": 86.8712597,
+   "amenity": "clinic"
+  },
+  {
+   "name": "District Head Quarters Hospital",
+   "lat": 21.4940581,
+   "lon": 86.9353563,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sri Ram Hospital",
+   "lat": 21.4954821,
+   "lon": 86.9398741,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Subham Health Care",
+   "lat": 21.0647805,
+   "lon": 86.5016323,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Anima Nursing Home",
+   "lat": 20.9408052,
+   "lon": 86.1294822,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Kalpataru Eye Clinic",
+   "lat": 21.4942575,
+   "lon": 86.9395353,
+   "amenity": "clinic"
+  },
+  {
+   "name": "SDH, Anandapur",
+   "lat": 21.2158197,
+   "lon": 86.109645,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Kaushalya Memorial Hospital and Research Centre",
+   "lat": 21.4904583,
+   "lon": 86.9359477,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Achyutananda Seba Sadan",
+   "lat": 20.8503894,
+   "lon": 86.3320806,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Durga Nursing Home & Research Center",
+   "lat": 21.500408,
+   "lon": 86.9305235,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Jawahar Navodaya Vidyalaya Hadagarh",
+   "lat": 21.2807512,
+   "lon": 86.3007736,
+   "amenity": "school"
+  },
+  {
+   "name": "Government Hospital, Dungura",
+   "lat": 21.223979,
+   "lon": 86.4752461,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital , Kalamatia",
+   "lat": 20.6480434,
+   "lon": 86.4027567,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Manjuri",
+   "lat": 20.9160751,
+   "lon": 86.3271868,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Katana",
+   "lat": 20.6634347,
+   "lon": 86.7586201,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Talchua",
+   "lat": 20.7627879,
+   "lon": 86.9415535,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Satkosia",
+   "lat": 21.3607109,
+   "lon": 86.1465628,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Darpani",
+   "lat": 20.7071197,
+   "lon": 86.0685166,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Khankira",
+   "lat": 20.7367512,
+   "lon": 85.9530046,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Agarpada",
+   "lat": 21.2001782,
+   "lon": 86.3811851,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Chandikhol Accident Unit",
+   "lat": 20.7101417,
+   "lon": 86.1362873,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Ranital",
+   "lat": 21.1351667,
+   "lon": 86.5597209,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Tudigadia",
+   "lat": 21.2947262,
+   "lon": 86.5906709,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Khaira",
+   "lat": 21.2824165,
+   "lon": 86.4654936,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Aradi(N)",
+   "lat": 20.8130226,
+   "lon": 86.6523638,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Kadabarang(N)",
+   "lat": 21.1445187,
+   "lon": 86.3956931,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Bhadrak District Hospital",
+   "lat": 21.0654838,
+   "lon": 86.5025885,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Padhi Healthcare and Research Center",
+   "lat": 21.0670332,
+   "lon": 86.5013641,
+   "amenity": "hospital"
+  },
+  {
+   "name": "District TB Hospital",
+   "lat": 21.4940384,
+   "lon": 86.9366518,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Ghanteswar(N)",
+   "lat": 20.931206,
+   "lon": 86.7962281,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Champajhar",
+   "lat": 21.4887375,
+   "lon": 86.239543,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Barpada",
+   "lat": 20.7481673,
+   "lon": 86.437199,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Ramchandrapur",
+   "lat": 20.6686641,
+   "lon": 86.3598427,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Raghabananda Eye Hospital",
+   "lat": 21.0720877,
+   "lon": 86.5074762,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Maitapur",
+   "lat": 21.1532266,
+   "lon": 86.5716487,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Baincha",
+   "lat": 20.9192488,
+   "lon": 86.896821,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dhusuri Area Hospital",
+   "lat": 20.9005141,
+   "lon": 86.5416495,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Sanmanga",
+   "lat": 20.6471737,
+   "lon": 86.5579855,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government hospital, Haripurhat",
+   "lat": 20.8035326,
+   "lon": 86.2325149,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government hospital, Fatepur",
+   "lat": 21.3211741,
+   "lon": 86.460392,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dhamnagar Municipality Hospital",
+   "lat": 20.9114198,
+   "lon": 86.4377032,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital, Kothar(N)",
+   "lat": 20.9184577,
+   "lon": 86.5191713,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Ramadevi Clinic",
+   "lat": 21.2148797,
+   "lon": 86.1099407,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Government Ayurvedic Hospital",
+   "lat": 21.1664876,
+   "lon": 86.1256303,
+   "amenity": "hospital"
+  },
+  {
+   "name": "HWC Nipania Hospital",
+   "lat": 21.214436,
+   "lon": 86.1129305,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Homeopathy Clinic",
+   "lat": 21.2147285,
+   "lon": 86.1064938,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Khuntia Homeo Clinic",
+   "lat": 21.2134995,
+   "lon": 86.12275,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Kashinath Health Care",
+   "lat": 21.224042,
+   "lon": 86.095171,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Aum Hospital",
+   "lat": 21.4777616,
+   "lon": 86.9013714,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Balasore Lions Eye Hospital",
+   "lat": 21.4971506,
+   "lon": 86.9276734,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Basanti Durga Nursing Home",
+   "lat": 21.2916308,
+   "lon": 86.68961,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Turigadia Hospital",
+   "lat": 21.2654833,
+   "lon": 86.579204,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. B.S Pani Clinic",
+   "lat": 21.4991516,
+   "lon": 86.9335169,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Samadhan Clinic",
+   "lat": 21.499007,
+   "lon": 86.935028,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sunguda Hospital",
+   "lat": 21.184844,
+   "lon": 86.6353216,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Prabhakar Mishra Nursing Home",
+   "lat": 21.284284,
+   "lon": 86.6871423,
+   "amenity": "clinic"
+  },
+  {
+   "name": "White House Clinic",
+   "lat": 21.4989066,
+   "lon": 86.9245448,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Government Homeopathy Hospital",
+   "lat": 21.4876934,
+   "lon": 86.9161228,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Ankita Poly Clinic",
+   "lat": 21.4966365,
+   "lon": 86.9250764,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Markona Hospital",
+   "lat": 21.1874837,
+   "lon": 86.6044183,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Swasthya Care",
+   "lat": 21.492086,
+   "lon": 86.939268,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Chandi Nursing Home",
+   "lat": 21.499828,
+   "lon": 86.922784,
+   "amenity": "clinic"
+  },
+  {
+   "name": "K.L Memorial Hospital",
+   "lat": 21.2813963,
+   "lon": 86.6943355,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Laxmipriya Clinic",
+   "lat": 21.506163,
+   "lon": 86.9220403,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Prathiksha Fertility and IVF Clinic",
+   "lat": 21.4888062,
+   "lon": 86.9173444,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Apollo Clinic",
+   "lat": 21.4898437,
+   "lon": 86.9372674,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Jatania Clinic",
+   "lat": 21.4960403,
+   "lon": 86.9367651,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Ashwini Hospital",
+   "lat": 21.496524,
+   "lon": 86.932412,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Kausalya Healthcare",
+   "lat": 21.2932282,
+   "lon": 86.6864385,
+   "amenity": "clinic"
+  },
+  {
+   "name": "ESIC Hospital",
+   "lat": 21.5241271,
+   "lon": 86.8742122,
+   "amenity": "hospital"
+  },
+  {
+   "name": "C.S Nanda Clinic",
+   "lat": 21.4974415,
+   "lon": 86.9379777,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Continental Hospital",
+   "lat": 21.4967498,
+   "lon": 86.9306055,
+   "amenity": "hospital"
+  },
+  {
+   "name": "City Primary Hospital",
+   "lat": 21.5076224,
+   "lon": 86.9140788,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. Sanjay Kumar Giri Clinic",
+   "lat": 21.4955814,
+   "lon": 86.936984,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Lifecare Hospital",
+   "lat": 21.4965974,
+   "lon": 86.9197046,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Bhumika Eye Hospital",
+   "lat": 21.2959998,
+   "lon": 86.6912048,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Patra Clinic",
+   "lat": 21.5022088,
+   "lon": 86.9165649,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Suvendu Madhual Clinic (Child Spl)",
+   "lat": 21.4981772,
+   "lon": 86.9348632,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Cure and Care Multispeciality Clinic",
+   "lat": 21.4926544,
+   "lon": 86.9354039,
+   "amenity": "clinic"
+  },
+  {
+   "name": "City Clinic",
+   "lat": 21.5049677,
+   "lon": 86.909548,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Modern Ortho Clinic",
+   "lat": 21.497398,
+   "lon": 86.928166,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sai Jyoti Eye Hospital",
+   "lat": 21.4128476,
+   "lon": 86.8167374,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Trinity Neuro Hospital and Trauma Centre",
+   "lat": 21.4989981,
+   "lon": 86.9308384,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Rotary Balasore Eye Hospital",
+   "lat": 21.4969061,
+   "lon": 86.9279219,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Palashpur Hospital",
+   "lat": 21.4424829,
+   "lon": 86.8911776,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Indira Nursing Home",
+   "lat": 21.4924383,
+   "lon": 86.9365421,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Matrushakti Hospital",
+   "lat": 21.4985181,
+   "lon": 86.922571,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Homeopathy Hospital",
+   "lat": 21.3652535,
+   "lon": 86.7932852,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Barikpur Hospital",
+   "lat": 20.9907466,
+   "lon": 86.4191584,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. Sarat Chandra Clinic",
+   "lat": 21.0114953,
+   "lon": 86.3200007,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sabarang Hospital",
+   "lat": 21.131887,
+   "lon": 86.7337539,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Omm Sai Hospital",
+   "lat": 21.0871852,
+   "lon": 86.5203228,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Brahmangan Hospital",
+   "lat": 21.106707,
+   "lon": 86.6649998,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Himadri Hospital",
+   "lat": 21.041842,
+   "lon": 86.4894777,
+   "amenity": "hospital"
+  },
+  {
+   "name": "ANM Centre",
+   "lat": 21.1474951,
+   "lon": 86.7045997,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Vinayak Nursing Home Private Limited",
+   "lat": 20.7770078,
+   "lon": 86.7442092,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Homeopthy Hospital",
+   "lat": 20.9740782,
+   "lon": 86.5848275,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Lifecare Medicine",
+   "lat": 20.737048,
+   "lon": 86.661731,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Guamal Hospital",
+   "lat": 21.0093635,
+   "lon": 86.5763877,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Basudebpur Homeopathy Clinic",
+   "lat": 21.1244557,
+   "lon": 86.7437613,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Chirag Hospital",
+   "lat": 21.0959378,
+   "lon": 86.5205596,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital",
+   "lat": 20.8716377,
+   "lon": 86.4493758,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. Satrughna Hati Clinic",
+   "lat": 21.0668365,
+   "lon": 86.5019051,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Pabitra Hospital",
+   "lat": 20.9449809,
+   "lon": 86.7131069,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Subham Healthcare and Research Centre",
+   "lat": 21.0664612,
+   "lon": 86.4932776,
+   "amenity": "hospital"
+  },
+  {
+   "name": "M.B Nursing Home",
+   "lat": 20.7370215,
+   "lon": 86.7048789,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sai Hospital",
+   "lat": 21.1227391,
+   "lon": 86.3198865,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dixit Clinic",
+   "lat": 21.0716934,
+   "lon": 86.5081153,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Government Homeopthy Hospital",
+   "lat": 20.6265032,
+   "lon": 86.5147372,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Annapurna Seba Hospital",
+   "lat": 20.7427165,
+   "lon": 86.7053438,
+   "amenity": "hospital"
+  },
+  {
+   "name": "M S Laxmi Hospital",
+   "lat": 21.0060983,
+   "lon": 86.3037679,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Purana Bazar Hospital",
+   "lat": 21.0506893,
+   "lon": 86.5181576,
+   "amenity": "hospital"
+  },
+  {
+   "name": "ANM Centre",
+   "lat": 21.0477159,
+   "lon": 86.674728,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sai Hospital",
+   "lat": 20.7354875,
+   "lon": 86.6967879,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Homeopathic Hospital",
+   "lat": 21.002707,
+   "lon": 86.5820393,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sai Bharadwaj Hospital",
+   "lat": 21.0681652,
+   "lon": 86.4970983,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Railway Hospital",
+   "lat": 21.0928911,
+   "lon": 86.5143316,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Olaver Hospital",
+   "lat": 20.7367016,
+   "lon": 86.6650198,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Kanchan Prava Health Clinic",
+   "lat": 21.1460199,
+   "lon": 86.3683455,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Bhoomika Eye Hospital",
+   "lat": 21.0777731,
+   "lon": 86.5108149,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Acupuncture Therapy Hospital",
+   "lat": 20.9330851,
+   "lon": 86.4781641,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital",
+   "lat": 20.7357498,
+   "lon": 86.6939851,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Baby Clinic",
+   "lat": 20.8375369,
+   "lon": 86.4430172,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Bhoomika Eye Hospital",
+   "lat": 20.9492519,
+   "lon": 86.1372247,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Bhelanga Homeopthy Hospital",
+   "lat": 20.8136504,
+   "lon": 86.3786012,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Government Hospital",
+   "lat": 20.9571043,
+   "lon": 86.1703029,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Netradham Eye Hospital",
+   "lat": 20.8438712,
+   "lon": 86.3284309,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Niramaya Kendra",
+   "lat": 20.7250923,
+   "lon": 86.4040109,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Tata Steel Hospital",
+   "lat": 20.9661403,
+   "lon": 85.9903946,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. Debashees Nanda ENT Clinic",
+   "lat": 20.8502227,
+   "lon": 86.329399,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Ayurved Clinic",
+   "lat": 20.8414537,
+   "lon": 86.3214132,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Bhoomika Eye Hospital",
+   "lat": 20.9422288,
+   "lon": 86.1250163,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. Nishikanta Kar Clinic",
+   "lat": 20.8143691,
+   "lon": 86.2079857,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Jyothi Clinic",
+   "lat": 20.6984256,
+   "lon": 86.1342159,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Dr Hari Pati Clinic",
+   "lat": 20.938125,
+   "lon": 86.131422,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Spandan Homeo Clinc",
+   "lat": 20.955386,
+   "lon": 86.1261641,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Dr. Ashok Priyadarshi Pediatric Clinic",
+   "lat": 20.9598047,
+   "lon": 86.1239039,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Babagrahi Hospital",
+   "lat": 20.8358401,
+   "lon": 86.2571053,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Maternity and Child Health Centre",
+   "lat": 20.8493529,
+   "lon": 86.3297265,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Akhandalamani Homeopthy Clinic",
+   "lat": 20.8536258,
+   "lon": 86.3334192,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Bhoomika Chakshu Chikitsalay",
+   "lat": 20.95533,
+   "lon": 86.127129,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sandhu Physiotherapy Clinic",
+   "lat": 20.9491809,
+   "lon": 86.1331616,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Super Speciality Clinic",
+   "lat": 20.8514227,
+   "lon": 86.332835,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Devine Health Care",
+   "lat": 20.849736,
+   "lon": 86.3301393,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Prava Care Hospital",
+   "lat": 20.9570278,
+   "lon": 86.1261829,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Sai Manorama Hospital",
+   "lat": 20.8511229,
+   "lon": 86.3328524,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Bhoomika Eye Hospital",
+   "lat": 20.95473,
+   "lon": 86.127675,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Light Panda Clinic",
+   "lat": 20.7978971,
+   "lon": 86.3945213,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Laxminagar Hospital",
+   "lat": 20.9000821,
+   "lon": 86.1390955,
+   "amenity": "hospital"
+  },
+  {
+   "name": "ESI Hospital",
+   "lat": 20.9182997,
+   "lon": 86.0137354,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Ayurvedic Chikitsalaya",
+   "lat": 20.8847941,
+   "lon": 86.2063638,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Chidananda Satabdi Seva Sadan",
+   "lat": 20.9432337,
+   "lon": 86.1375674,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Holz Memorial Hospital",
+   "lat": 21.0183773,
+   "lon": 85.9750427,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Health and Wellness Centre",
+   "lat": 20.7843279,
+   "lon": 86.4304402,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Jeebanjyothi Hospital and Diagnostics",
+   "lat": 20.8498674,
+   "lon": 86.329996,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Ajanta Clinic",
+   "lat": 20.7056946,
+   "lon": 86.1335313,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Utkal Poly Clinic",
+   "lat": 20.962998,
+   "lon": 86.032175,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Sity Steel Hospital",
+   "lat": 20.9634899,
+   "lon": 86.0843345,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Dr. N.C Nayak Clinic",
+   "lat": 20.8498259,
+   "lon": 86.3297966,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Kaptipada CHC",
+   "lat": 21.5166415,
+   "lon": 86.5282766,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Kaptipada Highschool",
+   "lat": 21.5178612,
+   "lon": 86.528856,
+   "amenity": "school"
+  },
+  {
+   "name": "Adarsha Vidyalaya, Bhalubasa",
+   "lat": 21.5132873,
+   "lon": 86.5569781,
+   "amenity": "school"
+  },
+  {
+   "name": "Kaptipada Police station",
+   "lat": 21.509674,
+   "lon": 86.5422347,
+   "amenity": "police"
+  },
+  {
+   "name": "Alopathy clinic",
+   "lat": 21.5340556,
+   "lon": 86.5519741,
+   "amenity": "clinic"
+  },
+  {
+   "name": "Hingula High School, Sankhachila",
+   "lat": 20.902198,
+   "lon": 86.1535545,
+   "amenity": "school"
+  },
+  {
+   "name": "Saraswati Sishu Mandira",
+   "lat": 20.9037965,
+   "lon": 86.1523403,
+   "amenity": "school"
+  },
+  {
+   "name": "District TB hospital",
+   "lat": 21.4940808,
+   "lon": 86.9372261,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Town Police Station Balasore",
+   "lat": 21.4912522,
+   "lon": 86.943942,
+   "amenity": "police"
+  },
+  {
+   "name": "BDM Public School",
+   "lat": 21.4941782,
+   "lon": 86.9470518,
+   "amenity": "school"
+  },
+  {
+   "name": "Christian High School",
+   "lat": 21.5032483,
+   "lon": 86.9283012,
+   "amenity": "school"
+  },
+  {
+   "name": "Handicapped Welfare Institute",
+   "lat": 21.5037119,
+   "lon": 86.9300389,
+   "amenity": "school"
+  },
+  {
+   "name": "Kids High International School",
+   "lat": 21.4984478,
+   "lon": 86.9367495,
+   "amenity": "school"
+  },
+  {
+   "name": "Maa Tarini Nursing Home",
+   "lat": 21.4972317,
+   "lon": 86.9254965,
+   "amenity": "hospital"
+  },
+  {
+   "name": "Isanendi UP School",
+   "lat": 21.5281191,
+   "lon": 86.6576953,
+   "amenity": "school"
+  },
+  {
+   "name": "Community Health Center, Berhampur",
+   "lat": 21.5302262,
+   "lon": 86.652009,
+   "amenity": "hospital"
+  },
+  {
+   "name": "electric office, Raj-Bermahmpur",
+   "lat": 21.5296692,
+   "lon": 86.6505519,
+   "amenity": "police"
+  },
+  {
+   "name": "Dharampur Nodal U.G.U.P School",
+   "lat": 21.5325516,
+   "lon": 86.6550607,
+   "amenity": "school"
+  },
+  {
+   "name": "Eklavya Model Residential School",
+   "lat": 21.5013378,
+   "lon": 86.5373842,
+   "amenity": "school"
+  },
+  {
+   "name": "Kanaka Durga High School",
+   "lat": 21.5030747,
+   "lon": 86.9734399,
+   "amenity": "school"
+  }
+ ]
+}

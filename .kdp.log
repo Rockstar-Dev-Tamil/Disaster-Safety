@@ -17,3 +17,42 @@ OSM places
     maps.mail.ru failed, next mirror
     tile 1/4: 34 cumulative
     tile 2/4: 34 cumulative
+    tile 3/4: 58 cumulative
+    tile 4/4: 58 cumulative
+  17 settlements, 41 facilities
+OSM land use
+    tile 1/4: 43 cumulative
+    tile 2/4: 43 cumulative
+    tile 3/4: 53 cumulative
+    tile 4/4: 53 cumulative
+  47 polygons burned
+    Unmapped                           691,756 cells
+    Open cultivated or plantation           15 cells
+    Built-up                             3,784 cells
+  slope             33 KB
+  elevation          6 KB
+  landslide          1 KB
+  flood              1 KB
+  distroad          81 KB
+  disttown          19 KB
+  landuse            2 KB
+total raster payload 141 KB
+221 ways -> public/terrain-kendrapara/roads.geojson (146 KB)
+by class: {'trunk': 41, 'primary': 21, 'secondary': 38, 'tertiary': 121}
+221 routable ways
+302 junction nodes of 5,859 total
+357 edges, 302 nodes -> public/terrain-kendrapara/road-graph.json (149 KB)
+  mean degree 2.36, 54 dead ends
+  by class: {'trunk': 69, 'primary': 36, 'secondary': 64, 'tertiary': 188}
+  mosaic 2882 x 2702 at 1 arc-second
+    N20_00_E086 merged
+    N20_00_E087 merged
+  7,787,164 of 7,787,164 cells carry data (100.0%)
+  z8: 4 tiles
+  z9: 4 tiles
+  z10: 12 tiles
+  z11: 30 tiles
+  z12: 100 tiles
+
+  150 tiles, 0.9 MB total
+  source: 8-12, terrarium, 256px

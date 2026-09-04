@@ -103,9 +103,18 @@ export const DEFAULT_ROUTE_PARAMS: RouteParams = {
 
 /* --------------------------------------------------------- risk sampling --- */
 
-function sampler(m: TerrainManifest, grid: Uint8Array) {
+/** @param grid may be absent: not every area of interest carries every layer.
+ *
+ *  The Odisha stack has no DEM at all -- it is a delta, and a gradient limit
+ *  excludes nothing at 0.2 degrees of mean slope -- so `slope` is undefined
+ *  there. Reading it unguarded threw inside the routing risk pass and took the
+ *  whole evacuation workspace down to a blank screen, with the index of the
+ *  offending cell as the only clue. Zero is the right answer for every layer
+ *  sampled here: absent means no recorded hazard along the edge. */
+function sampler(m: TerrainManifest, grid: Uint8Array | undefined) {
   const [w, s, e, n] = m.bounds;
   return (lon: number, lat: number) => {
+    if (!grid) return 0;
     if (lon < w || lon > e || lat < s || lat > n) return 0;
     const x = Math.round(((lon - w) / (e - w)) * (m.width - 1));
     const y = Math.round(((n - lat) / (n - s)) * (m.height - 1));

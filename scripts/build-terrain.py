@@ -61,14 +61,32 @@ AOIS = {
         'landslide': None,
         'flood': ('raster', 'flood_frequency_1999_2000_2004.tif'),
     },
-    # Kendrapara coast. Sized to hold a 30 km operation radius around Kanhupur
-    # (86.9381, 20.6284) with margin, and matching the Overpass feasibility
-    # probe that established this AOI has usable OSM coverage.
+    # Kendrapara coast, sized for a CYCLONE rather than a local hazard: holds a
+    # 100 km operation radius around Kanhupur (86.9381, 20.6284), which is the
+    # top of the radius slider. A cyclone evacuation moves people out of a
+    # region, not out of a valley, and the previous 0.8 x 0.75 degree box ran
+    # out of ground at about 50 km while the slider still went to 100.
+    #
+    # 150 m cells, not 100. At 100 m this box is 4.29 M cells against Wayanad's
+    # 1.27 M, and every zone-derivation pass runs over the crop in the browser.
+    # At a 100 km search, 100 m precision is illusory anyway -- the hazard
+    # inputs here are ~900 m Aqueduct and a ~28 km reanalysis wind field.
     'kendrapara': {
-        'bounds': (86.55, 20.25, 87.35, 21.00),
+        'bounds': (85.95, 19.70, 87.95, 21.55),
+        'cell': 150.0,
         # N20_00_E087 is a zero-byte tile -- that square is all Bay of Bengal.
         # Listed anyway so the skip is explicit rather than an unexplained gap.
-        'dem': ['N20_00_E086', 'N20_00_E087'],
+        # N19_00_E087 does not exist and N20_00_E087 is a zero-byte tile:
+        # both squares are entirely Bay of Bengal. Listed as absent rather than
+        # silently omitted.
+        # NO DEM, deliberately. This box would need eight Copernicus tiles
+        # (~215 MB) and a tile pyramid over 2 x 1.85 degrees, to produce a
+        # layer that does no work: elevation across the whole area runs -3 to
+        # 27 m and mean slope is 0.2 degrees, so the gradient limit excludes
+        # nothing, the slope score discriminates nothing, and a relief view of
+        # it is flat by construction. What binds on this delta is inundation
+        # return period and distance from the storm.
+        'dem': None,
         'out': 'public/terrain-kendrapara',
         # No landslide sheet on a delta, and the flood sheet here is the
         # Aqueduct coastal raster, written separately by
@@ -81,9 +99,11 @@ AOIS = {
 AOI = os.environ.get('TERRAIN_AOI', 'wayanad')
 _cfg = AOIS[AOI]
 W, S, E, N = _cfg['bounds']
-CELL_M = 100.0
+#: Per-AOI, because a cyclone-scale search cannot afford the cell count a
+#: valley-scale one uses. Everything downstream reads manifest.cellMetres.
+CELL_M = _cfg.get('cell', 100.0)
 
-DEM_TILES = _cfg['dem']
+DEM_TILES = _cfg['dem'] or []
 DEM_URL = ('https://copernicus-dem-30m.s3.amazonaws.com/'
            'Copernicus_DSM_COG_10_{t}_00_DEM/Copernicus_DSM_COG_10_{t}_00_DEM.tif')
 # The public instance 504s on a query this size; mirrors are tried in turn and
@@ -489,6 +509,24 @@ def hazard_sheet(spec, class_of):
 
 # ------------------------------------------------------------------ main ---
 
+def build_dem_layers(manifest):
+    """Slope and elevation, for AOIs that have a DEM worth reading."""
+    print('DEM')
+    elev = fetch_dem()
+    valid = np.isfinite(elev)
+    print(f'  coverage {valid.mean()*100:.1f}%  '
+          f'elev {np.nanmin(elev):.0f}-{np.nanmax(elev):.0f} m')
+    sl = slope_deg(elev)
+    b = write_png_gray(f'{OUT}/slope.png', np.clip(sl, 0, 90).astype('uint8'))
+    manifest['layers']['slope'] = {'file': f'{WEB}/slope.png', 'unit': 'degrees',
+                                   'scale': 1, 'bytes': b}
+    b = write_png_gray(f'{OUT}/elevation.png',
+                       np.clip(np.nan_to_num(elev) / 10.0, 0, 255).astype('uint8'))
+    manifest['layers']['elevation'] = {'file': f'{WEB}/elevation.png',
+                                       'unit': 'metres', 'scale': 10, 'bytes': b}
+    print(f'  slope mean {sl[valid].mean():.1f} deg, max {sl[valid].max():.1f} deg')
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(SCRATCH, exist_ok=True)
@@ -500,21 +538,13 @@ def main():
         'layers': {},
     }
 
-    print('DEM')
-    elev = fetch_dem()
-    valid = np.isfinite(elev)
-    print(f'  coverage {valid.mean()*100:.1f}%  elev {np.nanmin(elev):.0f}-{np.nanmax(elev):.0f} m')
-    sl = slope_deg(elev)
-    b = write_png_gray(f'{OUT}/slope.png', np.clip(sl, 0, 90).astype('uint8'))
-    manifest['layers']['slope'] = {'file': f'{WEB}/slope.png', 'unit': 'degrees',
-                                   'scale': 1, 'bytes': b}
-    b = write_png_gray(f'{OUT}/elevation.png',
-                       np.clip(np.nan_to_num(elev) / 10.0, 0, 255).astype('uint8'))
-    manifest['layers']['elevation'] = {'file': f'{WEB}/elevation.png', 'unit': 'metres',
-                                       'scale': 10, 'bytes': b}
-    print(f'  slope mean {sl[valid].mean():.1f} deg, max {sl[valid].max():.1f} deg')
+    if not DEM_TILES:
+        print('DEM  skipped for this AOI (see the AOIS entry for why)')
+    else:
+        build_dem_layers(manifest)
 
     print('hazard sheets')
+
     ls = hazard_sheet(_cfg['landslide'], lambda p: LS_CLASS.get(p.get('class'), 0))
     fl = hazard_sheet(_cfg['flood'], lambda p: FL_CLASS.get(p.get('class'), 0))
     b = write_png_gray(f'{OUT}/landslide.png', ls * 80)

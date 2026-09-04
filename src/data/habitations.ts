@@ -35,7 +35,13 @@ import { KANHUPUR } from './kendrapara';
  * correct: synthetic density points do not acquire observations of an Odisha
  * event just because an officer switched to it. They are marked synthetic in
  * their provenance for exactly this reason. */
-const GENERATED_OBSERVED_AT = WAYANAD_CLOCK;
+/* The single moment the generated national set is observed at.
+ *
+ * Exported because the derived district-alert overlay aggregates that set and
+ * has to state which clock it is reporting: it does NOT follow the selected
+ * case, and stamping it with whichever case is active would misdate 356 of the
+ * 359 habitations. Only the three authored ones move with their own events. */
+export const GENERATED_OBSERVED_AT = WAYANAD_CLOCK;
 
 /* ------------------------------------------------------------ generator  */
 

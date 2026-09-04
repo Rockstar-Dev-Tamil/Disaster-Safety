@@ -55,7 +55,16 @@ import {
   type RouteResult,
 } from '../lib/routing';
 
-const RADIUS_KM = 30;
+/* Bounds for the operation-radius slider.
+ *
+ * 30 km was the Wayanad default and it is arbitrary -- a debris flow in the
+ * Ghats and a cyclone crossing 150 km of coast are not the same search. The
+ * radius is now the officer's to set, and it drives the analysis rather than
+ * merely labelling it: for a long time there were TWO thirty-kilometre
+ * constants here, this one and rules.radiusKm, and only the second reached the
+ * derivation. They are one value now. */
+const RADIUS_MIN_KM = 10;
+const RADIUS_MAX_KM = 100;
 
 const TRANSPARENT_PX =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
@@ -90,6 +99,11 @@ export function EvacView({ habitationId }: { habitationId: string }) {
    * capacity model and evaluation differ entirely. */
   const [tier, setTier] = useState<'SHORT' | 'LONG'>('SHORT');
   const [rules, setRules] = useState<Rules>(DEFAULT_RULES);
+  /* One source of truth. The search circle, the crop, the coverage check and
+   * the zone derivation all read this. */
+  const radiusKm = rules.radiusKm;
+  const setRadiusKm = (v: number) =>
+    setRules((r) => ({ ...r, radiusKm: Math.round(v) }));
   const [weights, setWeights] = useState<Weights>(DEFAULT_WEIGHTS);
   const [selected, setSelected] = useState<number | null>(null);
   const [shortlistSize, setShortlistSize] = useState(10);
@@ -108,6 +122,59 @@ export function EvacView({ habitationId }: { habitationId: string }) {
    * full-width. The map is the subject; the tables are the argument for it. */
   const [panelOut, setPanelOut] = useState(false);
   const activeCase = useCase();
+
+  /* Forecast cones, one per issue time, for cases whose hazard is a moving
+   * system. `coneIdx` is which one is in force: stepping it re-derives the
+   * zones, because the cone is an exclusion and not merely a drawing. */
+  const [allCones, setAllCones] = useState<GeoJSON.Feature[]>([]);
+  const [coneIdx, setConeIdx] = useState(0);
+  /* How long the evacuation has to hold. At persistence-scale uncertainty this
+   * changes the answer completely -- the cone is 89 km wide at 6 h and 296 km
+   * at 24 h -- so it is the officer's to set, not a constant. */
+  const [coneLeadH, setConeLeadH] = useState(12);
+
+  /* Cones load with the habitation, not with the map, because the derivation
+   * needs them before anything is drawn. */
+  useEffect(() => {
+    const url = covering?.coneUrl;
+    if (!url) {
+      setAllCones([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(url)
+      .then((r) => r.json())
+      .then((gj: GeoJSON.FeatureCollection) => {
+        if (cancelled) return;
+        const fs = (gj.features ?? []) as GeoJSON.Feature[];
+        setAllCones(fs);
+        /* Open on the cone that matches the case clock -- the operating
+         * picture -- rather than at the start of the sequence. */
+        /* Index within the chosen horizon, not within the raw feature list:
+         * the file holds one hull per issue time PER horizon. */
+        const forLead = fs.filter((f) => f.properties?.maxLeadH === 12);
+        const at = forLead.findIndex((f) => f.properties?.operating);
+        setConeIdx(at >= 0 ? at : 0);
+      })
+      .catch(() => {
+        if (!cancelled) setAllCones([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [covering?.coneUrl]);
+
+  /* The cones for the horizon in force, in issue order. */
+  const cones = useMemo(
+    () => allCones.filter((f) => f.properties?.maxLeadH === coneLeadH),
+    [allCones, coneLeadH],
+  );
+  const cone = cones[Math.min(coneIdx, Math.max(0, cones.length - 1))] ?? null;
+  const coneRing = useMemo(() => {
+    const g = cone?.geometry;
+    return g && g.type === 'Polygon' ? (g.coordinates[0] as number[][]) : null;
+  }, [cone]);
+
 
   /* MapLibre measures its container, so a dock sliding over ~420 ms needs the
    * canvas re-measured across those frames rather than only once it settles. */
@@ -131,14 +198,16 @@ export function EvacView({ habitationId }: { habitationId: string }) {
    * re-scores and re-clusters live. Only the factor surfaces were precomputed. */
   const result: ZoneResult | null = useMemo(() => {
     if (!stack || !h) return null;
-    return analyse(stack, h.lngLat, rules, weights, h.population);
-  }, [stack, h, rules, weights]);
+    return analyse(stack, h.lngLat, rules, weights, h.population, coneRing);
+  }, [stack, h, rules, weights, coneRing]);
 
   /* Permanent tier runs its own extraction: different exclusions produce a
    * different eligible surface, not merely a different ranking over the same
    * one. */
   const longResult: ZoneResult | null = useMemo(() => {
     if (!stack || !h || tier !== 'LONG') return null;
+    /* No cone: PERMANENT_RULES does not use it, and passing it would only
+     * invite the reader to think it did. */
     return analyse(stack, h.lngLat, PERMANENT_RULES, weights, h.population);
   }, [stack, h, tier, weights]);
 
@@ -356,15 +425,66 @@ export function EvacView({ habitationId }: { habitationId: string }) {
   };
   blockRef.current = toggleBlock;
 
-  const aoi = useMemo(() => (h ? aoiAround(h.lngLat, RADIUS_KM) : null), [h]);
+  /* `radiusKm` belongs in the deps. Without it the bounding box stayed pinned
+   * to whatever the radius was on mount, so widening the search left the
+   * coverage check still measuring the original disc: at 100 km it reported
+   * 11.5% covered on a stack that contains that circle whole. The zone
+   * derivation was unaffected -- it crops from rules.radiusKm directly -- which
+   * is exactly why the numbers disagreed instead of both being wrong. */
+  const aoi = useMemo(
+    () => (h ? aoiAround(h.lngLat, radiusKm) : null),
+    [h, radiusKm],
+  );
   /* Fraction of the 30 km search disc the terrain stack actually covers.
    * Null until the crop stage has run. */
-  const [coverage, setCoverage] = useState<number | null>(null);
+  /* Derived, not stored: see the memo below. */
   /* Mean slope inside the search radius. Drives an honest note on the relief
    * view: on a floodplain that view looks flat because the ground IS flat, and
    * an officer should be told that rather than left wondering whether the 3D
    * is broken. */
-  const [meanSlopeDeg, setMeanSlopeDeg] = useState<number | null>(null);
+  /* Derived, not stored: see the memo below. */
+
+  /* How much of the search disc the stack actually covers, and what the ground
+   * inside it does. Both depend on the radius, so both are recomputed when it
+   * moves.
+   *
+   * Coverage is measured against the disc the radius DESCRIBES, not against
+   * whatever the stack happened to contain. Counting cells alone cannot
+   * distinguish "this ground was assessed and rejected" from "this ground was
+   * never looked at", and those are opposite findings.
+   *
+   * Stepped by 2 in each direction and weighted by 4: this runs on every slider
+   * move, and a quarter of the cells settles the percentage to well inside the
+   * precision it is reported at. */
+  const { coverage, meanSlopeDeg } = useMemo(() => {
+    if (!stack || !aoi || !h) return { coverage: null, meanSlopeDeg: null };
+    const { manifest } = stack;
+    const [w, so, e, no] = manifest.bounds;
+    const slopeGrid = stack.grids['slope'];
+    let inside = 0;
+    let slopeSum = 0;
+    let slopeN = 0;
+    for (let y = 0; y < manifest.height; y += 2) {
+      const lat = no - ((no - so) * y) / (manifest.height - 1);
+      if (lat < aoi.south || lat > aoi.north) continue;
+      for (let x = 0; x < manifest.width; x += 2) {
+        const lon = w + ((e - w) * x) / (manifest.width - 1);
+        if (lon < aoi.west || lon > aoi.east) continue;
+        if (haversineKm([lon, lat], h.lngLat) > radiusKm) continue;
+        inside += 4;
+        if (slopeGrid) {
+          slopeSum += slopeGrid[y * manifest.width + x];
+          slopeN++;
+        }
+      }
+    }
+    const areaKm2 = (inside * manifest.cellMetres ** 2) / 1e6;
+    const full = Math.PI * radiusKm * radiusKm;
+    return {
+      coverage: Math.min(1, areaKm2 / full),
+      meanSlopeDeg: slopeN ? slopeSum / slopeN : null,
+    };
+  }, [stack, aoi, h, radiusKm]);
 
   /* ------------------------------------------------------------- load --- */
   useEffect(() => {
@@ -383,64 +503,11 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       .then((s) => {
         if (cancelled) return;
         mark('crop', 'active');
-        /* Real work, not a fake step: count how much of the stack falls inside
-         * the operation radius, which is what the analysis will run over. */
-        const inside = (() => {
-          if (!aoi) return 0;
-          let n = 0;
-          const { manifest } = s;
-          const [w, so, e, no] = manifest.bounds;
-          for (let y = 0; y < manifest.height; y += 2) {
-            const lat = no - ((no - so) * y) / (manifest.height - 1);
-            if (lat < aoi.south || lat > aoi.north) continue;
-            for (let x = 0; x < manifest.width; x += 2) {
-              const lon = w + ((e - w) * x) / (manifest.width - 1);
-              if (lon < aoi.west || lon > aoi.east) continue;
-              if (haversineKm([lon, lat], h.lngLat) <= RADIUS_KM) n += 4;
-            }
-          }
-          return n;
-        })();
-        /* Same traversal, one more statistic: what the ground actually does.
-         * Cheap here, and it is the difference between "the relief view is
-         * broken" and "this terrain has no relief, which is the finding". */
-        (() => {
-          const g = s.grids['slope'];
-          if (!g || !aoi) return;
-          const { manifest } = s;
-          const [w, so, e, no] = manifest.bounds;
-          let sum = 0;
-          let n = 0;
-          for (let y = 0; y < manifest.height; y += 2) {
-            const lat = no - ((no - so) * y) / (manifest.height - 1);
-            if (lat < aoi.south || lat > aoi.north) continue;
-            for (let x = 0; x < manifest.width; x += 2) {
-              const lon = w + ((e - w) * x) / (manifest.width - 1);
-              if (lon < aoi.west || lon > aoi.east) continue;
-              if (haversineKm([lon, lat], h.lngLat) > RADIUS_KM) continue;
-              sum += g[y * manifest.width + x];
-              n++;
-            }
-          }
-          if (n) setMeanSlopeDeg(sum / n);
-        })();
-
-        const areaKm2 = (inside * s.manifest.cellMetres ** 2) / 1e6;
-        /* Against the disc the radius DESCRIBES, not against whatever the
-         * stack happened to contain. Counting cells alone cannot distinguish
-         * "this ground was assessed and rejected" from "this ground was never
-         * looked at", and those are opposite findings. A stack whose bounds
-         * cut the disc renders as a straight edge across the search area,
-         * which reads as a result rather than as an absence. */
-        const full = Math.PI * RADIUS_KM * RADIUS_KM;
-        const cov = Math.min(1, areaKm2 / full);
-        setCoverage(cov);
-        mark(
-          'crop',
-          'done',
-          `${int(inside)} cells · ${areaKm2.toFixed(0)} km² of ${full.toFixed(0)} km²`
-            + ` within ${RADIUS_KM} km · ${(cov * 100).toFixed(1)}% covered`,
-        );
+        /* The counting itself moved to a memo below, because it depends on the
+         * operation radius and the radius is now the officer's to change. Doing
+         * it here left a number that was computed once and then quietly
+         * described a different search than the one on screen. */
+        mark('crop', 'done', 'measured against the operation radius');
         setStack(s);
         setTimeout(() => !cancelled && setReady(true), 250);
       })
@@ -460,6 +527,11 @@ export function EvacView({ habitationId }: { habitationId: string }) {
      * are read from it, and a stack without a covering case would put another
      * AOI's relief under this habitation. */
     if (!ready || !h || !stack || !covering?.stack || !holder.current || mapRef.current) return;
+    /* Whether this area of interest has a DEM at all. Where it does not, the
+     * map is built without terrain sources and the relief toggle is hidden --
+     * rather than pointing raster-dem at tiles that do not exist and filling
+     * the console with decode errors. */
+    const hasDem = Boolean(covering.stack.demTiles);
 
     const map = new maplibregl.Map({
       container: holder.current,
@@ -480,9 +552,10 @@ export function EvacView({ habitationId }: { habitationId: string }) {
            * shading. Built by scripts/build-dem-tiles.py from the same
            * Copernicus GLO-30 data the slope layer comes from, so relief and
            * gradient can never disagree. No network. */
+          ...(hasDem ? {
           dem: {
             type: 'raster-dem',
-            tiles: [covering.stack!.demTiles],
+            tiles: [covering.stack!.demTiles!],
             encoding: 'terrarium',
             tileSize: 256,
             minzoom: 8,
@@ -509,13 +582,14 @@ export function EvacView({ habitationId }: { habitationId: string }) {
            * cache, so it costs a decode, not a download. */
           'dem-shade': {
             type: 'raster-dem',
-            tiles: [covering.stack!.demTiles],
+            tiles: [covering.stack!.demTiles!],
             encoding: 'terrarium',
             tileSize: 256,
             minzoom: 8,
             maxzoom: 12,
             bounds: covering.stack!.bounds,
           },
+          } : {}),
         },
         layers: [
           { id: 'ground', type: 'background', paint: { 'background-color': '#05070a' } },
@@ -534,18 +608,18 @@ export function EvacView({ habitationId }: { habitationId: string }) {
            * a 3D mesh shades the terrain twice, once baked and once by the
            * camera, and hillsides end up muddy. In 3D we hide that raster and
            * shade from the DEM instead. */
-          {
+          ...(hasDem ? [{
             id: 'hillshade-local',
-            type: 'hillshade',
+            type: 'hillshade' as const,
             source: 'dem-shade',
-            layout: { visibility: 'none' },
+            layout: { visibility: 'none' as const },
             paint: {
               'hillshade-exaggeration': 0.55,
               'hillshade-shadow-color': '#05070a',
               'hillshade-highlight-color': '#8c949e',
               'hillshade-accent-color': '#05070a',
             },
-          },
+          }] : []),
         ],
       },
       center: h.lngLat,
@@ -644,7 +718,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       /* Origin, and the operation radius the analysis will run inside. */
       map.addSource('aoi', {
         type: 'geojson',
-        data: circle(h.lngLat, RADIUS_KM),
+        data: circle(h.lngLat, radiusKm),
       });
       map.addLayer({
         id: 'aoi-line',
@@ -702,6 +776,25 @@ export function EvacView({ habitationId }: { habitationId: string }) {
           },
         });
       }
+
+      map.addSource('cone', { type: 'geojson', data: EMPTY_FC });
+      map.addLayer({
+        id: 'cone-fill',
+        type: 'fill',
+        source: 'cone',
+        paint: { 'fill-color': '#ff7563', 'fill-opacity': 0.1 },
+      });
+      map.addLayer({
+        id: 'cone-line',
+        type: 'line',
+        source: 'cone',
+        paint: {
+          'line-color': '#ff7563',
+          'line-width': 1.6,
+          'line-opacity': 0.85,
+          'line-dasharray': [3, 2],
+        },
+      });
 
       map.addSource('eligible', {
         type: 'image',
@@ -1037,7 +1130,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       { key: 'tier', label: 'Tier', value: tier === 'LONG' ? 'long-term, permanent' : 'short-term, transitional camp' },
       { key: 'population', label: 'Population to move', value: int(h.population), aka: ['people', 'persons'] },
       { key: 'households', label: 'Households', value: int(h.households) },
-      { key: 'radius', label: 'Operation radius', value: `${RADIUS_KM} km`, aka: ['search', 'area'] },
+      { key: 'radius', label: 'Operation radius', value: `${radiusKm} km`, aka: ['search', 'area'] },
       { key: 'eligible-ha', label: 'Eligible ground', value: `${int(Math.round(st.eligibleHa))} ha`, aka: ['passed', 'filter', 'land'] },
       { key: 'eligible-pct', label: 'Eligible share of search area', value: `${st.eligiblePct.toFixed(1)}%`, aka: ['percent', 'proportion'] },
       { key: 'candidates', label: 'Candidate zones', value: int(shown.length), aka: ['sites', 'options', 'zones'] },
@@ -1097,10 +1190,42 @@ export function EvacView({ habitationId }: { habitationId: string }) {
     };
   }, [activeResult, areas, tier, h, rules, stack, selectedZone, routeResult, selectedRoute]);
 
+  /* Refit the camera when the search area changes size.
+   *
+   * Without this the view stayed at whatever the radius was on mount, so
+   * widening from 30 to 100 km grew the analysis while showing the same
+   * postage stamp -- and anything the wider search brought into play, the
+   * forecast cone included, stayed off the edge of the map. */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !aoi) return;
+    map.fitBounds(
+      [
+        [aoi.west, aoi.south],
+        [aoi.east, aoi.north],
+      ],
+      { padding: 40, duration: 800, essential: true },
+    );
+  }, [aoi, mapReady]);
+
+  /* Draw whichever cone is in force. */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    const src = map.getSource('cone') as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+    src.setData(cone ? { type: 'FeatureCollection', features: [cone] } : EMPTY_FC);
+  }, [cone, mapReady]);
+
   /* ------------------------------------------------------ terrain on/off --- */
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
+    /* No DEM means no terrain source and no local hillshade layer to toggle.
+     * The relief control is hidden in that case, so view3d cannot be true --
+     * but guarding here too keeps a stale state from throwing on a case
+     * switch. */
+    if (!map.getSource('dem')) return;
 
     if (view3d) {
       map.setTerrain({ source: 'dem', exaggeration });
@@ -1120,7 +1245,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
   /* Exaggeration alone does not need a camera move. */
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady || !view3d) return;
+    if (!map || !mapReady || !view3d || !map.getSource('dem')) return;
     map.setTerrain({ source: 'dem', exaggeration });
   }, [exaggeration, view3d, mapReady]);
 
@@ -1272,7 +1397,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       <TopBar onShowKeys={() => {}} />
 
       {!ready ? (
-        <LoadScreen h={h} stages={stages} error={error} />
+        <LoadScreen h={h} stages={stages} error={error} radiusKm={radiusKm} />
       ) : (
         <div className={`evacview${panelOut ? ' panel-out' : ''}`}>
           <div className="mapstage">
@@ -1295,21 +1420,104 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                   <span className="lod">{h.name}</span>
                   <span className="mono">{coord(h.lngLat)}</span>
                 </div>
-                <div className="zoomctx-row">
-                  <span>View</span>
-                  <span className="seg seg-xs">
-                    <button className={view3d ? '' : 'on'} onClick={() => setView3d(false)}>
-                      Plan
-                    </button>
-                    <button className={view3d ? 'on' : ''} onClick={() => setView3d(true)}>
-                      Relief
-                    </button>
-                  </span>
-                </div>
+                {/* No DEM, no relief. Rather than offering a toggle that would
+                    render flat ground and log a decode error for every missing
+                    tile, the row states why the view is absent. On this delta
+                    that is not a gap in the data, it is a property of the
+                    ground: 0.2 degrees of mean slope has no relief to show. */}
+                {covering?.stack?.demTiles ? (
+                  <div className="zoomctx-row">
+                    <span>View</span>
+                    <span className="seg seg-xs">
+                      <button className={view3d ? '' : 'on'} onClick={() => setView3d(false)}>
+                        Plan
+                      </button>
+                      <button className={view3d ? 'on' : ''} onClick={() => setView3d(true)}>
+                        Relief
+                      </button>
+                    </span>
+                  </div>
+                ) : (
+                  <div className="zoomctx-row">
+                    <span>View</span>
+                    <span className="mono">plan only — no elevation model</span>
+                  </div>
+                )}
+                {/* Stepping this re-derives the zones: the cone is an
+                    exclusion, not a drawing, so a candidate that is eligible at
+                    one hour can be inside the cone at the next. That movement
+                    is the point -- it is what an officer is deciding against. */}
+                {cones.length > 0 ? (
+                  <>
+                    <div className="zoomctx-row">
+                      <span>Forecast cone issued</span>
+                      <span className="mono">
+                        {cone?.properties?.issuedIst
+                          ? ts(cone.properties.issuedIst as string)
+                          : '—'}
+                      </span>
+                    </div>
+                    <input
+                      className="exagslider"
+                      type="range"
+                      min={0}
+                      max={cones.length - 1}
+                      step={1}
+                      value={coneIdx}
+                      onChange={(e) => setConeIdx(Number(e.target.value))}
+                      aria-label="Forecast cone issue time"
+                    />
+                    <div className="zoomctx-row">
+                      <span>Evacuation must hold for</span>
+                      <span className="seg seg-xs">
+                        {[6, 12, 24].map((hrs) => (
+                          <button
+                            key={hrs}
+                            className={coneLeadH === hrs ? 'on' : ''}
+                            onClick={() => setConeLeadH(hrs)}
+                          >
+                            {hrs} h
+                          </button>
+                        ))}
+                      </span>
+                    </div>
+                    <div className="exagnote">
+                      {Math.min(coneIdx + 1, cones.length)} of {cones.length}
+                      {cone?.properties?.operating ? ' · operating picture' : ''}
+                      {' · cone radius '}
+                      {String(cone?.properties?.radiusKm ?? '—')} km at{' '}
+                      {coneLeadH} h
+                      {Number(cone?.properties?.inlandDecay ?? 1) < 0.99
+                        ? `, decayed from ${cone?.properties?.radiusUndecayedKm} km because the forecast track goes inland and a cyclone weakens away from the sea — which is why a longer horizon can give a SMALLER cone`
+                        : ''}
+                      . Short-term siting excludes it; the long-term tier does
+                      not.
+                    </div>
+                  </>
+                ) : null}
                 <div className="zoomctx-row">
                   <span>Operation radius</span>
-                  <span className="mono">{RADIUS_KM} km</span>
+                  <span className="mono">{radiusKm} km</span>
                 </div>
+                <input
+                  className="exagslider"
+                  type="range"
+                  min={RADIUS_MIN_KM}
+                  max={RADIUS_MAX_KM}
+                  step={5}
+                  value={radiusKm}
+                  onChange={(e) => setRadiusKm(Number(e.target.value))}
+                  aria-label="Operation radius, kilometres"
+                />
+                {/* A wider search is only a wider search where the stack
+                    reaches. Beyond it the coverage line in the Search area
+                    block says how much was actually assessed. */}
+                {coverage !== null && coverage < 0.99 ? (
+                  <div className="exagwarn">
+                    At {radiusKm} km the stack covers {(coverage * 100).toFixed(0)}%
+                    of the search area.
+                  </div>
+                ) : null}
                 <div className="zoomctx-row">
                   <span>Grid</span>
                   <span className="mono">{stack?.manifest.cellMetres} m</span>
@@ -1506,7 +1714,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
             </div>
 
             <div className="panel-body">
-              <Block title="Search area" aux={`${RADIUS_KM} km radius`} collapsible flush>
+              <Block title="Search area" aux={`${radiusKm} km radius`} collapsible flush>
                 <div className="block-body">
                   <dl className="kv">
                     <dt>Analysis grid</dt>
@@ -1528,7 +1736,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                   {coverage !== null && coverage < 0.99 ? (
                     <p className="exagwarn">
                       The terrain stack covers {(coverage * 100).toFixed(1)}% of the{' '}
-                      {RADIUS_KM} km search area. The remainder was not assessed and is
+                      {radiusKm} km search area. The remainder was not assessed and is
                       not shown as rejected — the straight edge on the map is the limit
                       of the data, not a finding. Rebuild the stack over a wider area of
                       interest before treating this shortlist as complete.
@@ -1619,9 +1827,19 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                 view. */}
             <ExplainDock scope="EVAC_ZONES" bundle={explainBundle} />
 
+            {/* The COVERING case's clock, not the selected one. `covering` is
+                resolved by containment, so a deep link into a habitation while
+                another case is selected still reports the moment that
+                habitation's own event is being read at -- opening Kanhupur with
+                Wayanad selected used to stamp Kendrapara data with a Kerala
+                timestamp. */}
             <div className="provline">
               <span className="src">Picture as of</span>
-              <div className="mono">{activeCase.clock ? ts(activeCase.clock) : 'live'}</div>
+              <div className="mono">
+                {(covering ?? activeCase).clock
+                  ? ts((covering ?? activeCase).clock)
+                  : 'live'}
+              </div>
             </div>
           </aside>
         </div>
@@ -1648,10 +1866,12 @@ function LoadScreen({
   h,
   stages,
   error,
+  radiusKm,
 }: {
   h: Habitation;
   stages: Stage[];
   error: string | null;
+  radiusKm: number;
 }) {
   /* Skipped stages count as settled: the wordmark should fill to the end on an
    * AOI that legitimately has fewer layers, not stall short of it. */
@@ -1673,7 +1893,7 @@ function LoadScreen({
           </span>
         </div>
         <div className="loadscreen-sub">
-          {h.name} · {h.block} block · {h.district} · {RADIUS_KM} km operation radius
+          {h.name} · {h.block} block · {h.district} · {radiusKm} km operation radius
         </div>
 
         <table className="loadtable">

@@ -18,6 +18,7 @@
  * ==========================================================================*/
 
 import type { HazardType, Provenance, SusceptibilityBand } from './schema';
+import { GENERATED_OBSERVED_AT } from './habitations';
 import {
   SRC_DELTARES_SHORELINE,
   SRC_IMD_NOWCAST,
@@ -44,7 +45,14 @@ export interface OverlayLayer {
   wmsLayer?: string;
   defaultOn: boolean;
   opacity: number;
-  /** Which derived field the DERIVED_DISTRICT layers aggregate. */
+  /** Which derived field the DERIVED_DISTRICT layers aggregate.
+   *
+   *  'alert' is still supported by the renderer but no layer uses it. The
+   *  aggregate-alert overlay was removed: it read as a national operational
+   *  picture while actually aggregating a habitation set pinned to one
+   *  observation moment, so it could not move with the case and looked like
+   *  IMD data without being it. District rainfall warnings replaced it with
+   *  something that varies per event and says where it came from. */
   derivedField?: 'susceptibility' | 'alert';
   /** GEOJSON only: feature property holding the class, and the colour per
    *  class value. Class values are the publisher's own strings -- they are not
@@ -60,6 +68,19 @@ export interface OverlayLayer {
   ramp?: Array<[number, string]>;
   /** IMAGE only: [w, s, e, n] corners of the georeferenced PNG. */
   imageBounds?: Bounds;
+  /** IMAGE_SEQUENCE only: which sequence to load per case.
+   *
+   *  A rain field is only meaningful for the event it belongs to. One entry in
+   *  the layer list resolves to a different sequence depending on which case is
+   *  selected, rather than three near-identical entries the officer has to pick
+   *  between correctly. Falls back to `url` for any case not listed. */
+  sequenceByCase?: Record<string, string>;
+  /** GEOJSON only: which file to load per case, same reasoning as
+   *  sequenceByCase. Falls back to `url`. */
+  geojsonByCase?: Record<string, string>;
+  /** Per-case provenance, for the same reason. The Fani field is reanalysis and
+   *  the other two are forecasts; one source line cannot describe both. */
+  provenanceByCase?: Record<string, Provenance>;
   /** XYZ only: deepest zoom the pyramid was built to. Beyond it MapLibre
    *  overzooms the deepest tiles rather than requesting ones that do not
    *  exist -- every such request would 404 and read as a basemap failure. */
@@ -94,42 +115,34 @@ export const OVERLAYS: OverlayLayer[] = [
       source: 'Derived from displayed habitation assessments',
       agency: 'This application',
       method:
-        'max(susceptibility.score) over habitations whose district matches the polygon, joined on district name.',
-      assessedOn: '2024-07-29T23:30:00+05:30',
+        'max(susceptibility.score) over habitations whose district matches the '
+        + 'polygon, joined on district name. Susceptibility is a standing '
+        + 'assessment and does not move with the operating clock, so unlike the '
+        + 'alert layer this one is not case-dependent.',
+      assessedOn: GENERATED_OBSERVED_AT,
     },
   },
   {
-    id: 'district-alert',
-    label: 'District operational alert (aggregate)',
+    id: 'rain-field',
+    label: 'Rain field — this case\u2019s event',
     meaning:
-      'Most severe current IMD alert state among habitations in each district, at the operating picture timestamp.',
-    kind: 'DERIVED_DISTRICT',
-    derivedField: 'alert',
-    url: 'derived',
-    defaultOn: false,
-    opacity: 0.6,
-    legend: [
-      { label: 'Red', band: 'VERY_HIGH' },
-      { label: 'Orange', band: 'HIGH' },
-      { label: 'Yellow', band: 'MODERATE' },
-      { label: 'Green', band: 'LOW' },
-    ],
-    provenance: {
-      status: 'LIVE',
-      source: 'Derived from displayed habitation operational state',
-      agency: 'This application',
-      method: 'max(current.alert) over habitations whose district matches the polygon.',
-      observedAt: '2024-07-29T23:30:00+05:30',
-    },
-  },
-
-  {
-    id: 'ecmwf-sequence',
-    label: 'ECMWF forecast rain, 3-hourly',
-    meaning:
-      'IFS HRES deterministic, run 29 Jul 2024 00Z. Rain falling in each 3 h window, not accumulated total, so the field shows rain arriving and passing. Scrub or play the clock below the map. 0.25 deg (~28 km) — cells are drawn unsmoothed because the model has no more detail than this.',
+      'Rain falling in each 3 h window, not accumulated total, so the field '
+      + 'shows weather arriving and passing. Scrub or play the clock below the '
+      + 'map. WHICH DATA depends on the case, because a rain field is only '
+      + 'meaningful for the event it belongs to: Wayanad and the live Assam '
+      + 'case get the ECMWF FORECAST for their own dates, Kendrapara gets ERA5 '
+      + 'REANALYSIS because the forecast archive begins in 2024 and Fani was '
+      + '2019. Forecast says what the model expected beforehand; reanalysis '
+      + 'says what the atmosphere did. The timeline states which is on screen. '
+      + '0.25 deg (~28 km) either way, drawn unsmoothed because neither model '
+      + 'has more detail than that.',
     kind: 'IMAGE_SEQUENCE',
     url: '/layers/ecmwf-sequence.json',
+    sequenceByCase: {
+      WAYANAD: '/layers/ecmwf-sequence.json',
+      KENDRAPARA: '/layers/era5-fani-sequence.json',
+      ASSAM: '/layers/ecmwf-live-sequence.json',
+    },
     imageBounds: [67.875, 5.875, 97.625, 37.625],
     defaultOn: false,
     opacity: 0.8,
@@ -147,51 +160,102 @@ export const OVERLAYS: OverlayLayer[] = [
       source: 'ECMWF IFS HRES open data, run 2024-07-29 00Z, steps +3 h to +48 h',
       agency: 'European Centre for Medium-Range Weather Forecasts',
       method:
-        'Deterministic total precipitation, differenced between consecutive steps to give rain per 3 h window. Retrieved by byte-range from the Google open-data mirror; ECMWF own feed retains only a rolling window and does not reach this date.',
+        'Deterministic total precipitation, differenced between consecutive '
+        + 'steps to give rain per 3 h window, resampled to Mercator rows before '
+        + 'drawing.',
       resolution: '0.25 deg (~28 km), 3 h',
       citation: 'ecmwf-open-data/20240729/00z/ifs/0p25/oper',
       observedAt: '2024-07-29T05:30:00+05:30',
     },
+    provenanceByCase: {
+      KENDRAPARA: {
+        status: 'LIVE',
+        source: 'ERA5 hourly reanalysis, 02-04 May 2019',
+        agency: 'ECMWF, via Google Earth Engine',
+        method:
+          'REANALYSIS, NOT FORECAST: assimilated after the event, so it '
+          + 'describes what the atmosphere did rather than what was predicted. '
+          + 'Hourly total precipitation summed into the same 3 h windows and '
+          + 'drawn on the same ramp as the forecast layers so the two are '
+          + 'directly comparable. Used because the ECMWF open-data forecast '
+          + 'archive begins between January and March 2024 and cannot reach '
+          + 'Cyclone Fani.',
+        resolution: '0.25 deg (~28 km), 3 h',
+        citation: 'ECMWF/ERA5/HOURLY, total_precipitation',
+        observedAt: '2019-05-02T05:30:00+05:30',
+      },
+      ASSAM: {
+        status: 'LIVE',
+        source: 'ECMWF IFS HRES open data, latest available cycle',
+        agency: 'European Centre for Medium-Range Weather Forecasts',
+        method:
+          'The current operational forecast. Refreshed by re-running '
+          + 'scripts/fetch-ecmwf.py; it does not refresh itself, and the '
+          + 'timeline says so if the clock has moved outside the run window.',
+        resolution: '0.25 deg (~28 km), 3 h',
+        citation: 'ecmwf-open-data, ifs/0p25/oper',
+        observedAt: '2026-09-04T05:30:00+05:30',
+      },
+    },
   },
 
   {
-    id: 'ecmwf-live-sequence',
-    label: 'ECMWF forecast rain — latest run',
+    id: 'district-rain-warning',
+    label: 'District rainfall warning (bias-adjusted)',
     meaning:
-      'The current operational forecast, not an archived one. Same product and '
-      + 'same 3-hourly windows as the July 2024 run above, initialised from the '
-      + 'most recent cycle pulled by scripts/fetch-ecmwf.py. This is what makes '
-      + 'the live case live: refresh it by re-running that script. It does NOT '
-      + 'refresh itself — the console ships as static files with no backend, so '
-      + 'the run below is exactly as current as the last fetch, and the timeline '
-      + 'says so if the clock has moved outside the forecast window.',
-    kind: 'IMAGE_SEQUENCE',
-    url: '/layers/ecmwf-live-sequence.json',
-    imageBounds: [67.875, 5.875, 97.625, 37.625],
+      'Observed 24 h rainfall per district for THIS CASE\u2019S event window, '
+      + 'banded at 39 / 69 / 123 mm. Those boundaries are IMD\u2019s category '
+      + 'ratios scaled by 0.60, because IMD\u2019s figures are gauge-calibrated '
+      + 'and satellite rainfall under-reads orographic extremes: unscaled, '
+      + 'Wayanad district reads ORANGE for the day around 400 people died and '
+      + 'Cyclone Fani produces no red district at all. The bands are therefore '
+      + 'NOT IMD categories and this is NOT the warning IMD issued \u2014 those '
+      + 'sit behind a key, forecast days only, with no archive for 2019 or 2024. '
+      + 'A single national factor also over-warns the plains at whatever setting '
+      + 'makes the Ghats read correctly; the honest fix is per-district return '
+      + 'levels, which is a bigger job than this.',
+    kind: 'GEOJSON',
+    url: '/layers/district-warning-wayanad.geojson',
+    geojsonByCase: {
+      WAYANAD: '/layers/district-warning-wayanad.geojson',
+      KENDRAPARA: '/layers/district-warning-kendrapara.geojson',
+      ASSAM: '/layers/district-warning-assam.geojson',
+    },
+    classField: 'warning',
+    classColors: {
+      RED: '#ff5f4d',
+      ORANGE: '#e08127',
+      YELLOW: '#bfa02e',
+    },
     defaultOn: false,
-    opacity: 0.8,
+    opacity: 0.5,
     legend: [
-      { label: '70+ mm / 3 h', color: '#ffb4aa' },
-      { label: '40-70 mm', color: '#ff7563' },
-      { label: '20-40 mm', color: '#d9a13a' },
-      { label: '10-20 mm', color: '#7cbf5c' },
-      { label: '5-10 mm', color: '#2ba3a0' },
-      { label: '2.5-5 mm', color: '#21819a' },
-      { label: '1-2.5 mm', color: '#1d5c74' },
+      { label: 'Highest band', color: '#ff5f4d', note: '\u2265 123 mm/24h observed' },
+      { label: 'Middle band', color: '#e08127', note: '69\u2013122 mm' },
+      { label: 'Lowest band', color: '#bfa02e', note: '39\u201368 mm' },
+      { label: 'Below category', note: 'not drawn \u2014 not a statement of safety' },
     ],
     provenance: {
       status: 'LIVE',
-      source: 'ECMWF IFS HRES open data, latest available cycle, steps +3 h to +48 h',
-      agency: 'European Centre for Medium-Range Weather Forecasts',
+      source: 'IMD 24 h category ratios scaled 0.60, applied to GPM IMERG V07',
+      agency: 'Derived in this application. Categories: India Meteorological '
+        + 'Department. Rainfall: NASA GES DISC / JAXA.',
       method:
-        'Deterministic total precipitation, differenced between consecutive '
-        + 'steps to give rain per 3 h window, resampled to Mercator rows before '
-        + 'drawing. Retrieved by byte-range from the Google open-data mirror, '
-        + 'which retains roughly the last four days plus an archive from '
-        + 'January 2023.',
-      resolution: '0.25 deg (~28 km), 3 h',
-      citation: 'ecmwf-open-data, ifs/0p25/oper',
-      observedAt: '2026-09-04T05:30:00+05:30',
+        'Maximum rolling 24 h accumulation per district across the case\u2019s '
+        + 'event window, stepped every 3 h rather than on calendar days, because '
+        + 'IMD\u2019s day runs 08:30\u201308:30 IST and a fixed boundary can '
+        + 'split one night\u2019s rain across two days. '
+        + 'The 0.60 factor was chosen against evidence, not guessed: swept '
+        + 'over both historical cases, it is the loosest setting at which '
+        + 'Wayanad district reads red for a catastrophic debris flow AND Puri '
+        + 'reads red for an ESCS landfall, while red stays 1\u20134% of '
+        + 'districts. Unscaled they read ORANGE and ORANGE. '
+        + 'REMAINING BIAS: one national multiplier cannot correct a bias that '
+        + 'varies spatially, so this over-warns the plains at the setting that '
+        + 'makes the Ghats read correctly. Treat the bands as relative severity '
+        + 'within an event, not as absolute rainfall categories.',
+      resolution: '0.1 deg (~11 km), aggregated to district polygons',
+      citation: 'GPM_3IMERGHH.07 via Earth Engine; IMD rainfall category definitions',
     },
   },
 

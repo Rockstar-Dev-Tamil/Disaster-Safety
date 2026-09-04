@@ -1,0 +1,241 @@
+{
+ "kind": "reanalysis",
+ "event": "Cyclone Fani, 02-04 May 2019",
+ "run": "2019-05-02T00:00:00Z",
+ "runIst": "2019-05-02T05:30:00+05:30",
+ "bounds": [
+  67.875,
+  5.875,
+  97.625,
+  37.625
+ ],
+ "stepHours": 3,
+ "cells": {
+  "WAYANAD": {
+   "lon": 76.15,
+   "lat": 11.45,
+   "label": "Wayanad"
+  },
+  "KENDRAPARA": {
+   "lon": 86.94,
+   "lat": 20.63,
+   "label": "Kendrapara"
+  },
+  "ASSAM": {
+   "lon": 94.22,
+   "lat": 26.95,
+   "label": "Majuli"
+  }
+ },
+ "operatingPictureMinutes": 1110,
+ "frames": [
+  {
+   "step": 3,
+   "file": "/layers/era5-fani-inc-03.png",
+   "validMinutes": 180,
+   "windowHours": 3,
+   "maxMm": 69.6,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 6.9
+   },
+   "bytes": 922
+  },
+  {
+   "step": 6,
+   "file": "/layers/era5-fani-inc-06.png",
+   "validMinutes": 360,
+   "windowHours": 3,
+   "maxMm": 75.7,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.0,
+    "ASSAM": 2.0
+   },
+   "bytes": 904
+  },
+  {
+   "step": 9,
+   "file": "/layers/era5-fani-inc-09.png",
+   "validMinutes": 540,
+   "windowHours": 3,
+   "maxMm": 74.1,
+   "cellMm": {
+    "WAYANAD": 0.1,
+    "KENDRAPARA": 0.6,
+    "ASSAM": 0.6
+   },
+   "bytes": 1277
+  },
+  {
+   "step": 12,
+   "file": "/layers/era5-fani-inc-12.png",
+   "validMinutes": 720,
+   "windowHours": 3,
+   "maxMm": 72.1,
+   "cellMm": {
+    "WAYANAD": 0.2,
+    "KENDRAPARA": 3.0,
+    "ASSAM": 0.1
+   },
+   "bytes": 1481
+  },
+  {
+   "step": 15,
+   "file": "/layers/era5-fani-inc-15.png",
+   "validMinutes": 900,
+   "windowHours": 3,
+   "maxMm": 74.8,
+   "cellMm": {
+    "WAYANAD": 0.1,
+    "KENDRAPARA": 6.1,
+    "ASSAM": 0.6
+   },
+   "bytes": 1116
+  },
+  {
+   "step": 18,
+   "file": "/layers/era5-fani-inc-18.png",
+   "validMinutes": 1080,
+   "windowHours": 3,
+   "maxMm": 75.4,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 2.0,
+    "ASSAM": 0.5
+   },
+   "bytes": 947
+  },
+  {
+   "step": 21,
+   "file": "/layers/era5-fani-inc-21.png",
+   "validMinutes": 1260,
+   "windowHours": 3,
+   "maxMm": 66.5,
+   "cellMm": {
+    "WAYANAD": 0.1,
+    "KENDRAPARA": 11.8,
+    "ASSAM": 0.4
+   },
+   "bytes": 949
+  },
+  {
+   "step": 24,
+   "file": "/layers/era5-fani-inc-24.png",
+   "validMinutes": 1440,
+   "windowHours": 3,
+   "maxMm": 72.5,
+   "cellMm": {
+    "WAYANAD": 0.1,
+    "KENDRAPARA": 5.4,
+    "ASSAM": 0.5
+   },
+   "bytes": 1101
+  },
+  {
+   "step": 27,
+   "file": "/layers/era5-fani-inc-27.png",
+   "validMinutes": 1620,
+   "windowHours": 3,
+   "maxMm": 61.0,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 5.4,
+    "ASSAM": 0.7
+   },
+   "bytes": 1182
+  },
+  {
+   "step": 30,
+   "file": "/layers/era5-fani-inc-30.png",
+   "validMinutes": 1800,
+   "windowHours": 3,
+   "maxMm": 66.1,
+   "cellMm": {
+    "WAYANAD": -0.0,
+    "KENDRAPARA": 4.3,
+    "ASSAM": 1.0
+   },
+   "bytes": 1207
+  },
+  {
+   "step": 33,
+   "file": "/layers/era5-fani-inc-33.png",
+   "validMinutes": 1980,
+   "windowHours": 3,
+   "maxMm": 64.7,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 7.4,
+    "ASSAM": 0.3
+   },
+   "bytes": 1420
+  },
+  {
+   "step": 36,
+   "file": "/layers/era5-fani-inc-36.png",
+   "validMinutes": 2160,
+   "windowHours": 3,
+   "maxMm": 74.8,
+   "cellMm": {
+    "WAYANAD": 0.1,
+    "KENDRAPARA": 2.2,
+    "ASSAM": 0.4
+   },
+   "bytes": 1523
+  },
+  {
+   "step": 39,
+   "file": "/layers/era5-fani-inc-39.png",
+   "validMinutes": 2340,
+   "windowHours": 3,
+   "maxMm": 55.2,
+   "cellMm": {
+    "WAYANAD": 0.1,
+    "KENDRAPARA": 9.0,
+    "ASSAM": 1.0
+   },
+   "bytes": 1209
+  },
+  {
+   "step": 42,
+   "file": "/layers/era5-fani-inc-42.png",
+   "validMinutes": 2520,
+   "windowHours": 3,
+   "maxMm": 63.8,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 18.2,
+    "ASSAM": 0.5
+   },
+   "bytes": 1226
+  },
+  {
+   "step": 45,
+   "file": "/layers/era5-fani-inc-45.png",
+   "validMinutes": 2700,
+   "windowHours": 3,
+   "maxMm": 37.3,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 7.9,
+    "ASSAM": 1.6
+   },
+   "bytes": 1307
+  },
+  {
+   "step": 48,
+   "file": "/layers/era5-fani-inc-48.png",
+   "validMinutes": 2880,
+   "windowHours": 3,
+   "maxMm": 47.2,
+   "cellMm": {
+    "WAYANAD": 0.0,
+    "KENDRAPARA": 0.1,
+    "ASSAM": 0.4
+   },
+   "bytes": 1316
+  }
+ ]
+}

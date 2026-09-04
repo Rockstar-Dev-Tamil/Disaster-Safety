@@ -72,6 +72,14 @@
     "protected": 255
    },
    "bytes": 6411
+  },
+  "land": {
+   "file": "/terrain/land.png",
+   "unit": "mask",
+   "scale": 255,
+   "bytes": 3228,
+   "source": "Bundled district boundaries, Government of India depiction",
+   "note": "Generalised for national-zoom display; shore accurate to roughly a kilometre, not to the 100 m grid."
   }
  },
  "towns": [
