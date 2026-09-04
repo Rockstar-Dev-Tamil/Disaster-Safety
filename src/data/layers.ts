@@ -579,6 +579,81 @@ export const OVERLAYS: OverlayLayer[] = [
     provenance: SRC_DELTARES_SHORELINE,
   },
   {
+    id: 'satabhaya-shoreline-change',
+    label: 'Land lost to the sea \u2014 Satabhaya, 1990\u20132026',
+    meaning:
+      'Ground that stood above water in the 1990-91 dry season and is sea now, '
+      + 'and the converse. This is the reach where the coast took the village: '
+      + 'the seven hamlets of the Satabhaya group went under, and 571 families '
+      + 'were resettled inland at Bagapatia in 2018. 7.3 km\u00b2 lost against '
+      + '3.8 km\u00b2 gained \u2014 shown as two classes and deliberately NOT '
+      + 'netted, because the gain is a spit building at the Dhamra mouth and is '
+      + 'not ground anyone can be resettled onto. Netting them reports +3.6 '
+      + 'km\u00b2 and hides the entire finding. Read this beside the transect '
+      + 'layer rather than instead of it: this says WHERE land went, the '
+      + 'transects say HOW FAST it is going.',
+    kind: 'GEOJSON',
+    hazard: 'COASTAL_EROSION',
+    url: '/layers/satabhaya-shoreline-change.geojson',
+    classField: 'change',
+    /* Same two ends as the transect ramp, so retreat reads as the same colour
+     * on both coastal layers and an officer switching between them is not
+     * relearning the key. */
+    classColors: {
+      LOST: '#c2410c',
+      GAINED: '#1e5f8c',
+    },
+    bounds: [86.85, 20.55, 87.05, 20.75],
+    defaultOn: false,
+    opacity: 0.72,
+    legend: [
+      { label: 'Land lost 1990\u20132026', color: '#c2410c', note: '13 polygons \u00b7 7.3 km\u00b2 \u00b7 largest 580 ha' },
+      { label: 'Land gained', color: '#1e5f8c', note: '19 polygons \u00b7 3.8 km\u00b2 \u00b7 mostly the Dhamra spit' },
+      { label: 'Unchanged', note: 'not drawn \u2014 includes coast retreating slower than one pixel' },
+      { label: 'Extent', note: 'clipped to the analysis box; the retreat continues past both ends' },
+    ],
+    provenance: {
+      status: 'LIVE',
+      source: 'Landsat Collection 2 Level-2, dry seasons 1990-91 and 2025-26',
+      agency: 'Derived in this application. Imagery: USGS / NASA.',
+      method:
+        'NDWI = (green \u2212 NIR) / (green + NIR), thresholded at 0 to separate '
+        + 'land from water, differenced between two epochs. '
+        + 'EACH EPOCH IS A MEDIAN OF MANY SCENES, NOT ONE OVERFLIGHT: 6 scenes '
+        + 'for 1990-91 and 11 for 2025-26, every one cloud-free and covering '
+        + 'the whole area of interest. Single-date pairs were tried first and '
+        + 'do not work here \u2014 the tide moves the waterline across '
+        + 'Gahirmatha\u2019s flats by more than a decade of erosion does, so '
+        + 'two scenes would have reported the tide. Seasons are matched at both '
+        + 'ends so monsoon turbidity is not doing the talking either. '
+        + 'The threshold was read off the histogram rather than assumed: the '
+        + 'land mode runs \u22120.65 to \u22120.25 and the water mode +0.25 to '
+        + '+0.55, with ~1.5% of pixels between, so zero sits mid-trough and the '
+        + 'classification barely moves if it shifts. '
+        + 'VERIFIED AGAINST A NULL: splitting the 2025-26 window in half and '
+        + 'differencing the two composites \u2014 where no erosion can have '
+        + 'happened \u2014 yields 0.89 km\u00b2 of apparent loss. The measured '
+        + 'loss is 9.0 times that. Cross-checked independently too: the area '
+        + 'implies 5.6\u20139.0 m/yr of mean retreat, against \u22124.3 m/yr '
+        + 'median and \u22128.5 m/yr p10 from the ShorelineMonitor transects '
+        + 'over the same box, which are measured by an unrelated method. '
+        + 'LIMITS. This is a two-epoch comparison illustrating known erosion, '
+        + 'NOT a rate study \u2014 nothing here should be quoted as m/yr; the '
+        + 'transect layer is the rate product. Polygons under 2 ha are dropped '
+        + 'so the layer stays legible, discarding 8.1% of lost and 11.5% of '
+        + 'gained area. Some GAINED polygons along channel margins reflect '
+        + 'channel width and tide rather than durable accretion; the open-coast '
+        + 'loss band is the robust part of this layer. Sentinel-2 was the first '
+        + 'choice and was rejected on measurement: its 2016\u20132026 window '
+        + 'gives +1.9 km\u00b2 against \u00b12.6 km\u00b2 of noise.',
+      resolution: '30 m',
+      citation:
+        'LANDSAT/LT05/C02/T1_L2 and LANDSAT/LC08,LC09/C02/T1_L2 via Earth '
+        + 'Engine. Village location and resettlement figures are public record.',
+      assessedOn: '2026-09-05T00:00:00+05:30',
+    },
+  },
+  {
     id: 'incois-surge',
     label: 'INCOIS storm surge envelope',
     meaning: '1-in-100-year modelled surge inundation extent.',

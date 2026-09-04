@@ -20,3 +20,6 @@ __*.mjs
 # directory, so a run without SCRATCH set drops 13 MB here.
 ec-tp-*.grib2
 tp*.grib2
+
+# NDWI review renders (evidence for the Satabhaya layer, not shipped)
+out/
