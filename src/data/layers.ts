@@ -142,6 +142,7 @@ export const OVERLAYS: OverlayLayer[] = [
       WAYANAD: '/layers/ecmwf-sequence.json',
       KENDRAPARA: '/layers/era5-fani-sequence.json',
       ASSAM: '/layers/ecmwf-live-sequence.json',
+      WESTBENGAL: '/layers/ecmwf-live-sequence.json',
     },
     imageBounds: [67.875, 5.875, 97.625, 37.625],
     defaultOn: false,
@@ -220,6 +221,7 @@ export const OVERLAYS: OverlayLayer[] = [
       WAYANAD: '/layers/district-warning-wayanad.geojson',
       KENDRAPARA: '/layers/district-warning-kendrapara.geojson',
       ASSAM: '/layers/district-warning-assam.geojson',
+      WESTBENGAL: '/layers/district-warning-westbengal.geojson',
     },
     classField: 'warning',
     classColors: {
@@ -577,6 +579,123 @@ export const OVERLAYS: OverlayLayer[] = [
       { label: 'Accretion', color: '#1e5f8c', note: '700 of 1,681 transects' },
     ],
     provenance: SRC_DELTARES_SHORELINE,
+  },
+  {
+    id: 'aqueduct-coast-westbengal',
+    label: 'Flood susceptibility \u2014 Sundarbans and the Hooghly mouth',
+    meaning:
+      'Coastal surge AND riverine flood combined on the smallest return period '
+      + 'that inundates each cell, because this coast takes both and a cell '
+      + 'either mechanism reaches is reached. The headline number is the case '
+      + 'for the whole exercise: 31.8% of this area floods at 1-in-10 or more '
+      + 'often, against 14.5% first inundated at the 1-in-100 on the Kendrapara '
+      + 'delta. Only 53.9% is dry at every modelled return period, and much of '
+      + 'that is already built on.',
+    kind: 'XYZ',
+    hazard: 'FLOOD',
+    url: '/floodrp-westbengal/{z}/{x}/{y}.png',
+    bounds: [87.3, 21.1, 89.05, 22.8],
+    maxzoom: 11,
+    defaultOn: false,
+    opacity: 0.85,
+    legend: [
+      { label: 'High \u00b7 floods 1-in-10 yr or more often', color: '#1a3f66', note: '31.8%' },
+      { label: 'Moderate \u00b7 1-in-11 to 1-in-100', color: '#2f7099', note: '9.5%' },
+      { label: 'Low \u00b7 1-in-101 to 1-in-1000', note: '4.8% \u2014 in the data, not drawn' },
+      { label: 'Dry at every modelled return period', note: '53.9% \u2014 not a safety guarantee' },
+    ],
+    provenance: {
+      status: 'LIVE',
+      source:
+        'Aqueduct Flood Hazard Maps V2 \u2014 coastal (inuncoast, 2010, no '
+        + 'subsidence) and riverine (inunriver), historical',
+      agency: 'World Resources Institute',
+      method:
+        'Global hydrological and inundation modelling at nine return periods. '
+        + 'Each cell is classed by the SMALLEST return period at which it is '
+        + 'inundated to more than 0.05 m, so the value states how often ground '
+        + 'floods rather than whether it happened to flood in a sampled year. '
+        + 'Coastal and riverine are fetched separately and combined on the '
+        + 'minimum: at the Hooghly mouth the same ground takes surge from the '
+        + 'Bay and freshwater flood down the distributaries, and taking only '
+        + 'the coastal product would call the inland half of this box dry. '
+        + 'Retrieved through Earth Engine (WRI/Aqueduct_Flood_Hazard_Maps/V2). '
+        + 'LIMITS. The model does not represent embankment breaches, which on '
+        + 'this coast is how flooding usually actually happens \u2014 the '
+        + 'Sundarbans are ringed by earthen bunds and it is their failure, not '
+        + 'overtopping, that puts water in villages. At ~900 m it also cannot '
+        + 'see which side of a bund a hamlet sits on. Read it as where water '
+        + 'goes when the defences are absent, not as a forecast of where it '
+        + 'will go.',
+      resolution: '30 arcsec (~900 m)',
+      citation: 'WRI Aqueduct Floods, Ward et al. Note this is V2; V3 exists.',
+      assessedOn: '2026-09-05T00:00:00+05:30',
+    },
+  },
+  {
+    id: 'erosion-ghoramara',
+    label: 'Land lost to the sea \u2014 Ghoramara and Sagar, 1990\u20132026',
+    meaning:
+      'Ground that stood above water in the 1990-91 dry season and is water '
+      + 'now, and the converse. Ghoramara is the island that is going: measured '
+      + 'off the current imagery it is down to 3.40 km\u00b2, and its people '
+      + 'have been moving to Sagar Island \u2014 which is inside this same box '
+      + 'and eroding too. 78.6 km\u00b2 lost against 55.2 km\u00b2 gained, '
+      + 'shown as two classes and never netted: netting reports +23 km\u00b2 '
+      + 'and hides the finding, and the gain is channel bar and spit at a '
+      + 'shifting river mouth, not ground anyone can be resettled onto. '
+      + 'MUCH OF BOTH CLASSES HERE IS THE HOOGHLY MOVING rather than the coast '
+      + 'retreating \u2014 this is an estuary, and the open-coast loss along '
+      + 'the island fringes is the part that speaks to relocation.',
+    kind: 'GEOJSON',
+    hazard: 'COASTAL_EROSION',
+    url: '/layers/erosion-ghoramara.geojson',
+    classField: 'change',
+    classColors: {
+      LOST: '#c2410c',
+      GAINED: '#1e5f8c',
+    },
+    bounds: [87.95, 21.5, 88.4, 22.05],
+    defaultOn: false,
+    opacity: 0.72,
+    legend: [
+      { label: 'Land lost 1990\u20132026', color: '#c2410c', note: '91 polygons \u00b7 78.6 km\u00b2' },
+      { label: 'Land gained', color: '#1e5f8c', note: '89 polygons \u00b7 55.2 km\u00b2 \u00b7 mostly channel bar' },
+      { label: 'Unchanged', note: 'not drawn \u2014 includes coast retreating slower than one pixel' },
+      { label: 'Extent', note: 'clipped to the analysis box; the retreat continues past both ends' },
+    ],
+    provenance: {
+      status: 'LIVE',
+      source: 'Landsat Collection 2 Level-2, dry seasons 1990-91 and 2025-26',
+      agency: 'Derived in this application. Imagery: USGS / NASA.',
+      method:
+        'NDWI = (green \u2212 NIR) / (green + NIR), thresholded at 0, '
+        + 'differenced between two epochs. EACH EPOCH IS A MEDIAN OF MANY '
+        + 'SCENES, NOT ONE OVERFLIGHT \u2014 2 for 1990-91 and 14 for 2025-26, '
+        + 'each cloud-free and covering the whole area of interest. Single-date '
+        + 'pairs do not work on a coast like this: the tide moves the waterline '
+        + 'across these flats by more than a decade of erosion does, so two '
+        + 'scenes would report the tide. Seasons are matched at both ends so '
+        + 'monsoon turbidity is not doing the talking either. '
+        + 'VERIFIED AGAINST A NULL: splitting the 2025-26 window in half and '
+        + 'differencing the two composites \u2014 where no erosion can have '
+        + 'happened \u2014 yields 5.95 km\u00b2 of apparent loss. The measured '
+        + 'loss is 14.0 times that. '
+        + 'LIMITS. A two-epoch comparison illustrating known erosion, NOT a '
+        + 'rate study \u2014 nothing here should be quoted as m/yr. The past '
+        + 'composite rests on only TWO clear scenes, because 1990-91 is thin '
+        + 'over this cloudier coast, so it averages tide less well than the '
+        + 'present one does. Polygons under 5 ha are dropped so the layer stays '
+        + 'servable, discarding 5.8% of lost and 6.3% of gained area; the '
+        + 'threshold is coarser than Satabhaya\u2019s because the Hooghly '
+        + 'mouth vectorises an order of magnitude more complex.',
+      resolution: '30 m',
+      citation:
+        'LANDSAT/LT05/C02/T1_L2 and LANDSAT/LC08,LC09/C02/T1_L2 via Earth '
+        + 'Engine. Island position and remaining area measured from the '
+        + '2025-26 composite, not from a published figure.',
+      assessedOn: '2026-09-05T00:00:00+05:30',
+    },
   },
   {
     id: 'satabhaya-shoreline-change',

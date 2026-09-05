@@ -104,6 +104,8 @@ CASES = {
                    'label': 'Cyclone Fani, 2-3 May 2019'},
     'assam': {'start': None, 'end': None,
               'label': 'Live case, most recent 48 h available'},
+    'westbengal': {'start': None, 'end': None,
+                   'label': 'Live case, most recent 48 h available'},
 }
 
 

@@ -82,6 +82,22 @@ AOIS = {
         'scale': 300,
         'extra': {},
     },
+    # Western Sundarbans: Ghoramara, Sagar and the Hooghly mouth. Same two
+    # mechanisms as Kendrapara and for the same reason -- this coast takes
+    # surge from the Bay and riverine flood from the Hooghly and its
+    # distributaries, and a cell inundated by either is inundated.
+    'westbengal': {
+        'box': [87.30, 21.10, 89.05, 22.80],
+        'floodtype': 'inuncoast',
+        'scale': 300,
+        'extra': {'year': 2010, 'subsidence': 'nosub'},
+    },
+    'westbengal-river': {
+        'box': [87.30, 21.10, 89.05, 22.80],
+        'floodtype': 'inunriver',
+        'scale': 300,
+        'extra': {},
+    },
 }
 
 

@@ -217,7 +217,12 @@ export async function loadTerrain(
 
   /* Long-term layers. Fetched with the rest because the stack is loaded once
    * and both tiers share it; a failure here degrades the long-term tab rather
-   * than blocking short-term. */
+   * than blocking short-term.
+   *
+   * These are OPTIONAL and not every stack ships them -- Kendrapara has no
+   * taluks.geojson -- so a 404 here is the expected way absence is discovered,
+   * not a fault. It is the one console 404 that survives on a healthy load;
+   * anything else appearing beside it is worth chasing. */
   const [taluks, hosts, amenities] = await Promise.all([
     fetch(`${base}/taluks.geojson`).then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),
     fetch(`${base}/host-population.json`).then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined),

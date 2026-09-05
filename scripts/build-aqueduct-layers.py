@@ -83,6 +83,17 @@ STACKS = {
         'src': ['kendrapara', 'kendrapara-river'],
         'floodtype': 'inuncoast + inunriver',
     },
+    'westbengal': {
+        'aoi': (87.30, 21.10, 89.05, 22.80),
+        'out': 'public/terrain-westbengal',
+        'web': '/terrain-westbengal',
+        # Both mechanisms again, and if anything more necessary here than at
+        # Kendrapara: this box is the Hooghly mouth, so the same ground takes
+        # surge from the Bay and freshwater flood down the distributaries, and
+        # the Sundarbans sit at the junction of the two.
+        'src': ['westbengal', 'westbengal-river'],
+        'floodtype': 'inuncoast + inunriver',
+    },
 }
 #: Fallback only. The grid is read from each stack's own manifest, because AOIs
 #: no longer share a cell size and a raster built on the wrong grid misaligns
@@ -92,6 +103,7 @@ CELL_M = 100.0
 TILESETS = [
     ('assam-region', 'public/floodrp-assam', (89.7, 24.1, 96.0, 28.2), 5, 10),
     ('kendrapara', 'public/floodrp-kendrapara', (86.55, 20.25, 87.35, 21.00), 6, 11),
+    ('westbengal', 'public/floodrp-westbengal', (87.30, 21.10, 89.05, 22.80), 6, 11),
 ]
 
 

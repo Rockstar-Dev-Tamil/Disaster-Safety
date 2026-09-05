@@ -26,7 +26,8 @@ SP = os.environ.get('SCRATCH', '.')
 # the road layers cannot end up in a different AOI's stack than the rasters they
 # describe.
 AOI_OUT = {'wayanad': 'public/terrain', 'majuli': 'public/terrain-assam',
-           'kendrapara': 'public/terrain-kendrapara'}
+           'kendrapara': 'public/terrain-kendrapara',
+           'westbengal': 'public/terrain-westbengal'}
 OUT_DIR = AOI_OUT[os.environ.get('TERRAIN_AOI', 'wayanad')]
 
 CLASSES = {'motorway', 'trunk', 'primary', 'secondary', 'tertiary'}

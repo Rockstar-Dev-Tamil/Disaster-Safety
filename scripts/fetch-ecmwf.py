@@ -61,6 +61,7 @@ CELLS = {
     'WAYANAD': {'lon': 76.15, 'lat': 11.45, 'label': 'Wayanad'},
     'KENDRAPARA': {'lon': 86.94, 'lat': 20.63, 'label': 'Kendrapara'},
     'ASSAM': {'lon': 94.22, 'lat': 26.95, 'label': 'Majuli'},
+    'WESTBENGAL': {'lon': 88.10, 'lat': 21.90, 'label': 'Sundarbans'},
 }
 
 # Precipitation ramp, mm per 3 h window. Monotonic in lightness so it survives
@@ -107,14 +108,22 @@ def tp_message(step):
     and a partial run should resume rather than start over.
     """
     scratch = os.environ.get('SCRATCH', '.')
-    cached = os.path.join(scratch, f'ec-tp-{RUN}-{step:02d}.grib2')
+    # Keyed on the CYCLE as well as the date. Without it the 18Z fetch reads
+    # back the 00Z messages cached under the same name earlier the same day and
+    # labels them 18Z -- a silent substitution of a 29-hour-old forecast for a
+    # 10-hour-old one, with nothing in the output to show it happened.
+    cached = os.path.join(scratch, f'ec-tp-{RUN}{CYCLE[:2]}-{step:02d}.grib2')
     if os.path.exists(cached) and os.path.getsize(cached) > 1000:
         with open(cached, 'rb') as f:
             return f.read(), None
 
     last_err = None
     for bucket in BUCKETS:
-        base = f'{bucket}/{PREFIX}/{RUN}000000-{step}h-oper-fc'
+        # The run HOUR is part of the object name, not just the path. This
+        # read `{RUN}000000` and so silently fetched the 00Z run whatever
+        # ECMWF_CYCLE said -- harmless while only 00Z was ever asked for, and
+        # wrong the moment a live case wants the freshest cycle of the day.
+        base = f'{bucket}/{PREFIX}/{RUN}{CYCLE[:2]}0000-{step}h-oper-fc'
         try:
             idx = get(f'{base}.index').decode('utf-8', 'replace')
             rec = next(json.loads(l) for l in idx.splitlines()

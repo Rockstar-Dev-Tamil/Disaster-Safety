@@ -304,6 +304,17 @@ const ANCHORS: Anchor[] = [
   ['Nallurnad', 'Kerala', 'Wayanad', 'Mananthavady', 76.02, 11.84, 'LANDSLIDE', 2, 0.57],
   // ---- Kendrapara district fill (real coastal and inland villages)
   ['Talachua', 'Odisha', 'Kendrapara', 'Rajnagar', 86.9102, 20.6902, 'COASTAL_EROSION', 2, 0.82],
+  // Ghoramara, the island that is going: 3.40 km2 left, measured off the
+  // 2025-26 Landsat NDWI composite rather than taken from a published figure,
+  // and the seed of the West Bengal case.
+  //
+  // The coordinate below is that measured centroid, but note what happens to
+  // it: like every row here it is a SYNTHETIC habitation record, so the
+  // generator jitters the point by up to 0.08 deg (~9 km) and invents the
+  // household count and LGD code. Real place, real hazard, stand-in record --
+  // the same footing as Majuli and Sagar. The erosion layer over it is the
+  // measured thing; this point is the drill-through hook.
+  ['Ghoramara', 'West Bengal', 'South 24 Parganas', 'Sagar', 88.1286, 21.9138, 'COASTAL_EROSION', 4, 0.88],
   ['Gupti', 'Odisha', 'Kendrapara', 'Rajnagar', 86.8501, 20.6902, 'COASTAL_EROSION', 2, 0.79],
   ['Batighar', 'Odisha', 'Kendrapara', 'Rajnagar', 86.96, 20.66, 'COASTAL_EROSION', 2, 0.85],
   ['Barahipur', 'Odisha', 'Kendrapara', 'Rajnagar', 86.92, 20.61, 'COASTAL_EROSION', 2, 0.83],

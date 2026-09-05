@@ -94,6 +94,37 @@ AOIS = {
         'landslide': None,
         'flood': None,
     },
+    # Western Sundarbans -- Ghoramara, Sagar Island, the Hooghly mouth and the
+    # Purba Medinipur coast west of it. Sized for a cyclone, like Kendrapara:
+    # holds a 100 km operation radius, and stops at 89.05 E because past that
+    # is Bangladesh.
+    #
+    # 150 m cells for the same reason as Kendrapara: the hazard inputs here are
+    # ~900 m Aqueduct and a ~28 km forecast field, so 100 m precision would be
+    # invented rather than measured, and the crop runs in the browser.
+    #
+    # NO DEM, and the case is stronger here than anywhere else in this project.
+    # Measured over this box on Copernicus GLO-30: median elevation 2.2 m, mean
+    # slope 0.26 degrees, maximum slope 5.3 degrees, and the share of ground
+    # steeper than the 5-degree camp limit is 0.00 per cent -- not "small",
+    # zero. A DEM would cost hundreds of megabytes to feed a gradient rule that
+    # excludes nothing and a relief view that is flat by construction. What
+    # binds on this delta is inundation return period, shoreline retreat and
+    # distance from the storm.
+    #
+    # West Bengal as a STATE is not flat -- Darjeeling is 67 per cent above 5
+    # degrees and reaches 3,603 m -- but that is 500 km north of this coast and
+    # irrelevant to a coastal relocation.
+    'westbengal': {
+        'bounds': (87.30, 21.10, 89.05, 22.80),
+        'cell': 150.0,
+        'dem': None,
+        'out': 'public/terrain-westbengal',
+        # No landslide sheet on a delta. The flood sheet is the Aqueduct
+        # coastal-plus-riverine raster, written by build-aqueduct-layers.py.
+        'landslide': None,
+        'flood': None,
+    },
 }
 
 AOI = os.environ.get('TERRAIN_AOI', 'wayanad')

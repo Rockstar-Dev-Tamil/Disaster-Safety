@@ -29,6 +29,7 @@ const WEIGHT_LABEL: Record<keyof Weights, string> = {
   distRoad: 'Road access',
   distTown: 'Settlement access',
   drainage: 'Drainage margin',
+  rain: 'Rain on site (moves with the clock)',
 };
 
 const SPHERE = 45;
@@ -494,6 +495,12 @@ function ZoneCard({
               <FactorRow name="Road access" raw={`${Math.round(z.factors.distRoadM)} m`} c={z.contributions.distRoad} max={maxContribution} />
               <FactorRow name="Settlement access" raw={`${(z.factors.distTownM / 1000).toFixed(1)} km`} c={z.contributions.distTown} max={maxContribution} />
               <FactorRow name="Drainage margin" raw={`${z.factors.drainageM.toFixed(1)} m`} c={z.contributions.drainage} max={maxContribution} />
+              {/* Only shown when a rain field was actually in the score. With
+                  no grid the term is redistributed, not zeroed, so a row
+                  reading 0.0 mm would misreport the ranking. */}
+              {z.contributions.rain > 0 ? (
+                <FactorRow name="Rain on site, this 3 h" raw={`${z.factors.rainMm.toFixed(1)} mm`} c={z.contributions.rain} max={maxContribution} />
+              ) : null}
             </tbody>
             <tfoot>
               <tr>

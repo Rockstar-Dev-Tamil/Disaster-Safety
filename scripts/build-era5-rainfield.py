@@ -58,6 +58,7 @@ CELLS = {
     'WAYANAD': {'lon': 76.15, 'lat': 11.45, 'label': 'Wayanad'},
     'KENDRAPARA': {'lon': 86.94, 'lat': 20.63, 'label': 'Kendrapara'},
     'ASSAM': {'lon': 94.22, 'lat': 26.95, 'label': 'Majuli'},
+    'WESTBENGAL': {'lon': 88.10, 'lat': 21.90, 'label': 'Sundarbans'},
 }
 
 # Identical to fetch-ecmwf.py. Monotonic in lightness so it survives greyscale

@@ -288,16 +288,55 @@ export interface Weights {
   distRoad: number;
   distTown: number;
   drainage: number;
+  /** Rain falling on the site in the window being planned.
+   *
+   *  Unlike every other factor here this one MOVES. Slope and distance are
+   *  properties of the ground; rain is a property of the hour, so the ranking
+   *  it produces is only valid for the moment on the clock. Stepping the clock
+   *  re-ranks, which is the point -- a site that is the best choice at 18:00
+   *  can be under the heaviest cell at 21:00. */
+  rain: number;
 }
 
+/* Rebalanced when the rain term was added: the six ground factors keep their
+ * relative proportions and are scaled to leave room for it, so switching rain
+ * off (see effectiveWeights) restores the previous ranking exactly rather than
+ * merely approximately. */
 export const DEFAULT_WEIGHTS: Weights = {
-  area: 0.25,
-  slope: 0.15,
-  distOrigin: 0.2,
-  distRoad: 0.2,
-  distTown: 0.15,
-  drainage: 0.05,
+  area: 0.22,
+  slope: 0.13,
+  distOrigin: 0.17,
+  distRoad: 0.17,
+  distTown: 0.13,
+  drainage: 0.03,
+  rain: 0.15,
 };
+
+/** Rain treated as full scale, mm per 3 h window. See RAIN_FULL_SCALE_MM. */
+const RAIN_FULL_SCALE = 25;
+
+/** The weights actually applied, given whether a rain field is available.
+ *
+ *  Without this, a case with no rain grid would score every site as though it
+ *  had lost the rain term's share -- all scores depressed by the same 15 per
+ *  cent, ranking unchanged but the numbers quietly wrong. Renormalising the
+ *  remaining factors back to 1.0 keeps scores comparable across cases, and
+ *  keeps "rain off" identical to the ranking before rain existed. */
+export function effectiveWeights(w: Weights, hasRain: boolean): Weights {
+  if (hasRain && w.rain > 0) return w;
+  const rest = 1 - w.rain;
+  if (rest <= 0) return w;
+  const k = 1 / rest;
+  return {
+    area: w.area * k,
+    slope: w.slope * k,
+    distOrigin: w.distOrigin * k,
+    distRoad: w.distRoad * k,
+    distTown: w.distTown * k,
+    drainage: w.drainage * k,
+    rain: 0,
+  };
+}
 
 /* ---------------------------------------------------------------- crop --- */
 
@@ -439,6 +478,9 @@ export interface CellFactors {
   distRoadM: number;
   distTownM: number;
   drainageM: number;
+  /** Mean rain over the cluster in the window being planned, mm. Zero when the
+   *  case carries no rain grid -- read alongside the weights actually used. */
+  rainMm: number;
 }
 
 export interface Zone {
@@ -469,6 +511,11 @@ export interface Zone {
 
 export interface ZoneResult {
   crop: Crop;
+  /** The weights the derivation actually applied. Not necessarily the ones
+   *  passed in: with no rain field the rain share is redistributed. Returned so
+   *  the merge step and the explanation panel quote the same numbers the
+   *  ranking used. */
+  weightsUsed: Weights;
   /** Per-cell exclusion code, crop-local. */
   reason: Uint8Array;
   /** 0-100 suitability, crop-local; 0 where excluded. */
@@ -528,13 +575,19 @@ export function analyse(
   stack: TerrainStack,
   origin: [number, number],
   rules: Rules,
-  weights: Weights,
+  weightsIn: Weights,
   requiredPersons: number,
   /** Outer ring of the cyclone cone in force at the moment being planned, or
    *  null when there is no cyclone. Only consulted when the rule set asks. */
   coneRing?: number[][] | null,
+  /** Rain at a point for the instant being planned, mm per 3 h window, or null
+   *  outside the grid. Absent for cases with no rain field, which is not an
+   *  error -- the rain term is then redistributed rather than scored as zero. */
+  rainAt?: ((lon: number, lat: number) => number | null) | null,
 ): ZoneResult {
   const { manifest, grids } = stack;
+  const hasRain = !!rainAt;
+  const weights = effectiveWeights(weightsIn, hasRain);
   const crop = cropFor(manifest, origin, rules.radiusKm);
   const { w, h } = crop;
   const n = w * h;
@@ -583,7 +636,8 @@ export function analyse(
   const maxTownM = 15000;
   const maxOriginKm = rules.radiusKm;
 
-  const factorsAt = new Float32Array(n * 6);
+  /* Seven slots per cell: the six ground factors plus rain. */
+  const factorsAt = new Float32Array(n * 7);
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -665,6 +719,10 @@ export function analyse(
       const fRoad = 1 - Math.min(1, roadM / maxRoadM);
       const fTown = 1 - Math.min(1, townM / maxTownM);
       const fDrain = Math.min(1, drain / 20);
+      /* Null outside the grid: treated as no contribution rather than as dry,
+       * because the two are not the same claim. */
+      const rainMm = hasRain ? (rainAt!(lon, lat) ?? 0) : 0;
+      const fRain = 1 - Math.min(1, rainMm / RAIN_FULL_SCALE);
 
       /* The per-cell score omits area, which is a property of the cluster, not
        * the cell. Cell scores colour the surface; cluster scores do the ranking.
@@ -674,15 +732,17 @@ export function analyse(
         fOrigin * weights.distOrigin +
         fRoad * weights.distRoad +
         fTown * weights.distTown +
-        fDrain * weights.drainage;
+        fDrain * weights.drainage +
+        fRain * weights.rain;
       score[i] = Math.max(1, Math.round((s / Math.max(0.01, 1 - weights.area)) * 100));
 
-      factorsAt[i * 6] = slope;
-      factorsAt[i * 6 + 1] = dOrigin;
-      factorsAt[i * 6 + 2] = roadM;
-      factorsAt[i * 6 + 3] = townM;
-      factorsAt[i * 6 + 4] = drain;
-      factorsAt[i * 6 + 5] = lu;
+      factorsAt[i * 7] = slope;
+      factorsAt[i * 7 + 1] = dOrigin;
+      factorsAt[i * 7 + 2] = roadM;
+      factorsAt[i * 7 + 3] = townM;
+      factorsAt[i * 7 + 4] = drain;
+      factorsAt[i * 7 + 5] = lu;
+      factorsAt[i * 7 + 6] = rainMm;
     }
   }
 
@@ -745,14 +805,14 @@ export function analyse(
   const zones: Zone[] = kept.map((members, idx) => {
     let sx = 0;
     let sy = 0;
-    const acc = [0, 0, 0, 0, 0, 0];
+    const acc = [0, 0, 0, 0, 0, 0, 0];
     const luCount = new Map<number, number>();
     let sScore = 0;
     for (const i of members) {
       sx += crop.lonAt(i % w);
       sy += crop.latAt((i / w) | 0);
-      for (let k = 0; k < 6; k++) acc[k] += factorsAt[i * 6 + k];
-      const luv = factorsAt[i * 6 + 5];
+      for (let k = 0; k < 7; k++) acc[k] += factorsAt[i * 7 + k];
+      const luv = factorsAt[i * 7 + 5];
       luCount.set(luv, (luCount.get(luv) ?? 0) + 1);
       sScore += score[i];
     }
@@ -794,6 +854,7 @@ export function analyse(
       distRoadM: acc[2] / members.length,
       distTownM: acc[3] / members.length,
       drainageM: acc[4] / members.length,
+      rainMm: acc[6] / members.length,
     };
 
     const capacityPersons = Math.floor((areaHa * 10000) / SPHERE_M2_PER_PERSON);
@@ -805,6 +866,7 @@ export function analyse(
     const fRoad = 1 - Math.min(1, f.distRoadM / maxRoadM);
     const fTown = 1 - Math.min(1, f.distTownM / maxTownM);
     const fDrain = Math.min(1, f.drainageM / 20);
+    const fRain = 1 - Math.min(1, f.rainMm / RAIN_FULL_SCALE);
     const contributions = {
       area: fArea * weights.area * 100,
       slope: fSlope * weights.slope * 100,
@@ -812,6 +874,7 @@ export function analyse(
       distRoad: fRoad * weights.distRoad * 100,
       distTown: fTown * weights.distTown * 100,
       drainage: fDrain * weights.drainage * 100,
+      rain: fRain * weights.rain * 100,
     };
 
     let nearestTown: Zone['nearestTown'] = null;
@@ -837,7 +900,8 @@ export function analyse(
         fOrigin * weights.distOrigin * 100 +
         fRoad * weights.distRoad * 100 +
         fTown * weights.distTown * 100 +
-        fDrain * weights.drainage * 100,
+        fDrain * weights.drainage * 100 +
+        fRain * weights.rain * 100,
       factors: f,
       contributions,
       distOriginKm: haversineKm([cLon, cLat], origin),
@@ -854,6 +918,7 @@ export function analyse(
 
   return {
     crop,
+    weightsUsed: weights,
     reason,
     score,
     zones,
@@ -976,6 +1041,7 @@ export function mergeZones(
       distRoadM: sums[2] / nTotal,
       distTownM: sums[3] / nTotal,
       drainageM: sums[4] / nTotal,
+      rainMm: sums[6] / nTotal,
     };
     const areaHa = nTotal * cellHa;
     const capacityPersons = Math.floor((areaHa * 10000) / SPHERE_M2_PER_PERSON);
@@ -986,6 +1052,7 @@ export function mergeZones(
     const fRoad = 1 - Math.min(1, f.distRoadM / 3000);
     const fTown = 1 - Math.min(1, f.distTownM / 15000);
     const fDrain = Math.min(1, f.drainageM / 20);
+    const fRain = 1 - Math.min(1, f.rainMm / RAIN_FULL_SCALE);
 
     const best = members.reduce((a, z) => (z.score > a.score ? z : a));
     out.push({
@@ -1005,6 +1072,7 @@ export function mergeZones(
         distRoad: fRoad * weights.distRoad * 100,
         distTown: fTown * weights.distTown * 100,
         drainage: fDrain * weights.drainage * 100,
+        rain: fRain * weights.rain * 100,
       },
       score:
         fArea * weights.area * 100 +
@@ -1012,7 +1080,8 @@ export function mergeZones(
         fOrigin * weights.distOrigin * 100 +
         fRoad * weights.distRoad * 100 +
         fTown * weights.distTown * 100 +
-        fDrain * weights.drainage * 100,
+        fDrain * weights.drainage * 100 +
+        fRain * weights.rain * 100,
       capacityPersons,
       moments: { cxx, cyy, cxy },
       sums,

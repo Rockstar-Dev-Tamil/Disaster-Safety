@@ -23,3 +23,7 @@ tp*.grib2
 
 # NDWI review renders (evidence for the Satabhaya layer, not shipped)
 out/
+
+# Python bytecode from script imports
+__pycache__/
+*.pyc

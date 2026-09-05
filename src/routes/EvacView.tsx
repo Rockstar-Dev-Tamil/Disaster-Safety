@@ -44,6 +44,17 @@ import {
 } from '../lib/longterm';
 import { RoutePanel } from '../components/RoutePanel';
 import {
+  ForecastTimeline,
+  type BlendState,
+  type SequenceMeta,
+} from '../components/ForecastTimeline';
+import {
+  loadRainGrid,
+  samplerAt,
+  spread as rainSpread,
+  type RainGrid,
+} from '../lib/rain';
+import {
   DEFAULT_ROUTE_PARAMS,
   RISK_COLOR,
   buildAdjacency,
@@ -126,6 +137,11 @@ export function EvacView({ habitationId }: { habitationId: string }) {
   /* Forecast cones, one per issue time, for cases whose hazard is a moving
    * system. `coneIdx` is which one is in force: stepping it re-derives the
    * zones, because the cone is an exclusion and not merely a drawing. */
+  /* One switch for the whole cone feature. Drawing it without excluding it
+   * would be worse than not drawing it: an officer seeing the cone on the map
+   * would reasonably assume the shortlist already respects it. So the toggle
+   * governs both, and the note says which state it is in. */
+  const [showCone, setShowCone] = useState(true);
   const [allCones, setAllCones] = useState<GeoJSON.Feature[]>([]);
   const [coneIdx, setConeIdx] = useState(0);
   /* How long the evacuation has to hold. At persistence-scale uncertainty this
@@ -171,9 +187,92 @@ export function EvacView({ habitationId }: { habitationId: string }) {
   );
   const cone = cones[Math.min(coneIdx, Math.max(0, cones.length - 1))] ?? null;
   const coneRing = useMemo(() => {
+    if (!showCone) return null;
     const g = cone?.geometry;
     return g && g.type === 'Polygon' ? (g.coordinates[0] as number[][]) : null;
-  }, [cone]);
+  }, [cone, showCone]);
+
+  /* ----------------------------------------------------------- rainfall --- */
+  /* The same field the national map draws, brought onto the evacuation map so
+   * the officer can see the weather they are siting into without switching
+   * views -- and, unlike the national view, actually scored against.
+   *
+   * Two files: the colourised sequence for the eye, and a numeric grid for the
+   * ranking. Same source, same run, same windows. See src/lib/rain.ts. */
+  const [showRain, setShowRain] = useState(true);
+  const [rainSeq, setRainSeq] = useState<SequenceMeta | null>(null);
+  const [rainGrid, setRainGrid] = useState<RainGrid | null>(null);
+  const [rainBlend, setRainBlend] = useState<BlendState | null>(null);
+
+  useEffect(() => {
+    const url = covering?.rainSequenceUrl;
+    if (!url) {
+      setRainSeq(null);
+      setRainBlend(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(url)
+      .then((r) => r.json())
+      .then((m: SequenceMeta) => {
+        if (!cancelled) setRainSeq(m);
+      })
+      .catch(() => {
+        if (!cancelled) setRainSeq(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [covering?.rainSequenceUrl]);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadRainGrid(covering?.rainGridUrl).then((g) => {
+      if (!cancelled) setRainGrid(g);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [covering?.rainGridUrl]);
+
+  /* Where the playhead sits, in minutes from run initialisation. Derived from
+   * the blend the timeline reports rather than held separately, so the field on
+   * screen and the field in the score can never drift apart. */
+  const rainMinutes = rainBlend
+    ? rainBlend.a.validMinutes +
+      rainBlend.f * (rainBlend.b.validMinutes - rainBlend.a.validMinutes)
+    : null;
+
+  /* The ranking re-runs on the HOUR, not on every animation frame.
+   *
+   * `onBlend` fires each tick while the timeline plays, and a full derivation
+   * is a scan of the whole crop -- up to four million cells. Re-ranking at
+   * frame rate would lock the interface solid for no analytical gain: the
+   * underlying field is 3-hourly, so between one hour and the next the change
+   * is interpolation, not new information. Quantising to the hour keeps the
+   * drawn field cross-fading smoothly while the shortlist re-ranks at a rate
+   * an officer can actually read. */
+  const scoreMinutes =
+    rainMinutes === null ? null : Math.round(rainMinutes / 60) * 60;
+
+  const rainSampler = useMemo(
+    () =>
+      showRain && rainGrid && scoreMinutes !== null
+        ? samplerAt(rainGrid, scoreMinutes)
+        : null,
+    [showRain, rainGrid, scoreMinutes],
+  );
+
+  /* How much the field varies across the search disc right now. Reported, not
+   * assumed: at 28 km a small radius holds barely one cell, and a weight
+   * applied to a constant is not a criterion. */
+  const rainVar = useMemo(
+    () =>
+      rainGrid && scoreMinutes !== null && h
+        ? rainSpread(rainGrid, scoreMinutes, h.lngLat, rules.radiusKm)
+        : null,
+    [rainGrid, scoreMinutes, h, rules.radiusKm],
+  );
 
 
   /* MapLibre measures its container, so a dock sliding over ~420 ms needs the
@@ -198,16 +297,21 @@ export function EvacView({ habitationId }: { habitationId: string }) {
    * re-scores and re-clusters live. Only the factor surfaces were precomputed. */
   const result: ZoneResult | null = useMemo(() => {
     if (!stack || !h) return null;
-    return analyse(stack, h.lngLat, rules, weights, h.population, coneRing);
-  }, [stack, h, rules, weights, coneRing]);
+    return analyse(
+      stack, h.lngLat, rules, weights, h.population, coneRing, rainSampler,
+    );
+  }, [stack, h, rules, weights, coneRing, rainSampler]);
 
   /* Permanent tier runs its own extraction: different exclusions produce a
    * different eligible surface, not merely a different ranking over the same
    * one. */
   const longResult: ZoneResult | null = useMemo(() => {
     if (!stack || !h || tier !== 'LONG') return null;
-    /* No cone: PERMANENT_RULES does not use it, and passing it would only
-     * invite the reader to think it did. */
+    /* Neither cone nor rain. PERMANENT_RULES does not use the cone, and rain
+     * has no business in permanent siting for the same reason: a township is
+     * occupied for fifty years, and the rain falling on one afternoon says
+     * nothing about where it should stand. Passing either would only invite
+     * the reader to think it counted. */
     return analyse(stack, h.lngLat, PERMANENT_RULES, weights, h.population);
   }, [stack, h, tier, weights]);
 
@@ -240,7 +344,10 @@ export function EvacView({ habitationId }: { habitationId: string }) {
       result.zones,
       mergeKm,
       rules,
-      weights,
+      /* The weights the derivation ACTUALLY used -- with no rain field the rain
+       * share is redistributed, and merging under the nominal weights would
+       * rank merged zones on a different formula from unmerged ones. */
+      result.weightsUsed,
       h.population,
       (stack.manifest.cellMetres * stack.manifest.cellMetres) / 10000,
     );
@@ -762,7 +869,7 @@ export function EvacView({ habitationId }: { habitationId: string }) {
           type: 'raster',
           tiles: [ht],
           tileSize: 256,
-          bounds: covering.stack!.bounds,
+          bounds: covering.stack!.hazardTilesBounds ?? covering.stack!.bounds,
           maxzoom: covering.stack!.hazardTilesMaxZoom ?? 12,
         });
         map.addLayer({
@@ -771,6 +878,28 @@ export function EvacView({ habitationId }: { habitationId: string }) {
           source: 'hazard-tiles',
           paint: {
             'raster-opacity': 0.55,
+            'raster-resampling': 'nearest',
+            'raster-fade-duration': 0,
+          },
+        });
+      }
+
+      /* Two image sources so consecutive rain frames cross-fade instead of
+       * hard-cutting every 3 h. Same technique as the national map; these sit
+       * below the cone and the eligible surface so neither is ever hidden by
+       * the weather. */
+      for (const slot of ['rain-a', 'rain-b']) {
+        map.addSource(slot, {
+          type: 'image',
+          url: TRANSPARENT_PX,
+          coordinates: [[0, 1], [1, 1], [1, 0], [0, 0]],
+        });
+        map.addLayer({
+          id: `${slot}-layer`,
+          type: 'raster',
+          source: slot,
+          paint: {
+            'raster-opacity': 0,
             'raster-resampling': 'nearest',
             'raster-fade-duration': 0,
           },
@@ -1208,14 +1337,56 @@ export function EvacView({ habitationId }: { habitationId: string }) {
     );
   }, [aoi, mapReady]);
 
-  /* Draw whichever cone is in force. */
+  /* Draw whichever cone is in force -- and nothing at all when the feature is
+   * switched off, because the switch also removes it from the derivation. */
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
     const src = map.getSource('cone') as maplibregl.GeoJSONSource | undefined;
     if (!src) return;
-    src.setData(cone ? { type: 'FeatureCollection', features: [cone] } : EMPTY_FC);
-  }, [cone, mapReady]);
+    src.setData(
+      showCone && cone ? { type: 'FeatureCollection', features: [cone] } : EMPTY_FC,
+    );
+  }, [cone, showCone, mapReady]);
+
+  /* Cross-fade the rain field. Textures are only re-uploaded when the frame
+   * actually changes; the blend factor moves every animation tick and has to
+   * stay cheap. */
+  const rainUrls = useRef<{ a: string | null; b: string | null }>({ a: null, b: null });
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !map.getLayer('rain-a-layer')) return;
+
+    if (!showRain || !rainBlend || !rainSeq) {
+      map.setPaintProperty('rain-a-layer', 'raster-opacity', 0);
+      map.setPaintProperty('rain-b-layer', 'raster-opacity', 0);
+      rainUrls.current = { a: null, b: null };
+      return;
+    }
+    const [bw, bs, be, bn] = rainSeq.bounds;
+    const coords: [[number, number], [number, number], [number, number], [number, number]] =
+      [[bw, bn], [be, bn], [be, bs], [bw, bs]];
+    if (rainUrls.current.a !== rainBlend.a.file) {
+      (map.getSource('rain-a') as maplibregl.ImageSource).updateImage({
+        url: rainBlend.a.file,
+        coordinates: coords,
+      });
+      rainUrls.current.a = rainBlend.a.file;
+    }
+    if (rainUrls.current.b !== rainBlend.b.file) {
+      (map.getSource('rain-b') as maplibregl.ImageSource).updateImage({
+        url: rainBlend.b.file,
+        coordinates: coords,
+      });
+      rainUrls.current.b = rainBlend.b.file;
+    }
+    /* Held well below the national map's opacity: here the rain is context for
+     * a siting decision, not the subject, and the eligible surface underneath
+     * it has to stay readable. */
+    const o = 0.5;
+    map.setPaintProperty('rain-a-layer', 'raster-opacity', o * (1 - rainBlend.f));
+    map.setPaintProperty('rain-b-layer', 'raster-opacity', o * rainBlend.f);
+  }, [showRain, rainBlend, rainSeq, mapReady]);
 
   /* ------------------------------------------------------ terrain on/off --- */
   useEffect(() => {
@@ -1414,6 +1585,22 @@ export function EvacView({ habitationId }: { habitationId: string }) {
               {panelOut ? '‹' : '›'}
             </button>
 
+            {/* The clock. Every rain-dependent number on this page reads from
+                it, so scrubbing re-ranks rather than merely re-drawing. */}
+            {showRain && rainSeq ? (
+              <div className="map-overlay map-timeline">
+                <ForecastTimeline
+                  meta={rainSeq}
+                  onBlend={setRainBlend}
+                  focus={{
+                    key: covering?.id ?? '',
+                    clock: covering?.clock || new Date().toISOString(),
+                    live: !covering?.clock,
+                  }}
+                />
+              </div>
+            ) : null}
+
             <div className="map-overlay map-scale">
               <div className="zoomctx">
                 <div className="zoomctx-row">
@@ -1448,6 +1635,33 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                     one hour can be inside the cone at the next. That movement
                     is the point -- it is what an officer is deciding against. */}
                 {cones.length > 0 ? (
+                  <>
+                    <div className="zoomctx-row">
+                      <span>Cyclone cone</span>
+                      <span className="seg seg-xs">
+                        <button
+                          className={showCone ? 'on' : ''}
+                          onClick={() => setShowCone(true)}
+                        >
+                          On
+                        </button>
+                        <button
+                          className={showCone ? '' : 'on'}
+                          onClick={() => setShowCone(false)}
+                        >
+                          Off
+                        </button>
+                      </span>
+                    </div>
+                    {!showCone ? (
+                      <div className="exagwarn">
+                        Cone off — the shortlist below does NOT exclude ground the
+                        cyclone may still cross.
+                      </div>
+                    ) : null}
+                  </>
+                ) : null}
+                {cones.length > 0 && showCone ? (
                   <>
                     <div className="zoomctx-row">
                       <span>Forecast cone issued</span>
@@ -1493,6 +1707,65 @@ export function EvacView({ habitationId }: { habitationId: string }) {
                       . Short-term siting excludes it; the long-term tier does
                       not.
                     </div>
+                  </>
+                ) : null}
+                {/* Rain moves; slope does not. This is the only factor in the
+                    ranking that changes with the clock, so the control for it
+                    sits with the clock rather than with the ground rules. */}
+                {rainSeq || rainGrid ? (
+                  <>
+                    <div className="zoomctx-row">
+                      <span>Rainfall</span>
+                      <span className="seg seg-xs">
+                        <button
+                          className={showRain ? 'on' : ''}
+                          onClick={() => setShowRain(true)}
+                        >
+                          On
+                        </button>
+                        <button
+                          className={showRain ? '' : 'on'}
+                          onClick={() => setShowRain(false)}
+                        >
+                          Off
+                        </button>
+                      </span>
+                    </div>
+                    {showRain && rainVar ? (
+                      <>
+                        <div className="zoomctx-row">
+                          <span>Rain across search area</span>
+                          <span className="mono">
+                            {rainVar.min.toFixed(1)}&ndash;{rainVar.max.toFixed(1)} mm/3h
+                          </span>
+                        </div>
+                        {/* A weight applied to a flat field is not a criterion,
+                            and at ~28 km a small radius holds barely one cell.
+                            Measured every time rather than assumed. */}
+                        {rainVar.cells < 4 || rainVar.max - rainVar.min < 0.5 ? (
+                          <div className="exagwarn">
+                            The field is nearly flat over this radius
+                            ({rainVar.cells} grid {rainVar.cells === 1 ? 'cell' : 'cells'}),
+                            so rain is barely re-ranking anything. Widen the radius
+                            for it to discriminate.
+                          </div>
+                        ) : (
+                          <div className="exagnote">
+                            {rainVar.cells} grid cells at ~28 km. Rain is
+                            {' '}{((result?.weightsUsed.rain ?? 0) * 100).toFixed(0)}% of
+                            the site score and moves with the clock, so stepping
+                            the timeline re-ranks the shortlist. It cannot resolve
+                            a valley — one cell spans 28 km.
+                          </div>
+                        )}
+                      </>
+                    ) : null}
+                    {showRain && !rainGrid ? (
+                      <div className="exagwarn">
+                        Rain is drawn but NOT scored — no numeric grid for this
+                        case. Run scripts/build-rain-grids.py.
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
                 <div className="zoomctx-row">

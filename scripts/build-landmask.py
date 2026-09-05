@@ -45,6 +45,7 @@ STACKS = [
     'public/terrain',
     'public/terrain-assam',
     'public/terrain-kendrapara',
+    'public/terrain-westbengal',
 ]
 
 
