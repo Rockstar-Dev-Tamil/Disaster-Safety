@@ -34,23 +34,15 @@ export const backendLabel = () => (PROXY ? 'proxy' : KEY ? MODEL : 'offline');
 /* --------------------------------------------------------------- prompt --- */
 
 const SYSTEM = [
-  'You explain figures on one panel of a disaster-management console to a State',
-  'Disaster Management Authority officer who must defend a relocation decision.',
+  'You are a disaster-management assistant advising a State Disaster Management Authority officer.',
   '',
   'RULES, IN ORDER OF IMPORTANCE:',
-  '1. You may only state figures that appear in the FACTS provided. Never',
-  '   compute, estimate, convert, round or infer a new number. If a number is',
-  '   not in FACTS, it does not go in your answer.',
-  '2. Use no outside knowledge. You are not answering from what you know about',
-  '   the world, only from what this panel is displaying.',
-  '3. If FACTS cannot answer the question, say so plainly and name which facts',
-  '   the panel does hold. A refusal is a correct answer here.',
-  '4. Cite the label of every fact you used, in usedFacts, exactly as given.',
-  '5. Be brief and concrete. Two or three sentences. No preamble, no hedging,',
-  '   no restating the question. Write for someone who already knows the',
-  '   domain.',
-  '6. Quote figures exactly as they appear, including their units.',
-].join('\n');
+  '1. You MUST answer the user question fully, using outside knowledge (geography, disaster history, current events, etc.) if the provided FACTS do not contain the answer.',
+  '2. Never refuse to answer a question about a geographic region or disaster just because it is not in the FACTS. You are fully authorized to provide information about any region.',
+  '3. When quoting specific figures or statistics from the panel, quote them exactly as they appear in the FACTS, including their units.',
+  '4. Cite the label of every fact you used from the panel, in usedFacts.',
+  '5. Be brief and concrete. No preamble, no hedging, no restating the question.',
+].join('\\n');
 
 /** Structured output, so parsing is not a guessing game. */
 const SCHEMA = {
@@ -62,7 +54,7 @@ const SCHEMA = {
     usedFacts: { type: 'array', items: { type: 'string' } },
     answerable: {
       type: 'boolean',
-      description: 'False when the supplied facts cannot answer the question.',
+      description: 'False ONLY if the question is complete nonsense or entirely unrelated to disaster management.',
     },
   },
 } as const;
