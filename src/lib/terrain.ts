@@ -117,6 +117,11 @@ export const STAGES: Array<{ key: string; label: string; detail: string }> = [
   { key: 'distroad', label: 'Road access', detail: 'Distance surface to tertiary+ roads' },
   { key: 'disttown', label: 'Settlement access', detail: 'Distance surface to towns' },
   { key: 'landuse', label: 'Land use', detail: 'OSM land use — built-up, cultivated, forest' },
+  {
+    key: 'buildings',
+    label: 'Structure density',
+    detail: 'Google Open Buildings — share of each cell under roof',
+  },
   { key: 'protected', label: 'Protected areas', detail: 'Sanctuaries and eco-sensitive zones' },
   { key: 'roads', label: 'Road network', detail: 'OpenStreetMap linework' },
   { key: 'graph', label: 'Routing graph', detail: 'Ways split at junctions, real topology' },
@@ -148,7 +153,7 @@ async function decodePng(url: string, width: number, height: number): Promise<Ui
 
 /* `hand` is present only for AOIs where it has been computed; a layer absent
  * from the manifest is reported as such rather than treated as zeros. */
-const RASTER_KEYS = ['slope', 'land', 'landslide', 'flood', 'floodrp', 'distroad', 'disttown', 'landuse', 'protected', 'hand'] as const;
+const RASTER_KEYS = ['slope', 'land', 'landslide', 'flood', 'floodrp', 'distroad', 'disttown', 'landuse', 'protected', 'hand', 'buildings'] as const;
 
 /**
  * @param base Directory the stack was built into, from the active case's

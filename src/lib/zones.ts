@@ -52,7 +52,7 @@ export const EXCLUSION_LABEL: Record<number, string> = {
   [EXCLUSION.DRAINAGE]: 'Too close to local drainage level',
   [EXCLUSION.NO_DATA]: 'No terrain data',
   [EXCLUSION.SPECKLE]: 'Isolated cells, not contiguous buildable ground',
-  [EXCLUSION.BUILT_UP]: 'Built-up — residential, commercial or industrial',
+  [EXCLUSION.BUILT_UP]: 'Built-up — mapped as settlement, or measured under roof',
   [EXCLUSION.RESTRICTED]: 'Restricted use — quarry, cemetery, military',
   [EXCLUSION.PADDY]: 'Paddy — seasonally waterlogged',
   [EXCLUSION.FOREST]: 'Forest — diversion under Forest (Conservation) Act 1980',
@@ -111,6 +111,20 @@ export interface Rules {
    *  without this a cluster spanning a town and open land beside it fits one
    *  ellipse over both -- putting the centroid on the houses. */
   excludeBuiltUp: boolean;
+  /** Share of a cell under roof at or above which it counts as occupied.
+   *
+   *  This exists because `excludeBuiltUp` alone was very nearly blind. It reads
+   *  OSM land use, and OSM has barely mapped these coasts: measured over the
+   *  shipped rasters it saw 0.5% of Wayanad as built, 1.2% of Majuli, 1.6% of
+   *  the Sundarbans and 0.2% of the Kendrapara delta. Google Open Buildings
+   *  puts the same ground at 21.8%, 16.2%, 25.3% and 7.8% above a one per cent
+   *  built fraction -- so OSM was seeing between a thirteenth and a
+   *  forty-fourth of it, and the console was siting camps on ground it could
+   *  not see houses on.
+   *
+   *  Undefined disables the test, which is the right value for a stack with no
+   *  buildings raster. */
+  maxBuiltFraction?: number;
   /** Exclude paddy: flat, tempting, and seasonally waterlogged. */
   excludePaddy: boolean;
   /** Permanent tier only. Forest needs diversion under the Forest
@@ -174,6 +188,11 @@ export const DEFAULT_RULES: Rules = {
   minSeparationKm: 0,
   excludeBuiltUp: true,
   excludePaddy: true,
+  /* Camp tier. Five per cent of a cell under roof is a hamlet, not scattered
+   * outbuildings, and pitching a transitional camp there means pitching it in
+   * somebody's village. Deliberately looser than the permanent tier: a camp
+   * can sit at the edge of settlement and often should, for water and access. */
+  maxBuiltFraction: 0.05,
   excludeForest: false,
   excludeProtected: false,
   /* Short-term evacuation happens while the storm is still coming. */
@@ -205,6 +224,10 @@ export const PERMANENT_RULES: Rules = {
   minSeparationKm: 0,
   excludeBuiltUp: true,
   excludePaddy: true,
+  /* Permanent tier, stricter. A township is land that must actually be
+   * acquired, and two per cent under roof is enough structure to mean somebody
+   * has to be bought out or moved to build it. */
+  maxBuiltFraction: 0.02,
   excludeForest: true,
   excludeProtected: true,
   /* Off, deliberately. A township is occupied for fifty years; the position of
@@ -668,6 +691,10 @@ export function analyse(
       const drain = margin[i];
 
       const prot = grids['protected'] ? g('protected', x, y) : 0;
+      /* Share of the cell under roof, 0-1. Stored as round(fraction * 255) by
+       * scripts/build-structures.py; absent stacks read 0, which the rule
+       * guards against separately so "no raster" never reads as "no houses". */
+      const built = grids['buildings'] ? g('buildings', x, y) / 255 : 0;
       /* Raw, not divided: 255 is the "not resolved" sentinel and must not be
        * rounded into a class. See scripts/build-hand.py. */
       const handRaw = grids['hand'] ? g('hand', x, y) : -1;
@@ -683,7 +710,18 @@ export function analyse(
        * suitable; this asks whether it is survivable this week. */
       else if (inCone) code = EXCLUSION.CYCLONE_CONE;
       else if (rules.excludeProtected && prot > 127) code = EXCLUSION.PROTECTED;
+      /* Two independent readings of the same question, and the second is by
+       * far the stronger. OSM's class is kept because where it IS mapped it is
+       * a surveyed statement about use -- a factory and a housing block are
+       * both built-up -- whereas the structure raster only knows there is a
+       * roof. Either one firing excludes the cell. */
       else if (rules.excludeBuiltUp && lu === LANDUSE.BUILT_UP) code = EXCLUSION.BUILT_UP;
+      else if (
+        rules.maxBuiltFraction !== undefined &&
+        grids['buildings'] &&
+        built >= rules.maxBuiltFraction
+      )
+        code = EXCLUSION.BUILT_UP;
       else if (rules.excludeForest && lu === LANDUSE.FOREST) code = EXCLUSION.FOREST;
       else if (lu === LANDUSE.RESTRICTED) code = EXCLUSION.RESTRICTED;
       else if (rules.excludePaddy && lu === LANDUSE.PADDY) code = EXCLUSION.PADDY;

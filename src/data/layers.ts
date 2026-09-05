@@ -581,6 +581,56 @@ export const OVERLAYS: OverlayLayer[] = [
     provenance: SRC_DELTARES_SHORELINE,
   },
   {
+    id: 'satellite-imagery',
+    label: 'Satellite imagery',
+    meaning:
+      'True-colour imagery under the analysis layers, so a candidate site can '
+      + 'be looked at rather than only scored. Useful for the thing no raster '
+      + 'in this console resolves: whether the ground a shortlist just proposed '
+      + 'is actually empty. '
+      + 'VINTAGE IS MIXED AND NOT STATED PER TILE. This is a mosaic assembled '
+      + 'from many acquisitions of different dates, so it is "recent" in '
+      + 'general and unknown in particular — which on a coast that loses land '
+      + 'every year is a real limitation. Do not read it as the state of the '
+      + 'shoreline today; the erosion layers are dated and this is not.',
+    kind: 'XYZ',
+    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    /* No bounds: unlike every other raster here this one is global, so it can
+     * sit under any case without a per-AOI build. */
+    maxzoom: 18,
+    defaultOn: false,
+    /* Full strength. It is a basemap, not a shading, and half-transparent
+     * imagery over a dark ground reads as neither. */
+    opacity: 1,
+    legend: [
+      { label: 'True colour', note: 'natural colour, as the sensor saw it' },
+      { label: 'Vintage', note: 'mixed per tile and not published — not a dated observation' },
+      { label: 'Resolution', note: 'sub-metre in populated areas, coarser over water and forest' },
+    ],
+    provenance: {
+      status: 'LIVE',
+      source: 'Esri World Imagery',
+      agency:
+        'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+      method:
+        'A global mosaic of commercial and public imagery served as map tiles. '
+        + 'Fetched from Esri at view time rather than rebuilt into this repo: '
+        + 'the pyramid for one case AOI alone would run to tens of megabytes, '
+        + 'and it is the one layer here that needs no per-case processing. '
+        + 'IT IS ALSO THE ONE LAYER THAT NEEDS A NETWORK. Everything else in '
+        + 'this console is a static file and works offline; if a demonstration '
+        + 'or a field deployment has no connectivity, this layer is blank and '
+        + 'nothing else is affected. '
+        + 'NOT AN ANALYSIS INPUT. No score, exclusion or ranking reads it. It '
+        + 'is there to be looked at, and its undated mosaic could not honestly '
+        + 'feed a measurement anyway.',
+      resolution: 'varies by tile; sub-metre to ~15 m',
+      citation:
+        'services.arcgisonline.com/ArcGIS/rest/services/World_Imagery. '
+        + 'Attribution required wherever it is displayed.',
+    },
+  },
+  {
     id: 'aqueduct-coast-westbengal',
     label: 'Flood susceptibility \u2014 Sundarbans and the Hooghly mouth',
     meaning:
